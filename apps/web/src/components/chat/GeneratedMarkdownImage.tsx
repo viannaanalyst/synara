@@ -10,6 +10,7 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { type MouseEvent, useEffect, useRef, useState } from "react";
+import { useT } from "~/i18n";
 
 import { DownloadIcon, Loader2Icon, Maximize2 } from "~/lib/icons";
 import { buildLocalImageUrl, localImageAbsolutePath } from "~/lib/localImageUrls";
@@ -43,6 +44,7 @@ export function GeneratedMarkdownImage(props: GeneratedMarkdownImageProps) {
 }
 
 function GeneratedMarkdownImageContent(props: GeneratedMarkdownImageProps) {
+  const t = useT();
   const { src, alt, cwd, onImageExpand } = props;
   const queryClient = useQueryClient();
   const mounted = useRef(true);
@@ -108,11 +110,11 @@ function GeneratedMarkdownImageContent(props: GeneratedMarkdownImageProps) {
     const grant = await queryClient.fetchQuery({ ...grantOptions, retry: retryGrant });
     return buildLocalImageUrl({ src, cwd, download, grant: grant.grant });
   };
-  const accessibleName = alt?.trim() || "Generated image";
+  const accessibleName = alt?.trim() || t("Generated image");
   const downloadImage = useLocalImageDownloadClick({
     downloadUrl,
     downloadName,
-    errorTitle: "Could not download generated image",
+    errorTitle: t("Could not download generated image"),
     resolveDownloadUrl: () => resolveGrantedUrl(true),
   });
 
@@ -136,8 +138,8 @@ function GeneratedMarkdownImageContent(props: GeneratedMarkdownImageProps) {
         if (mounted.current) {
           toastManager.add({
             type: "error",
-            title: "Could not open generated image",
-            description: error instanceof Error ? error.message : "The file may be unavailable.",
+            title: t("Could not open generated image"),
+            description: error instanceof Error ? error.message : t("The file may be unavailable."),
           });
         }
       });
@@ -149,7 +151,7 @@ function GeneratedMarkdownImageContent(props: GeneratedMarkdownImageProps) {
         downloadUrl={downloadUrl}
         downloadName={downloadName}
         className="local-image-error--prose"
-        downloadAriaLabel="Download generated image"
+        downloadAriaLabel={t("Download generated image")}
         onDownloadClick={downloadImage}
       />
     );
@@ -161,7 +163,7 @@ function GeneratedMarkdownImageContent(props: GeneratedMarkdownImageProps) {
         type="button"
         className="chat-generated-image__frame"
         onClick={expandImage}
-        aria-label="Expand generated image"
+        aria-label={t("Expand generated image")}
       >
         {status === "loading" || resolvingGrant ? (
           <span className="chat-generated-image__skeleton" aria-hidden="true">
@@ -172,7 +174,7 @@ function GeneratedMarkdownImageContent(props: GeneratedMarkdownImageProps) {
         <span className="chat-generated-image__overlay" aria-hidden="true">
           <span className="chat-generated-image__overlay-pill chat-generated-image__overlay-pill--expand">
             <Maximize2 className="size-3.5" />
-            <span>Expand</span>
+            <span>{t("Expand")}</span>
           </span>
         </span>
       </button>
@@ -182,11 +184,11 @@ function GeneratedMarkdownImageContent(props: GeneratedMarkdownImageProps) {
         onClick={downloadImage}
         onMouseDown={stopPropagation}
         className="chat-generated-image__overlay-pill chat-generated-image__overlay-pill--download"
-        aria-label="Download generated image"
-        title="Download"
+        aria-label={t("Download generated image")}
+        title={t("Download")}
       >
         <DownloadIcon className="size-3.5" aria-hidden="true" />
-        <span>Download</span>
+        <span>{t("Download")}</span>
       </a>
     </span>
   );

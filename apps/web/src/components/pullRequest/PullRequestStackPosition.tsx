@@ -9,11 +9,16 @@ import { Badge } from "~/components/ui/badge";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "~/components/ui/tooltip";
 import { GitForkIcon } from "~/lib/icons";
 import { cn } from "~/lib/utils";
+import { useT } from "~/i18n";
 
 type StackPosition = Pick<PullRequestStackSummary, "number" | "size" | "position" | "baseBranch">;
 
-function stackPositionAriaLabel(stack: StackPosition): string {
-  return `Stack #${stack.number}, pull request ${stack.position} of ${stack.size}`;
+function stackPositionAriaLabel(stack: StackPosition, t: ReturnType<typeof useT>): string {
+  return t("Stack #{number}, pull request {position} of {size}", {
+    number: stack.number,
+    position: stack.position,
+    size: stack.size,
+  });
 }
 
 function StackPositionContents({ stack }: { stack: StackPosition }) {
@@ -36,6 +41,7 @@ export function PullRequestStackPosition({
   appearance?: "badge" | "plain";
   className?: string;
 }) {
+  const t = useT();
   if (appearance === "plain") {
     return (
       <span className={cn("inline-flex items-center gap-1.5", className)} aria-hidden="true">
@@ -44,7 +50,7 @@ export function PullRequestStackPosition({
     );
   }
 
-  const label = stackPositionAriaLabel(stack);
+  const label = stackPositionAriaLabel(stack, t);
   return (
     <Tooltip>
       <TooltipTrigger
@@ -60,7 +66,12 @@ export function PullRequestStackPosition({
         }
       />
       <TooltipPopup side="top">
-        Stack #{stack.number} · PR {stack.position} of {stack.size} · targets {stack.baseBranch}
+        {t("Stack #{number} · PR {position} of {size} · targets {branch}", {
+          number: stack.number,
+          position: stack.position,
+          size: stack.size,
+          branch: stack.baseBranch,
+        })}
       </TooltipPopup>
     </Tooltip>
   );

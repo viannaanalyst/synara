@@ -11,7 +11,14 @@ import type { SVGProps } from "react";
 import { PinFilledIcon, PinIcon } from "./icons";
 
 /** Accessible verb for a pin toggle: "Pin <target>" when unpinned, "Unpin <target>" when pinned. */
-export function pinActionLabel(target: string, pinned: boolean): string {
+export function pinActionLabel(
+  target: string,
+  pinned: boolean,
+  translate?: (key: string, params?: Record<string, string | number>) => string,
+): string {
+  if (translate) {
+    return translate(pinned ? "Unpin {target}" : "Pin {target}", { target });
+  }
   return `${pinned ? "Unpin" : "Pin"} ${target}`;
 }
 

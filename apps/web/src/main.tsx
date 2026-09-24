@@ -9,9 +9,14 @@ import { appHistory } from "./appNavigation";
 import { getRouter } from "./router";
 import { APP_DISPLAY_NAME } from "./branding";
 import { isElectron } from "./env";
+import { bootstrapAppLocale } from "./i18n/bootstrap";
 import { isMacPlatform } from "./lib/utils";
 
 const router = getRouter(appHistory);
+
+// Apply the stored language before the first render: no English flash on launch and
+// non-React callers (toasts, notifications) translate from the start.
+bootstrapAppLocale();
 
 document.title = APP_DISPLAY_NAME;
 

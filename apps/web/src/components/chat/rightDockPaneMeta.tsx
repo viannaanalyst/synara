@@ -33,6 +33,8 @@ export interface RightDockLauncherItem extends RightDockPaneMeta {
   kind: RightDockPaneKind;
 }
 
+type Translator = (key: string) => string;
+
 export const RIGHT_DOCK_PANE_META: Record<RightDockPaneKind, RightDockPaneMeta> = {
   browser: { label: "Browser", Icon: GlobeIcon },
   // The contracts stay platform-neutral ("device") so Android emulators can plug
@@ -58,8 +60,37 @@ const FALLBACK_RIGHT_DOCK_PANE_META: RightDockPaneMeta = {
 
 // Always resolve pane meta through this helper instead of indexing the map
 // directly, so an unknown kind degrades gracefully rather than throwing.
-export function getRightDockPaneMeta(kind: RightDockPaneKind): RightDockPaneMeta {
-  return RIGHT_DOCK_PANE_META[kind] ?? FALLBACK_RIGHT_DOCK_PANE_META;
+function translatedPaneLabel(kind: RightDockPaneKind | null, t: Translator): string {
+  switch (kind) {
+    case "browser":
+      return t("Browser");
+    case "device":
+      return t("iOS Simulator");
+    case "diff":
+      return t("Diff");
+    case "explorer":
+      return t("Explorer");
+    case "file":
+      return t("File");
+    case "terminal":
+      return t("Terminal");
+    case "sidechat":
+      return t("Side chats");
+    case "git":
+      return t("Git");
+    case "pullRequest":
+      return t("Pull request");
+    default:
+      return t("Panel");
+  }
+}
+
+export function getRightDockPaneMeta(
+  kind: RightDockPaneKind,
+  t: Translator = (key) => key,
+): RightDockPaneMeta {
+  const meta = RIGHT_DOCK_PANE_META[kind] ?? FALLBACK_RIGHT_DOCK_PANE_META;
+  return { ...meta, label: translatedPaneLabel(RIGHT_DOCK_PANE_META[kind] ? kind : null, t) };
 }
 
 // Empty-dock launchers prioritize the everyday workspace tools. Review only
@@ -76,13 +107,6 @@ const RIGHT_DOCK_LAUNCHER_ORDER: readonly RightDockPaneKind[] = [
   "git",
 ];
 
-const RIGHT_DOCK_LAUNCHER_LABELS: Partial<Record<RightDockPaneKind, string>> = {
-  diff: "Review",
-  explorer: "Files",
-  sidechat: "Side chats",
-  git: "Source control",
-};
-
 export function resolveRightDockLauncherItems(input: {
   hasWorkspace: boolean;
   hasGitRepository: boolean;
@@ -93,7 +117,9 @@ export function resolveRightDockLauncherItems(input: {
    * from this machine to make it work.
    */
   hasDeviceSupport?: boolean;
+  t?: Translator;
 }): readonly RightDockLauncherItem[] {
+  const t = input.t ?? ((key: string) => key);
   return RIGHT_DOCK_LAUNCHER_ORDER.flatMap((kind) => {
     if (kind === "diff" && !input.hasReview) {
       return [];
@@ -107,12 +133,22 @@ export function resolveRightDockLauncherItems(input: {
     if (kind === "device" && input.hasDeviceSupport !== true) {
       return [];
     }
-    const meta = getRightDockPaneMeta(kind);
+    const meta = getRightDockPaneMeta(kind, t);
+    const label =
+      kind === "diff"
+        ? t("Review")
+        : kind === "explorer"
+          ? t("Files")
+          : kind === "sidechat"
+            ? t("Side chats")
+            : kind === "git"
+              ? t("Source control")
+              : meta.label;
     return [
       {
         kind,
         Icon: meta.Icon,
-        label: RIGHT_DOCK_LAUNCHER_LABELS[kind] ?? meta.label,
+        label,
       },
     ];
   });
@@ -123,8 +159,9 @@ export function resolveRightDockLauncherItems(input: {
 export function resolveRightDockPaneLabel(
   pane: RightDockPane,
   overrides?: Record<string, string | undefined>,
+  t: Translator = (key) => key,
 ): string {
-  return overrides?.[pane.id] ?? getRightDockPaneMeta(pane.kind).label;
+  return overrides?.[pane.id] ?? getRightDockPaneMeta(pane.kind, t).label;
 }
 
 export function buildRightDockPaneLabelOverrides(

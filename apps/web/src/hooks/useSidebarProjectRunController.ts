@@ -19,6 +19,7 @@ import { projectDiscoverScriptsQueryOptions } from "../lib/projectReactQuery";
 import { serverQueryKeys, sidebarLocalServersQueryOptions } from "../lib/serverReactQuery";
 import { newCommandId } from "../lib/utils";
 import { readNativeApi } from "../nativeApi";
+import { t } from "../i18n";
 import { useProjectRunStore, type ProjectRunState } from "../projectRunStore";
 import {
   selectPrimaryProjectRunCommand,
@@ -174,8 +175,9 @@ export function useSidebarProjectRunController(input: {
         storeRemoveProjectRun(projectId);
         toastManager.add({
           type: "error",
-          title: `Failed to run "${project.name}"`,
-          description: error instanceof Error ? error.message : "Unable to start the run command.",
+          title: t('Failed to run "{name}"', { name: project.name }),
+          description:
+            error instanceof Error ? error.message : t("Unable to start the run command."),
         });
       }
     },
@@ -207,8 +209,8 @@ export function useSidebarProjectRunController(input: {
         }
         toastManager.add({
           type: "error",
-          title: "Failed to stop run",
-          description: error instanceof Error ? error.message : "Unable to stop the dev server.",
+          title: t("Failed to stop run"),
+          description: error instanceof Error ? error.message : t("Unable to stop the dev server."),
         });
       } finally {
         void queryClient.invalidateQueries({ queryKey: serverQueryKeys.localServers() });
@@ -227,8 +229,8 @@ export function useSidebarProjectRunController(input: {
     } catch (error) {
       toastManager.add({
         type: "error",
-        title: `Unable to open ${localServerAddressLabel(server)}`,
-        description: error instanceof Error ? error.message : "Unable to open the local server.",
+        title: t("Unable to open {server}", { server: localServerAddressLabel(server) }),
+        description: error instanceof Error ? error.message : t("Unable to open the local server."),
       });
     }
   }, []);

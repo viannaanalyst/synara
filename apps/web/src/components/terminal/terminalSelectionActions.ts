@@ -9,7 +9,7 @@ const MULTI_CLICK_SELECTION_ACTION_DELAY_MS = 260;
 export function resolveTerminalSelectionContextMenuItems(
   hasComposerTarget: boolean,
 ): readonly ContextMenuItem<"add-to-chat">[] {
-  return hasComposerTarget ? [{ id: "add-to-chat", label: "Add to chat" }] : [];
+  return hasComposerTarget ? [{ id: "add-to-chat", label: t("Add to chat") }] : [];
 }
 
 export function resolveTerminalSelectionActionPosition(options: {
@@ -57,3 +57,4 @@ export function shouldHandleTerminalSelectionMouseUp(
 ): boolean {
   return selectionGestureActive && button === 0;
 }
+import { t } from "~/i18n";

@@ -9,6 +9,7 @@
 import type { ProjectId, SpaceId, ThreadId } from "@synara/contracts";
 import { useNavigate } from "@tanstack/react-router";
 import { startTransition, useCallback, useEffect, useMemo, useState } from "react";
+import { t } from "~/i18n";
 
 import type { SidebarThreadSortOrder } from "../appSettings";
 import { spaceKey, toSpaceIconName } from "../lib/spaceGrouping";
@@ -333,8 +334,12 @@ export function useSpacesController(input: {
       ).length;
       const confirmed = await api.dialogs.confirm(
         projectCount > 0
-          ? `Delete “${space.name}”?\n\n${projectCount} project${projectCount === 1 ? "" : "s"} will move to Void.`
-          : `Delete “${space.name}”?`,
+          ? t("Delete “{name}”?\n\n{count} {projectLabel} will move to Void.", {
+              name: space.name,
+              count: projectCount,
+              projectLabel: projectCount === 1 ? t("project") : t("projects"),
+            })
+          : t("Delete “{name}”?", { name: space.name }),
       );
       if (!confirmed) return;
 
@@ -356,8 +361,8 @@ export function useSpacesController(input: {
       } catch (error) {
         toastManager.add({
           type: "error",
-          title: "Unable to delete space",
-          description: error instanceof Error ? error.message : "Try again.",
+          title: t("Unable to delete space"),
+          description: error instanceof Error ? error.message : t("Try again."),
         });
       }
     },
@@ -383,8 +388,8 @@ export function useSpacesController(input: {
     } catch (error) {
       toastManager.add({
         type: "error",
-        title: "Unable to rename space",
-        description: error instanceof Error ? error.message : "Try again.",
+        title: t("Unable to rename space"),
+        description: error instanceof Error ? error.message : t("Try again."),
       });
     }
   }, []);
@@ -417,8 +422,8 @@ export function useSpacesController(input: {
         }
         toastManager.add({
           type: "error",
-          title: "Unable to confirm space order",
-          description: error instanceof Error ? error.message : "Try again.",
+          title: t("Unable to confirm space order"),
+          description: error instanceof Error ? error.message : t("Try again."),
         });
       });
     },
@@ -428,7 +433,7 @@ export function useSpacesController(input: {
   const handleBulkMoveProjects = useCallback(
     async (projectIds: ReadonlyArray<ProjectId>, spaceId: SpaceId) => {
       const api = readNativeApi();
-      if (!api) throw new Error("The app server is unavailable.");
+      if (!api) throw new Error(t("The app server is unavailable."));
       const result = await moveProjectsToSpace({ api, projectIds, spaceId });
       return result.failedProjectIds;
     },
@@ -453,8 +458,8 @@ export function useSpacesController(input: {
       } catch (error) {
         toastManager.add({
           type: "error",
-          title: "Unable to move project",
-          description: error instanceof Error ? error.message : "Try again.",
+          title: t("Unable to move project"),
+          description: error instanceof Error ? error.message : t("Try again."),
         });
       }
     },

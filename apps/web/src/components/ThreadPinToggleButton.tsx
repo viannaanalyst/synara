@@ -9,6 +9,7 @@
 import type React from "react";
 import { PinStatusIcon, pinActionLabel } from "~/lib/pin";
 import { cn } from "~/lib/utils";
+import { useT } from "~/i18n";
 import { IconButton } from "./ui/icon-button";
 import { SIDEBAR_TRAILING_ICON_CLASS } from "./sidebarGlyphs";
 
@@ -25,8 +26,9 @@ export function ThreadPinToggleButton({
   toneClassName?: string;
   onToggle: (event: React.MouseEvent<HTMLButtonElement> | React.MouseEvent) => void;
 }) {
+  const t = useT();
   const targetLabel = targetLabelProp ?? "thread";
-  const label = pinActionLabel(targetLabel, pinned);
+  const label = pinActionLabel(t(targetLabel), pinned, t);
 
   return (
     <IconButton

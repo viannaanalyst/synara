@@ -5,6 +5,7 @@ import type { TimestampFormat } from "~/appSettings";
 import { gitBlameLineQueryOptions } from "~/lib/gitReactQuery";
 import { CopyIcon, MessageCircleIcon } from "~/lib/icons";
 import { cn } from "~/lib/utils";
+import { useT } from "~/i18n";
 import { ELEVATED_HOVER_SURFACE_RAISED_TEXT_CLASS_NAME } from "~/surfaceStyles";
 import { formatShortDateTimestamp } from "~/timestampFormat";
 import { resolveTranscriptSelectionActionLayout } from "./chat/chatSelectionActions";
@@ -86,6 +87,7 @@ export function DiffLineBlamePopover(props: {
   onReferenceInChat: ((target: DiffLineBlameTarget) => void) | undefined;
   onClose: () => void;
 }) {
+  const t = useT();
   const { onClose } = props;
   const containerRef = useRef<HTMLDivElement | null>(null);
   const blameQuery = useQuery(
@@ -137,16 +139,16 @@ export function DiffLineBlamePopover(props: {
       ref={containerRef}
       data-diff-line-blame="true"
       role="dialog"
-      aria-label={`Blame for line ${props.target.line}`}
+      aria-label={t("Blame for line {line}", { line: props.target.line })}
       className="fixed z-50 flex flex-col gap-1.5 rounded-md border border-border bg-[var(--color-background-elevated-primary-opaque)] p-2 shadow-xl backdrop-blur-xl"
       style={{ left: props.target.left, top: props.target.top, width: BLAME_POPOVER_WIDTH_PX }}
     >
       {isLoadingBlame ? (
-        <p className="text-ui-sm text-muted-foreground">Loading blame...</p>
+        <p className="text-ui-sm text-muted-foreground">{t("Loading blame...")}</p>
       ) : !blame ? (
-        <p className="text-ui-sm text-muted-foreground">Blame unavailable</p>
+        <p className="text-ui-sm text-muted-foreground">{t("Blame unavailable")}</p>
       ) : blame.uncommitted ? (
-        <p className="text-ui text-foreground">Not committed yet</p>
+        <p className="text-ui text-foreground">{t("Not committed yet")}</p>
       ) : (
         <>
           <p className="line-clamp-2 text-ui leading-snug text-foreground">{blame.summary}</p>
@@ -166,7 +168,7 @@ export function DiffLineBlamePopover(props: {
         <div className="flex items-center gap-1 border-t border-border/60 pt-1.5">
           {blame && !blame.uncommitted ? (
             <BlameActionButton
-              label="Copy sha"
+              label={t("Copy sha")}
               icon={<CopyIcon className="size-3.5 shrink-0" />}
               onClick={() => {
                 void navigator.clipboard?.writeText(blame.sha);
@@ -176,7 +178,7 @@ export function DiffLineBlamePopover(props: {
           ) : null}
           {handleReferenceInChat ? (
             <BlameActionButton
-              label="Reference line in chat"
+              label={t("Reference line in chat")}
               icon={<MessageCircleIcon className="size-3.5 shrink-0" />}
               onClick={handleReferenceInChat}
             />

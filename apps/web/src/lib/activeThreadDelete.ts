@@ -8,6 +8,7 @@ import { terminalScopeIdsForThread } from "@synara/shared/terminalThreads";
 import { collectSubagentDescendants } from "@synara/shared/threadHierarchy";
 
 import { toastManager } from "../components/ui/toast";
+import { t } from "../i18n";
 import { readNativeApi } from "../nativeApi";
 import { useStore } from "../store";
 import { getThreadFromState, getThreadsFromState } from "../threadDerivation";
@@ -131,8 +132,11 @@ export async function deleteActiveThreadFromClient<TPrepared = undefined>(input:
     });
     toastManager.add({
       type: "error",
-      title: "Thread deleted, but worktree removal failed",
-      description: `Could not remove ${displayWorktreePath ?? orphanedWorktreePath}. ${message}`,
+      title: t("Thread deleted, but worktree removal failed"),
+      description: t("Could not remove {path}. {message}", {
+        path: displayWorktreePath ?? orphanedWorktreePath,
+        message,
+      }),
     });
   }
 }

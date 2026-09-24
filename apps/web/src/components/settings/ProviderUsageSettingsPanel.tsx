@@ -20,6 +20,7 @@ import { ProviderUsageLineList } from "~/components/ProviderUsageLineList";
 import { ProviderUsageResetCredits } from "~/components/ProviderUsageResetCredits";
 import { SettingsCard, SettingsSectionShell } from "~/components/settings/SettingsPanelPrimitives";
 import { Button } from "~/components/ui/button";
+import { useT } from "~/i18n";
 import { useProviderUsageSummary } from "~/hooks/useProviderUsageSummary";
 import { RotateCcwIcon, TriangleAlertIcon } from "~/lib/icons";
 import { deriveProviderUsageDisplayRows } from "~/lib/providerUsageDisplay";
@@ -65,6 +66,7 @@ function ProviderUsageCard({
   threadRateLimits: ReadonlyArray<ProviderRateLimit>;
   codexHomePath: string | null;
 }) {
+  const t = useT();
   const provider = snapshot.provider;
   const status = snapshot.status ?? "ok";
   const usageSummary = useProviderUsageSummary({
@@ -79,6 +81,16 @@ function ProviderUsageCard({
   const hasResetCredits = Boolean(resetCredits && resetCredits.availableCount > 0);
   const hasUsage = meterRows.length > 0 || usageLines.length > 0 || hasResetCredits;
   const pill = status === "ok" ? null : statusPill(snapshot.status);
+  const authDetail = providerUsageNeedsAuthDetail(provider);
+  const signInCommand = authDetail.match(/^Sign in with `([^`]+)` to see usage\.$/)?.[1];
+  const emptyMessage =
+    status === "ok"
+      ? t("No usage data reported yet.")
+      : snapshot.detail
+        ? t(snapshot.detail)
+        : signInCommand
+          ? t("Sign in with `{command}` to see usage.", { command: signInCommand })
+          : t("Sign in with the provider CLI to see usage.");
 
   return (
     <SettingsCard>
@@ -97,7 +109,7 @@ function ProviderUsageCard({
               {snapshot.planName}
             </span>
           ) : pill ? (
-            <span className={cn(PILL_CLASS_NAME, pill.className)}>{pill.label}</span>
+            <span className={cn(PILL_CLASS_NAME, pill.className)}>{t(pill.label)}</span>
           ) : null}
         </div>
 
@@ -106,7 +118,7 @@ function ProviderUsageCard({
             {usageSummary.usageNotice ? (
               <p className="flex items-start gap-1.5 text-ui leading-relaxed text-amber-600 dark:text-amber-300/90">
                 <TriangleAlertIcon className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
-                <span>{usageSummary.usageNotice}</span>
+                <span>{t(usageSummary.usageNotice)}</span>
               </p>
             ) : null}
             {meterRows.length > 0 ? (
@@ -127,11 +139,7 @@ function ProviderUsageCard({
             ) : null}
           </>
         ) : (
-          <p className="text-ui leading-relaxed text-muted-foreground">
-            {status === "ok"
-              ? "No usage data reported yet."
-              : (snapshot.detail ?? providerUsageNeedsAuthDetail(provider))}
-          </p>
+          <p className="text-ui leading-relaxed text-muted-foreground">{emptyMessage}</p>
         )}
       </div>
     </SettingsCard>
@@ -153,6 +161,7 @@ function mergeProviderUsageRefresh(
 }
 
 export function ProviderUsageSettingsPanel() {
+  const t = useT();
   const queryClient = useQueryClient();
   const { settings } = useAppSettings();
   const codexHomePath = settings.codexHomePath || null;
@@ -180,7 +189,7 @@ export function ProviderUsageSettingsPanel() {
 
   return (
     <SettingsSectionShell
-      title="Provider usage"
+      title={t("Provider usage")}
       action={
         <Button
           size="xs"
@@ -190,14 +199,14 @@ export function ProviderUsageSettingsPanel() {
           onClick={() => refreshMutation.mutate()}
         >
           <RotateCcwIcon className={cn("size-3.5", isRefreshing && "animate-spin")} />
-          Refresh
+          {t("Refresh")}
         </Button>
       }
     >
       {showInitialLoading ? (
         <SettingsCard>
           <div className="px-4 py-3.5 text-ui leading-snug text-muted-foreground">
-            Loading provider usage…
+            {t("Loading provider usage…")}
           </div>
         </SettingsCard>
       ) : (
@@ -214,10 +223,9 @@ export function ProviderUsageSettingsPanel() {
       )}
 
       <p className="px-2 text-ui-sm leading-relaxed text-muted-foreground">
-        Usage is read locally from each provider CLI&apos;s stored credentials and fetched directly
-        from the provider. The list follows whatever you are signed into; unsigned providers stay
-        visible until any account is connected, then drop away. Short-lived tokens are refreshed
-        through the provider&apos;s own CLI or official token endpoint.
+        {t(
+          "Usage is read locally from each provider CLI's stored credentials and fetched directly from the provider. The list follows whatever you are signed into; unsigned providers stay visible until any account is connected, then drop away. Short-lived tokens are refreshed through the provider's own CLI or official token endpoint.",
+        )}
       </p>
     </SettingsSectionShell>
   );

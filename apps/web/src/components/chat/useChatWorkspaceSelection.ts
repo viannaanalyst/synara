@@ -8,15 +8,12 @@ import {
 import { workspaceRootsEqual } from "@synara/shared/threadWorkspace";
 import type { RefObject } from "react";
 import { useCallback } from "react";
+import { useT } from "~/i18n";
 import { newCommandId } from "~/lib/utils";
 import { readNativeApi } from "~/nativeApi";
 import { type DraftThreadEnvMode, useComposerDraftStore } from "../../composerDraftStore";
 import { ensureHomeChatProject } from "../../lib/chatProjects";
-import {
-  PROJECT_CREATE_EXISTING_SYNC_ERROR,
-  PROJECT_CREATE_SYNC_ERROR,
-  createOrRecoverProjectFromPath,
-} from "../../lib/projectCreation";
+import { createOrRecoverProjectFromPath } from "../../lib/projectCreation";
 import { useProjectEnvironmentStore } from "../../projectEnvironmentStore";
 import { useStore } from "../../store";
 import type { Project, Thread } from "../../types";
@@ -89,6 +86,7 @@ export function useChatWorkspaceSelection({
   scheduleComposerFocus,
   defaultProvider,
 }: ChatWorkspaceSelectionInput) {
+  const t = useT();
   const syncServerShellSnapshot = useStore((store) => store.syncServerShellSnapshot);
   const setStoreThreadWorkspace = useStore((store) => store.setThreadWorkspace);
   const setDraftThreadContext = useComposerDraftStore((store) => store.setDraftThreadContext);
@@ -181,15 +179,15 @@ export function useChatWorkspaceSelection({
       if (!isHomeChatContainer) {
         return (async () => {
           if (!homeDir) {
-            throw new Error("Home folder is not available yet.");
+            throw new Error(t("Home folder is not available yet."));
           }
           const homeProjectId = await ensureHomeChatProject({ homeDir, chatWorkspaceRoot });
           if (!homeProjectId) {
-            throw new Error("Unable to prepare a normal chat.");
+            throw new Error(t("Unable to prepare a normal chat."));
           }
           const api = readNativeApi();
           if (!api) {
-            throw new Error("App is still connecting. Try again in a moment.");
+            throw new Error(t("App is still connecting. Try again in a moment."));
           }
           const hasHomeProjectInStore = useStore
             .getState()
@@ -197,7 +195,11 @@ export function useChatWorkspaceSelection({
           if (!hasHomeProjectInStore) {
             const { project, snapshot } = await waitForShellProjectById(api, homeProjectId);
             if (!project || !snapshot) {
-              throw new Error(PROJECT_CREATE_SYNC_ERROR);
+              throw new Error(
+                t(
+                  "The project was created, but it has not synced into Synara yet. Try again in a moment.",
+                ),
+              );
             }
             syncServerShellSnapshot(snapshot);
           }
@@ -253,6 +255,7 @@ export function useChatWorkspaceSelection({
     setStoreThreadWorkspace,
     syncServerShellSnapshot,
     threadId,
+    t,
   ]);
 
   const handleSelectWorkspaceRoot = useCallback(
@@ -328,7 +331,7 @@ export function useChatWorkspaceSelection({
         .getState()
         .projects.find((candidate) => candidate.id === projectId && candidate.kind === "project");
       if (!project) {
-        throw new Error("Selected project is not available.");
+        throw new Error(t("Selected project is not available."));
       }
       if (draftThread?.projectId === projectId) {
         scheduleComposerFocus();
@@ -341,6 +344,7 @@ export function useChatWorkspaceSelection({
       isLocalDraftThread,
       moveEmptyDraftToLocalProject,
       scheduleComposerFocus,
+      t,
     ],
   );
 
@@ -351,7 +355,7 @@ export function useChatWorkspaceSelection({
       }
       const api = readNativeApi();
       if (!api) {
-        throw new Error("App is still connecting. Try again in a moment.");
+        throw new Error(t("App is still connecting. Try again in a moment."));
       }
 
       const existingProject = useStore
@@ -376,10 +380,18 @@ export function useChatWorkspaceSelection({
         syncServerShellSnapshot(creationResult.snapshot);
       }
       if (!creationResult.created && !creationResult.project) {
-        throw new Error(PROJECT_CREATE_EXISTING_SYNC_ERROR);
+        throw new Error(
+          t(
+            "This folder is already linked, but the existing project has not synced into the sidebar yet. Try again in a moment.",
+          ),
+        );
       }
       if (!creationResult.project) {
-        throw new Error(PROJECT_CREATE_SYNC_ERROR);
+        throw new Error(
+          t(
+            "The project was created, but it has not synced into Synara yet. Try again in a moment.",
+          ),
+        );
       }
       moveEmptyDraftToLocalProject(creationResult.project.id);
     },
@@ -389,6 +401,7 @@ export function useChatWorkspaceSelection({
       moveEmptyDraftToLocalProject,
       defaultProvider,
       syncServerShellSnapshot,
+      t,
     ],
   );
   return {

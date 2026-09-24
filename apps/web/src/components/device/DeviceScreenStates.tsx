@@ -9,6 +9,7 @@
 
 import type { DeviceSetupStep } from "@synara/contracts";
 
+import { useT } from "~/i18n";
 import { CheckIcon, LoaderCircleIcon } from "~/lib/icons";
 import { cn } from "~/lib/utils";
 
@@ -40,6 +41,7 @@ export function DeviceSetupScreen(props: {
   footnote?: string | null;
   action?: { readonly label: string; readonly onClick: () => void } | null;
 }) {
+  const t = useT();
   // The first unfinished step is the only actionable one; everything after it is
   // blocked on it, which is what the dimming communicates.
   const activeIndex = props.steps.findIndex((step) => !step.done);
@@ -56,7 +58,7 @@ export function DeviceSetupScreen(props: {
       </div>
 
       {props.steps.length > 0 ? (
-        <ol className="mt-5 space-y-3.5" aria-label="Setup steps">
+        <ol className="mt-5 space-y-3.5" aria-label={t("Setup steps")}>
           {props.steps.map((step, index) => {
             const blocked = activeIndex !== -1 && index > activeIndex;
             return (

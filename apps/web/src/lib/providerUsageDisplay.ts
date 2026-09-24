@@ -10,6 +10,7 @@ import {
   type VisibleRateLimitRow,
 } from "~/lib/rateLimits";
 import { deriveUsagePace, type UsagePaceSummary } from "~/lib/usagePace";
+import { t } from "~/i18n";
 
 export type ProviderUsageTone = "healthy" | "warning" | "danger";
 
@@ -87,7 +88,7 @@ export function providerUsageProgressTrackProps(
   row: ProviderUsageDisplayRow,
 ): ProviderUsageProgressTrackProps {
   return {
-    label: `${row.label} remaining`,
+    label: t("{label} remaining", { label: row.label }),
     remainingPercent: row.remainingPercent,
     markerPercent: row.markerPercent,
     fillClassName: providerUsageToneClassName(row.remainingTone),
@@ -122,7 +123,7 @@ export function deriveProviderUsageDisplayRow(row: VisibleRateLimitRow): Provide
     ...row,
     remainingPercent,
     remainingLabel,
-    leftText: `${remainingLabel} left`,
+    leftText: t("{percentage} left", { percentage: remainingLabel }),
     resetText: row.resetsAt ? formatRateLimitResetCountdown(row.resetsAt) : null,
     pace,
     markerPercent: pace ? clampPercent(pace.expectedRemainingPercent) : null,

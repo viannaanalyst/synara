@@ -6,6 +6,7 @@ import {
 } from "@synara/contracts";
 import type { Dispatch, RefObject, SetStateAction } from "react";
 import { useEffect } from "react";
+import { t } from "~/i18n";
 import { readStarredModelSlugs } from "~/lib/starredModels";
 import { isMacNavigatorPlatform } from "~/lib/utils";
 import { projectScriptIdFromCommand } from "~/projectScripts";
@@ -401,7 +402,7 @@ export function useChatKeyboardShortcuts({
           event.stopPropagation();
           toastManager.add({
             type: "info",
-            title: "Nothing to commit or push.",
+            title: t("Nothing to commit or push."),
           });
         }
         return;

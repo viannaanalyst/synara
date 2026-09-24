@@ -17,6 +17,7 @@ import { type ReactNode, type RefObject, useEffect, useRef, useState } from "rea
 import { createPortal } from "react-dom";
 
 import { useAppSettings } from "../../appSettings";
+import { useT } from "~/i18n";
 import {
   selectThreadComputerPreviewFloating,
   selectThreadComputerPreviewSession,
@@ -89,6 +90,7 @@ function ComputerPreviewPopoverCard(props: {
   readonly size?: ComputerPreviewCardSize | undefined;
 }) {
   const { threadId, session } = props;
+  const t = useT();
   const caps = computerPreviewCardCaps(props.size ?? "compact");
   const cardMaxWidth = Math.min(props.maxWidthPx ?? caps.maxWidthPx, caps.maxWidthPx);
   const open = computerPreviewCardOpen(session.phase);
@@ -100,12 +102,13 @@ function ComputerPreviewPopoverCard(props: {
   const floating = useComputerPreviewStore(selectThreadComputerPreviewFloating(threadId));
   const desktopControl = useComputerDesktopControl(threadId);
   const inputStopped = useComputerStateStore((store) => store.inputStopped);
-  const statusLabel = computerPreviewStatusLabel({
+  const statusLabelValue = computerPreviewStatusLabel({
     agentActive: desktopControl.agentActive,
     inputStopped: inputStopped || threadState?.inputStopped === true,
     currentActivity: threadState?.activity ?? null,
     lastActionLabel: session.lastActionLabel ?? null,
   });
+  const statusLabel = statusLabelValue ? t(statusLabelValue) : null;
   // The card fits the space its slot offers: measure the positioned ancestor
   // so window resizes, sidebar toggles, and split leaves all re-fit the card
   // instead of it overflowing or floating in dead space. In the env rail the
@@ -222,7 +225,7 @@ function ComputerPreviewPopoverCard(props: {
     <div
       ref={cardRef}
       role="region"
-      aria-label="Computer preview"
+      aria-label={t("Computer preview")}
       aria-hidden={visuallyOpen ? undefined : true}
       inert={!visuallyOpen}
       data-computer-preview-popover={threadId}
@@ -248,10 +251,12 @@ function ComputerPreviewPopoverCard(props: {
       >
         <canvas
           ref={canvasRef}
-          aria-label={computerCanvasLabel({
-            availability: threadState?.availability,
-            visibleDesktop: desktopControl.visibleDesktop,
-          })}
+          aria-label={t(
+            computerCanvasLabel({
+              availability: threadState?.availability,
+              visibleDesktop: desktopControl.visibleDesktop,
+            }),
+          )}
           tabIndex={-1}
           className="absolute inset-0 h-full w-full object-contain"
         />
@@ -310,6 +315,7 @@ function ComputerPreviewViewport(props: {
 }) {
   const { children, threadId, floating, frameDims, hasFrame, streamStatus, statusLabel, float } =
     props;
+  const t = useT();
   return (
     <div
       className={cn(
@@ -364,8 +370,8 @@ function ComputerPreviewViewport(props: {
               <button
                 type="button"
                 onClick={float.dock}
-                title="Dock the preview back into the chat rail"
-                aria-label="Dock the computer preview back into the chat rail"
+                title={t("Dock the preview back into the chat rail")}
+                aria-label={t("Dock the computer preview back into the chat rail")}
                 className="grid size-7 place-items-center rounded-full text-white drop-shadow-[0_1px_2px_rgb(0_0_0/0.6)] transition-colors duration-150 hover:bg-white/20 focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:outline-none"
               >
                 <PanelCollapseIcon className="size-4" />
@@ -374,8 +380,8 @@ function ComputerPreviewViewport(props: {
               <button
                 type="button"
                 onClick={float.popOut}
-                title="Float the preview as a draggable window"
-                aria-label="Float the computer preview as a draggable window"
+                title={t("Float the preview as a draggable window")}
+                aria-label={t("Float the computer preview as a draggable window")}
                 className="grid size-7 place-items-center rounded-full text-white drop-shadow-[0_1px_2px_rgb(0_0_0/0.6)] transition-colors duration-150 hover:bg-white/20 focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:outline-none"
               >
                 <PanelExpandIcon className="size-4" />
@@ -390,13 +396,14 @@ function ComputerPreviewViewport(props: {
 }
 
 function ComputerPreviewHideButton(props: { readonly threadId: ThreadId }) {
+  const t = useT();
   const hidePreviewForTask = useComputerPreviewStore((store) => store.hidePreviewForTask);
   return (
     <button
       type="button"
       onClick={() => hidePreviewForTask(props.threadId)}
-      title="Hide the preview for the rest of this task"
-      aria-label="Hide the computer preview for the rest of this task"
+      title={t("Hide the preview for the rest of this task")}
+      aria-label={t("Hide the computer preview for the rest of this task")}
       className="grid size-7 place-items-center rounded-full text-white drop-shadow-[0_1px_2px_rgb(0_0_0/0.6)] transition-colors duration-150 hover:bg-white/20 focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:outline-none"
     >
       <XIcon className="size-4" />
@@ -407,26 +414,27 @@ function ComputerPreviewHideButton(props: { readonly threadId: ThreadId }) {
 function ComputerPreviewStreamStatus(props: {
   status: ReturnType<typeof useComputerImageStream>["status"];
 }) {
+  const t = useT();
   if (props.status.kind === "connecting") {
     return (
       <span className="text-ui-sm text-muted-foreground" role="status">
-        Connecting to the desktop…
+        {t("Connecting to the desktop…")}
       </span>
     );
   }
   if (props.status.kind === "unsupported") {
     return (
       <span className="text-ui-sm text-muted-foreground">
-        This browser cannot decode desktop frames.
+        {t("This browser cannot decode desktop frames.")}
       </span>
     );
   }
   if (props.status.kind === "error") {
-    return <span className="text-ui-sm text-muted-foreground">{props.status.message}</span>;
+    return <span className="text-ui-sm text-muted-foreground">{t(props.status.message)}</span>;
   }
   return (
     <span className="text-ui-sm text-muted-foreground">
-      Waiting for the window the agent is using…
+      {t("Waiting for the window the agent is using…")}
     </span>
   );
 }

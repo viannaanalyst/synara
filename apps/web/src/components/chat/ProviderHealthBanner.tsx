@@ -13,6 +13,7 @@ import {
 import { CircleAlertIcon, TriangleAlertIcon, XIcon } from "~/lib/icons";
 import { cn } from "~/lib/utils";
 import { ChatColumnBannerFrame } from "./ChatColumnBannerFrame";
+import { useT } from "~/i18n";
 
 export const ProviderHealthBanner = function ProviderHealthBanner({
   onDismiss,
@@ -21,6 +22,7 @@ export const ProviderHealthBanner = function ProviderHealthBanner({
   onDismiss?: () => void;
   status: ServerProviderStatus | null;
 }) {
+  const t = useT();
   if (!status || status.status === "ready") {
     return null;
   }
@@ -28,9 +30,9 @@ export const ProviderHealthBanner = function ProviderHealthBanner({
   const providerLabel = PROVIDER_DISPLAY_NAMES[status.provider] ?? status.provider;
   const defaultMessage =
     status.status === "error"
-      ? `${providerLabel} provider is unavailable.`
-      : `${providerLabel} provider has limited availability.`;
-  const title = `${providerLabel} provider status`;
+      ? t("{provider} provider is unavailable.", { provider: providerLabel })
+      : t("{provider} provider has limited availability.", { provider: providerLabel });
+  const title = t("{provider} provider status", { provider: providerLabel });
   const Icon = status.status === "error" ? CircleAlertIcon : TriangleAlertIcon;
 
   return (
@@ -51,8 +53,8 @@ export const ProviderHealthBanner = function ProviderHealthBanner({
           <AlertAction className="absolute top-2 right-2">
             <IconButton
               className="size-6 rounded-full text-[var(--notification-fg)]/65 hover:bg-[var(--notification-fg)]/10 hover:text-[var(--notification-fg)] focus-visible:ring-[var(--notification-fg)]/35 sm:size-6"
-              label="Dismiss provider status"
-              title="Dismiss provider status"
+              label={t("Dismiss provider status")}
+              title={t("Dismiss provider status")}
               onClick={onDismiss}
             >
               <XIcon className="size-3.5" />

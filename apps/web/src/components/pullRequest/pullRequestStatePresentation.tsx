@@ -18,10 +18,11 @@ import {
 } from "~/lib/icons";
 
 import { cn } from "~/lib/utils";
+import { t } from "~/i18n";
 
 /** Shared PR-state presentation so every PR surface labels, colors, and glyphs PRs identically. */
 export interface PrStatePresentation {
-  label: "PR open" | "PR closed" | "PR merged" | "PR draft" | "PR has conflicts";
+  label: string;
   colorClass: string;
   iconKind: "pull-request" | "draft" | "pull-request-closed" | "merged-simple" | "merge-conflict";
 }
@@ -49,7 +50,7 @@ export function resolvePrStatePresentation(pr: {
     // "draft" (git semantics). Conflicts surface once the PR is actually mergeable work.
     if (pr.isDraft === true) {
       return {
-        label: "PR draft",
+        label: t("PR draft"),
         // GitHub renders drafts gray; reuse the closed treatment so draft reads as "not live yet".
         colorClass: "text-status-neutral",
         iconKind: "draft",
@@ -57,14 +58,14 @@ export function resolvePrStatePresentation(pr: {
     }
     if (pr.mergeability === "conflicting") {
       return {
-        label: "PR has conflicts",
+        label: t("PR has conflicts"),
         // The same red as a failed check, so one red means "something is wrong" everywhere.
         colorClass: "text-status-failure",
         iconKind: "merge-conflict",
       };
     }
     return {
-      label: "PR open",
+      label: t("PR open"),
       // Match the diff "+" green so an opened PR reads as the same positive signal.
       colorClass: "text-status-open",
       iconKind: "pull-request",
@@ -72,13 +73,13 @@ export function resolvePrStatePresentation(pr: {
   }
   if (pr.state === "closed") {
     return {
-      label: "PR closed",
+      label: t("PR closed"),
       colorClass: "text-status-neutral",
       iconKind: "pull-request-closed",
     };
   }
   return {
-    label: "PR merged",
+    label: t("PR merged"),
     colorClass: "text-status-merged",
     iconKind: "merged-simple",
   };

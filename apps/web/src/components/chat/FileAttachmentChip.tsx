@@ -7,6 +7,7 @@ import { formatBytes } from "@synara/shared/formatBytes";
 
 import { basenameOfPath } from "~/file-icons";
 import { FileIcon } from "~/lib/icons";
+import { useT } from "~/i18n";
 import { cn } from "~/lib/utils";
 import { type ChatFileAttachment } from "../../types";
 import { COMPOSER_ATTACHMENT_CHIP_CLASS_NAME } from "../composerInlineChip";
@@ -112,6 +113,7 @@ function FileAttachmentPillTrigger({
   className?: string | undefined;
   nonPersisted: boolean;
 }) {
+  const t = useT();
   return (
     <span
       className={cn(
@@ -131,7 +133,7 @@ function FileAttachmentPillTrigger({
         <AttachmentRemoveButton
           size="sm"
           placement="center-right"
-          label={`Remove ${file.name}`}
+          label={t("Remove {name}", { name: file.name })}
           onRemove={() => onRemove(file.id)}
         />
       ) : null}

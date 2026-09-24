@@ -14,6 +14,7 @@ import { DisclosureChevron } from "~/components/ui/DisclosureChevron";
 import { DisclosureRegion } from "~/components/ui/DisclosureRegion";
 import { Button } from "~/components/ui/button";
 import { SettingsCard, SettingsListRow, SettingsSectionShell } from "./SettingsPanelPrimitives";
+import { getLocale, useT } from "~/i18n";
 
 const PAGE_SIZE = 30;
 const EFFECT_LABELS: Record<ComputerAuditHistoryEntry["effect"], string> = {
@@ -47,6 +48,7 @@ export function computerAuditHistoryEntries(
 
 /** No polling: history is read only after the user opens it, and refreshed on request. */
 export function ComputerAuditHistorySection() {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const queryClient = useQueryClient();
   const history = useInfiniteQuery({
@@ -74,7 +76,7 @@ export function ComputerAuditHistorySection() {
 
   return (
     <SettingsSectionShell
-      title="Recent Computer actions"
+      title={t("Recent Computer actions")}
       action={
         <Button
           size="xs"
@@ -83,7 +85,7 @@ export function ComputerAuditHistorySection() {
           onClick={() => setOpen((value) => !value)}
         >
           <DisclosureChevron open={open} />
-          {open ? "Hide history" : "Show history"}
+          {open ? t("Hide history") : t("Show history")}
         </Button>
       }
     >
@@ -91,17 +93,18 @@ export function ComputerAuditHistorySection() {
         {open ? (
           <div className="space-y-3">
             <p className="px-2 text-ui-sm text-muted-foreground">
-              Recent actions across chats on this server. Read-only observations, typed text, page
-              contents, and file paths are not included.
+              {t(
+                "Recent actions across chats on this server. Read-only observations, typed text, page contents, and file paths are not included.",
+              )}
             </p>
             {history.isPending ? (
               <p className="px-2 text-ui-sm text-muted-foreground" role="status">
-                Loading recent actions…
+                {t("Loading recent actions…")}
               </p>
             ) : null}
             {history.isError ? (
               <p className="px-2 text-ui-sm text-destructive" role="alert">
-                Could not load recent actions. Refresh to try again.
+                {t("Could not load recent actions. Refresh to try again.")}
               </p>
             ) : null}
             {status ? (
@@ -109,7 +112,7 @@ export function ComputerAuditHistorySection() {
             ) : null}
             <div className="flex flex-wrap items-center gap-2">
               <Button size="xs" variant="outline" disabled={history.isFetching} onClick={refresh}>
-                Refresh history
+                {t("Refresh history")}
               </Button>
               {history.hasNextPage && !history.isError ? (
                 <Button
@@ -118,7 +121,7 @@ export function ComputerAuditHistorySection() {
                   disabled={history.isFetching}
                   onClick={() => void history.fetchNextPage()}
                 >
-                  {history.isFetchingNextPage ? "Loading…" : "Load older actions"}
+                  {history.isFetchingNextPage ? t("Loading…") : t("Load older actions")}
                 </Button>
               ) : null}
             </div>
@@ -134,10 +137,11 @@ export function ComputerAuditHistoryList(props: {
   readonly status: ComputerGetAuditHistoryResult["status"];
   readonly truncated: boolean;
 }) {
+  const t = useT();
   return (
     <>
       {props.entries.length > 0 ? (
-        <div role="list" aria-label="Recent Computer actions">
+        <div role="list" aria-label={t("Recent Computer actions")}>
           <SettingsCard>
             {props.entries.map((entry) => (
               <div role="listitem" key={entry.id}>
@@ -146,15 +150,20 @@ export function ComputerAuditHistoryList(props: {
                     <span className="flex items-center gap-2">
                       <ComputerUseIcon className="size-4 shrink-0" />
                       {describeComputerToolCall({ toolName: entry.tool, args: undefined })
-                        ?.summary ?? "Computer action"}
+                        ?.summary ?? t("Computer action")}
                     </span>
                   }
                   description={
-                    <time dateTime={entry.ts}>{new Date(entry.ts).toLocaleString()}</time>
+                    <time dateTime={entry.ts}>
+                      {new Intl.DateTimeFormat(getLocale(), {
+                        dateStyle: "short",
+                        timeStyle: "short",
+                      }).format(new Date(entry.ts))}
+                    </time>
                   }
                   actions={
                     <span className="text-ui-xs text-muted-foreground">
-                      {EFFECT_LABELS[entry.effect]}
+                      {t(EFFECT_LABELS[entry.effect])}
                     </span>
                   }
                 />
@@ -165,20 +174,22 @@ export function ComputerAuditHistoryList(props: {
       ) : (
         <p className="px-2 text-ui-sm text-muted-foreground">
           {props.status === "disabled"
-            ? "Action history is not enabled on this server."
+            ? t("Action history is not enabled on this server.")
             : props.truncated
-              ? "Older retained actions are no longer available. Refresh to see recent actions."
-              : "No recorded actions yet."}
+              ? t("Older retained actions are no longer available. Refresh to see recent actions.")
+              : t("No recorded actions yet.")}
         </p>
       )}
       {props.truncated && props.entries.length > 0 ? (
         <p className="px-2 text-ui-sm text-muted-foreground">
-          Some earlier actions are unavailable. This is not a complete history.
+          {t("Some earlier actions are unavailable. This is not a complete history.")}
         </p>
       ) : null}
       {props.entries.length >= COMPUTER_AUDIT_HISTORY_MAX_LIMIT ? (
         <p className="px-2 text-ui-sm text-muted-foreground">
-          Showing the latest {COMPUTER_AUDIT_HISTORY_MAX_LIMIT} loaded actions.
+          {t("Showing the latest {count} loaded actions.", {
+            count: COMPUTER_AUDIT_HISTORY_MAX_LIMIT,
+          })}
         </p>
       ) : null}
     </>

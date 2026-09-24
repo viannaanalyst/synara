@@ -1,4 +1,5 @@
 import { flushWorkspaceEditors } from "~/lib/workspaceEditorSession";
+import { t } from "~/i18n";
 import { resolveComputerInvocationMode } from "@synara/shared/computerInvocation";
 import {
   prepareComputerPermissionGuide,
@@ -575,7 +576,7 @@ export function useChatTurnSubmission({
           .catch((error) => {
             toastManager.add({
               type: "error",
-              title: "Computer permission setup could not start",
+              title: t("Computer permission setup could not start"),
               description: String(error),
             });
             return false;
@@ -632,17 +633,28 @@ export function useChatTurnSubmission({
           id: randomUUID(),
           kind: "chat",
           createdAt: new Date().toISOString(),
-          previewText: buildQueuedComposerPreviewText({
-            trimmedPrompt: trimmed,
-            images: queuedImagesForPersistence,
-            files: composerFilesForSend,
-            assistantSelections: composerAssistantSelectionsForSend,
-            browserAnnotations: composerBrowserAnnotationsForSend,
-            terminalContexts: sendableComposerTerminalContexts,
-            fileComments: composerFileCommentsForSend,
-            pastedTexts: sendableComposerPastedTexts,
-            pullRequestContexts: sendableComposerPullRequestContexts,
-          }),
+          previewText: buildQueuedComposerPreviewText(
+            {
+              trimmedPrompt: trimmed,
+              images: queuedImagesForPersistence,
+              files: composerFilesForSend,
+              assistantSelections: composerAssistantSelectionsForSend,
+              browserAnnotations: composerBrowserAnnotationsForSend,
+              terminalContexts: sendableComposerTerminalContexts,
+              fileComments: composerFileCommentsForSend,
+              pastedTexts: sendableComposerPastedTexts,
+              pullRequestContexts: sendableComposerPullRequestContexts,
+            },
+            {
+              image: (name) => t("Image: {name}", { name }),
+              file: (name) => t("File: {name}", { name }),
+              assistantSelections: (count) =>
+                count === 1 ? t("1 referenced selection") : t("Referenced selections"),
+              pastedText: t("Pasted text"),
+              multiplePastedTexts: (count) => t("{count} pasted texts", { count }),
+              queuedFollowUp: t("Queued follow-up"),
+            },
+          ),
           prompt: promptForSend,
           images: queuedImagesForPersistence,
           files: composerFilesForSend,

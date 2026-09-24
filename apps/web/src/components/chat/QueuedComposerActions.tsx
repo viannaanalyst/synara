@@ -13,6 +13,7 @@ import { Button } from "../ui/button";
 import { IconButton } from "../ui/icon-button";
 import { Menu, MenuItem, MenuTrigger } from "../ui/menu";
 import { ComposerPickerMenuPopup } from "./ComposerPickerMenuPopup";
+import { useT } from "~/i18n";
 
 type QueuedComposerActionsProps = {
   queuedTurn: QueuedComposerTurn;
@@ -27,16 +28,17 @@ function QueuedComposerActions({
   onRemove,
   onEdit,
 }: QueuedComposerActionsProps) {
+  const t = useT();
   return (
     <div className="flex shrink-0 items-center gap-0">
       <Button variant="subtle" size="chip" onClick={() => void onSteer(queuedTurn)}>
         <SteerIcon />
-        <span>Steer</span>
+        <span>{t("Steer")}</span>
       </Button>
       <IconButton
         variant="ghost"
         size="icon-chip"
-        label="Delete queued follow-up"
+        label={t("Delete queued follow-up")}
         onClick={() => onRemove(queuedTurn.id)}
       >
         <Trash2 />
@@ -47,7 +49,7 @@ function QueuedComposerActions({
             <Button
               variant="ghost"
               size="icon-chip"
-              aria-label="Queued follow-up actions"
+              aria-label={t("Queued follow-up actions")}
               className="[&_svg]:mx-0"
             />
           }
@@ -55,8 +57,8 @@ function QueuedComposerActions({
           <EllipsisIcon />
         </MenuTrigger>
         <ComposerPickerMenuPopup align="end" side="top" sideOffset={6}>
-          <MenuItem onClick={() => onEdit(queuedTurn)}>Edit queued prompt</MenuItem>
-          <MenuItem onClick={() => onRemove(queuedTurn.id)}>Delete queued prompt</MenuItem>
+          <MenuItem onClick={() => onEdit(queuedTurn)}>{t("Edit queued prompt")}</MenuItem>
+          <MenuItem onClick={() => onRemove(queuedTurn.id)}>{t("Delete queued prompt")}</MenuItem>
         </ComposerPickerMenuPopup>
       </Menu>
     </div>

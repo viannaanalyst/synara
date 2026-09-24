@@ -14,6 +14,7 @@ import {
 } from "~/lib/rateLimits";
 import { deriveProviderUsageDisplayRows } from "~/lib/providerUsageDisplay";
 import { cn } from "~/lib/utils";
+import { useT } from "~/i18n";
 
 import { ProviderUsageLimitRows } from "./ProviderUsageLimitRows";
 import { ProviderUsageLineList } from "./ProviderUsageLineList";
@@ -36,6 +37,7 @@ export function ProviderUsagePanelContent(props: {
   showLearnMore?: boolean | undefined;
   className?: string | undefined;
 }) {
+  const t = useT();
   const visibleRows = deriveProviderUsageDisplayRows(props.rateLimits);
   const learnMoreHref =
     props.learnMoreHref ??
@@ -46,13 +48,13 @@ export function ProviderUsagePanelContent(props: {
     <div className={cn("space-y-2", props.className)}>
       {props.showTitle !== false ? (
         <div className="text-chat-meta font-medium text-muted-foreground">
-          {providerUsageLabel(props.provider)}
+          {t(providerUsageLabel(props.provider))}
         </div>
       ) : null}
       {props.notice ? (
         <p className="flex items-start gap-1.5 text-chat-meta leading-relaxed text-amber-600 dark:text-amber-300/90">
           <TriangleAlertIcon className="mt-0.5 size-3 shrink-0" aria-hidden="true" />
-          <span>{props.notice}</span>
+          <span>{t(props.notice)}</span>
         </p>
       ) : null}
       <ProviderUsageLimitRows rows={visibleRows} surface="popover" />
@@ -70,14 +72,15 @@ export function ProviderUsagePanelContent(props: {
         />
       ) : visibleRows.length === 0 && props.isLoading ? (
         <p className="text-chat-meta leading-relaxed text-muted-foreground">
-          Scanning local usage data for the selected provider.
+          {t("Scanning local usage data for the selected provider.")}
         </p>
       ) : visibleRows.length === 0 ? (
         <p className="text-chat-meta leading-relaxed text-muted-foreground">
-          {props.emptyMessage ??
-            (props.provider
-              ? "No local usage data was found yet for the selected provider."
-              : "No local usage data was found yet.")}
+          {props.emptyMessage
+            ? t(props.emptyMessage)
+            : props.provider
+              ? t("No local usage data was found yet for the selected provider.")
+              : t("No local usage data was found yet.")}
         </p>
       ) : null}
       {props.showLearnMore === true && learnMoreHref ? (
@@ -87,7 +90,7 @@ export function ProviderUsagePanelContent(props: {
           rel="noopener noreferrer"
           className="flex items-center gap-1 pt-0.5 text-chat-meta text-muted-foreground transition-colors hover:text-foreground"
         >
-          Learn more
+          {t("Learn more")}
           <ExternalLinkIcon className="size-3" />
         </a>
       ) : null}

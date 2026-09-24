@@ -1,4 +1,5 @@
 import { PROVIDER_SEND_TURN_MAX_ATTACHMENTS } from "@synara/contracts";
+import { t } from "~/i18n";
 import { readNativeApi } from "~/nativeApi";
 import {
   type ComposerAssistantSelectionAttachment,
@@ -54,23 +55,26 @@ export async function resolveChatPromptCaptures({
     } else {
       toastManager.add({
         type: "warning",
-        title: `You can attach up to ${PROVIDER_SEND_TURN_MAX_ATTACHMENTS} references per message.`,
-        description:
+        title: t("You can attach up to {count} references per message.", {
+          count: PROVIDER_SEND_TURN_MAX_ATTACHMENTS,
+        }),
+        description: t(
           "The current browser screenshot was skipped because this message is already at the attachment limit.",
+        ),
       });
     }
   } else if (browserPromptAttachment.requested) {
     const description =
       browserPromptAttachment.reason === "no-open-browser"
-        ? "Open the in-app browser first, then try again."
+        ? t("Open the in-app browser first, then try again.")
         : browserPromptAttachment.reason === "no-active-tab"
-          ? "The in-app browser has no active tab to capture yet."
+          ? t("The in-app browser has no active tab to capture yet.")
           : browserPromptAttachment.reason === "attachment-processing-failed"
-            ? "The browser screenshot could not be optimized for attachment."
-            : "The current browser context could not be attached.";
+            ? t("The browser screenshot could not be optimized for attachment.")
+            : t("The current browser context could not be attached.");
     toastManager.add({
       type: "warning",
-      title: "Couldn’t attach the in-app browser context",
+      title: t("Couldn’t attach the in-app browser context"),
       description,
     });
   }
@@ -97,23 +101,26 @@ export async function resolveChatPromptCaptures({
     } else {
       toastManager.add({
         type: "warning",
-        title: `You can attach up to ${PROVIDER_SEND_TURN_MAX_ATTACHMENTS} references per message.`,
-        description:
+        title: t("You can attach up to {count} references per message.", {
+          count: PROVIDER_SEND_TURN_MAX_ATTACHMENTS,
+        }),
+        description: t(
           "The simulator screenshot was skipped because this message is already at the attachment limit.",
+        ),
       });
     }
   } else if (devicePromptAttachment.requested) {
     const description =
       devicePromptAttachment.reason === "no-attached-device"
-        ? "Open the iOS Simulator panel and choose a device first, then try again."
+        ? t("Open the iOS Simulator panel and choose a device first, then try again.")
         : devicePromptAttachment.reason === "device-not-booted"
-          ? "The selected simulator is still starting up."
+          ? t("The selected simulator is still starting up.")
           : devicePromptAttachment.reason === "attachment-processing-failed"
-            ? "The simulator screenshot could not be optimized for attachment."
-            : "The current simulator context could not be attached.";
+            ? t("The simulator screenshot could not be optimized for attachment.")
+            : t("The current simulator context could not be attached.");
     toastManager.add({
       type: "warning",
-      title: "Couldn’t attach the simulator screen",
+      title: t("Couldn’t attach the simulator screen"),
       description,
     });
   }

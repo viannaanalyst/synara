@@ -68,6 +68,8 @@ export type ScheduleKind =
 
 export type IntervalUnit = "seconds" | "minutes";
 
+export type AutomationTranslate = (key: string, params?: Record<string, string | number>) => string;
+
 export const SCHEDULE_KIND_OPTIONS: readonly { value: ScheduleKind; label: string }[] = [
   { value: "manual", label: "Manual" },
   { value: "once", label: "Once" },
@@ -251,13 +253,6 @@ function formatIntervalSchedule(seconds: number): string {
   return seconds % 60 === 0 ? `Every ${seconds / 60} min` : `Every ${seconds} sec`;
 }
 
-function formatIntervalCadence(seconds: number): string {
-  if (seconds === 3600) return "Hourly";
-  if (seconds % 3600 === 0) return `Every ${seconds / 3600}h`;
-  if (seconds % 60 === 0) return `Every ${seconds / 60}m`;
-  return `Every ${seconds}s`;
-}
-
 export function formatSchedule(schedule: AutomationSchedule): string {
   switch (schedule.type) {
     case "manual":
@@ -285,38 +280,81 @@ export function formatClockTime(timeOfDay: string): string {
   return `${hour}:${minutes ?? "00"}`;
 }
 
-export function formatCadence(schedule: AutomationSchedule): string {
+function formatIntervalCadence(seconds: number, translate?: AutomationTranslate): string {
+  if (seconds === 3600) return translate?.("Hourly") ?? "Hourly";
+  if (seconds % 3600 === 0) {
+    const count = seconds / 3600;
+    return translate?.("Every {count}h", { count }) ?? `Every ${count}h`;
+  }
+  if (seconds % 60 === 0) {
+    const count = seconds / 60;
+    return translate?.("Every {count}m", { count }) ?? `Every ${count}m`;
+  }
+  return translate?.("Every {count}s", { count: seconds }) ?? `Every ${seconds}s`;
+}
+
+export function formatCadence(
+  schedule: AutomationSchedule,
+  translate?: AutomationTranslate,
+): string {
   switch (schedule.type) {
-    case "manual":
-      return "Manual";
+    case "manual": {
+      const label = translate?.("Manual schedule");
+      return label === "Manual schedule" ? "Manual" : (label ?? "Manual");
+    }
     case "once":
       return formatDateTime(schedule.runAt);
     case "interval":
-      return formatIntervalCadence(schedule.everySeconds);
+      return formatIntervalCadence(schedule.everySeconds, translate);
     case "daily":
-      return `Daily at ${formatClockTime(schedule.timeOfDay)}`;
+      return (
+        translate?.("Daily at {time}", { time: formatClockTime(schedule.timeOfDay) }) ??
+        `Daily at ${formatClockTime(schedule.timeOfDay)}`
+      );
     case "weekdays":
-      return `Weekdays at ${formatClockTime(schedule.timeOfDay)}`;
+      return (
+        translate?.("Weekdays at {time}", { time: formatClockTime(schedule.timeOfDay) }) ??
+        `Weekdays at ${formatClockTime(schedule.timeOfDay)}`
+      );
     case "weekly":
-      return `${weekdayLabel(schedule.dayOfWeek)} at ${formatClockTime(schedule.timeOfDay)}`;
+      return (
+        translate?.("{day} at {time}", {
+          day: weekdayLabel(schedule.dayOfWeek, translate),
+          time: formatClockTime(schedule.timeOfDay),
+        }) ?? `${weekdayLabel(schedule.dayOfWeek)} at ${formatClockTime(schedule.timeOfDay)}`
+      );
     case "cron":
-      return `Cron ${schedule.expression}`;
+      return (
+        translate?.("Cron {expression}", { expression: schedule.expression }) ??
+        `Cron ${schedule.expression}`
+      );
   }
 }
 
-function formatIntervalCadenceLong(seconds: number): string {
-  if (seconds === 3600) return "Hourly";
-  if (seconds % 3600 === 0) return `Every ${seconds / 3600} hours`;
-  if (seconds === 60) return "Every minute";
-  if (seconds % 60 === 0) return `Every ${seconds / 60} minutes`;
-  return seconds === 1 ? "Every second" : `Every ${seconds} seconds`;
+function formatIntervalCadenceLong(seconds: number, translate?: AutomationTranslate): string {
+  if (seconds === 3600) return translate?.("Hourly") ?? "Hourly";
+  if (seconds % 3600 === 0) {
+    const count = seconds / 3600;
+    return translate?.("Every {count} hours", { count }) ?? `Every ${count} hours`;
+  }
+  if (seconds === 60) return translate?.("Every minute") ?? "Every minute";
+  if (seconds % 60 === 0) {
+    const count = seconds / 60;
+    return translate?.("Every {count} minutes", { count }) ?? `Every ${count} minutes`;
+  }
+  return seconds === 1
+    ? (translate?.("Every second") ?? "Every second")
+    : (translate?.("Every {count} seconds", { count: seconds }) ?? `Every ${seconds} seconds`);
 }
 
 /** Like {@link formatCadence} but with interval units spelled out ("Every 5 minutes"). */
-export function formatCadenceLong(schedule: AutomationSchedule): string {
+export function formatCadenceLong(
+  schedule: AutomationSchedule,
+  translate?: AutomationTranslate,
+): string {
   return schedule.type === "interval"
-    ? formatIntervalCadenceLong(schedule.everySeconds)
-    : formatCadence(schedule);
+    ? formatIntervalCadenceLong(schedule.everySeconds, translate)
+    : formatCadence(schedule, translate);
 }
 
 /**
@@ -324,22 +362,37 @@ export function formatCadenceLong(schedule: AutomationSchedule): string {
  * A past-due `nextRunAt` (scheduler catching up) also reads "now". Null when unscheduled
  * or unparseable so callers can drop the segment entirely.
  */
-export function formatNextRun(nextRunAt: string | null, now: number = Date.now()): string | null {
+export function formatNextRun(
+  nextRunAt: string | null,
+  now: number = Date.now(),
+  translate?: AutomationTranslate,
+): string | null {
   if (!nextRunAt) return null;
   const time = new Date(nextRunAt).getTime();
   if (Number.isNaN(time)) return null;
   const seconds = Math.round((time - now) / 1000);
-  if (seconds < 60) return "now";
+  if (seconds < 60) return translate?.("now") ?? "now";
   const minutes = Math.round(seconds / 60);
-  if (minutes < 60) return minutes === 1 ? "in 1 minute" : `in ${minutes} minutes`;
+  if (minutes < 60) {
+    return minutes === 1
+      ? (translate?.("in 1 minute") ?? "in 1 minute")
+      : (translate?.("in {count} minutes", { count: minutes }) ?? `in ${minutes} minutes`);
+  }
   const hours = Math.round(minutes / 60);
-  if (hours < 24) return hours === 1 ? "in 1 hour" : `in ${hours} hours`;
+  if (hours < 24) {
+    return hours === 1
+      ? (translate?.("in 1 hour") ?? "in 1 hour")
+      : (translate?.("in {count} hours", { count: hours }) ?? `in ${hours} hours`);
+  }
   const days = Math.round(hours / 24);
-  return days === 1 ? "in 1 day" : `in ${days} days`;
+  return days === 1
+    ? (translate?.("in 1 day") ?? "in 1 day")
+    : (translate?.("in {count} days", { count: days }) ?? `in ${days} days`);
 }
 
-export function weekdayLabel(value: number): string {
-  return ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][value] ?? "Sun";
+export function weekdayLabel(value: number, translate?: AutomationTranslate): string {
+  const day = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][value] ?? "Sun";
+  return translate?.(day) ?? day;
 }
 
 // --- Thread automation lookups ---------------------------------------------
@@ -391,11 +444,20 @@ export const AUTOMATION_INTERVAL_PRESET_SECONDS: readonly number[] = [
   900, 1800, 3600, 7200, 21600, 43200, 86400,
 ];
 
-export function formatIntervalPresetLabel(seconds: number): string {
-  if (seconds === 3600) return "Every hour";
-  if (seconds % 3600 === 0) return `Every ${seconds / 3600} hours`;
-  if (seconds >= 60 && seconds % 60 === 0) return `Every ${seconds / 60} min`;
-  return `Every ${seconds} sec`;
+export function formatIntervalPresetLabel(
+  seconds: number,
+  translate?: AutomationTranslate,
+): string {
+  if (seconds === 3600) return translate?.("Every hour") ?? "Every hour";
+  if (seconds % 3600 === 0) {
+    const count = seconds / 3600;
+    return translate?.("Every {count} hours", { count }) ?? `Every ${count} hours`;
+  }
+  if (seconds >= 60 && seconds % 60 === 0) {
+    const count = seconds / 60;
+    return translate?.("Every {count} min", { count }) ?? `Every ${count} min`;
+  }
+  return translate?.("Every {count} sec", { count: seconds }) ?? `Every ${seconds} sec`;
 }
 
 /**
@@ -406,22 +468,24 @@ export function formatIntervalPresetLabel(seconds: number): string {
 export function automationIntervalPresetOptions({
   currentSeconds,
   includeHourly,
+  translate,
 }: {
   readonly currentSeconds?: number | undefined;
   readonly includeHourly: boolean;
+  readonly translate?: AutomationTranslate;
 }): readonly { readonly value: string; readonly label: string }[] {
   const presetSeconds = includeHourly
     ? AUTOMATION_INTERVAL_PRESET_SECONDS
     : AUTOMATION_INTERVAL_PRESET_SECONDS.filter((seconds) => seconds !== 3600);
   const presets = presetSeconds.map((seconds) => ({
     value: String(seconds),
-    label: formatIntervalPresetLabel(seconds),
+    label: formatIntervalPresetLabel(seconds, translate),
   }));
   if (currentSeconds === undefined || presetSeconds.includes(currentSeconds)) {
     return presets;
   }
   return [
-    { value: String(currentSeconds), label: formatIntervalPresetLabel(currentSeconds) },
+    { value: String(currentSeconds), label: formatIntervalPresetLabel(currentSeconds, translate) },
     ...presets,
   ];
 }
@@ -557,7 +621,10 @@ function maxIterationsFromForm(form: Pick<AutomationFormState, "maxIterations">)
   return parsed > 0 ? parsed : null;
 }
 
-export function automationFastIntervalLimitMessage(form: AutomationFormState): string | null {
+export function automationFastIntervalLimitMessage(
+  form: AutomationFormState,
+  translate?: AutomationTranslate,
+): string | null {
   const schedule = scheduleFromForm(form);
   const maxIterations = maxIterationsFromForm(form);
   if (
@@ -565,7 +632,12 @@ export function automationFastIntervalLimitMessage(form: AutomationFormState): s
     schedule.everySeconds < DEFAULT_AUTOMATION_MINIMUM_INTERVAL_SECONDS &&
     (maxIterations === null || maxIterations > DEFAULT_AUTOMATION_FAST_INTERVAL_MAX_ITERATIONS)
   ) {
-    return `Intervals under one minute need max iterations set to ${DEFAULT_AUTOMATION_FAST_INTERVAL_MAX_ITERATIONS} runs or fewer.`;
+    return (
+      translate?.("Intervals under one minute need max iterations set to {count} runs or fewer.", {
+        count: DEFAULT_AUTOMATION_FAST_INTERVAL_MAX_ITERATIONS,
+      }) ??
+      `Intervals under one minute need max iterations set to ${DEFAULT_AUTOMATION_FAST_INTERVAL_MAX_ITERATIONS} runs or fewer.`
+    );
   }
   return null;
 }
@@ -677,11 +749,15 @@ export function acknowledgedRiskIdsForFormWarnings(
 // --- Validation ---------------------------------------------------------------
 
 /** Error for an automation name draft, or null when saveable. */
-export function automationNameError(name: string): string | null {
+export function automationNameError(name: string, translate?: AutomationTranslate): string | null {
   const trimmed = name.trim();
-  if (!trimmed) return "Add a name";
+  if (!trimmed) return translate?.("Add a name") ?? "Add a name";
   if (trimmed.length > AUTOMATION_NAME_MAX_LENGTH) {
-    return `Name must be ${AUTOMATION_NAME_MAX_LENGTH} characters or fewer`;
+    return (
+      translate?.("Name must be {count} characters or fewer", {
+        count: AUTOMATION_NAME_MAX_LENGTH,
+      }) ?? `Name must be ${AUTOMATION_NAME_MAX_LENGTH} characters or fewer`
+    );
   }
   return null;
 }
@@ -713,11 +789,19 @@ export function automationTimezoneError(timezone: string): string | null {
 }
 
 /** Error for an automation prompt draft, or null when saveable. */
-export function automationPromptError(prompt: string): string | null {
+export function automationPromptError(
+  prompt: string,
+  translate?: AutomationTranslate,
+): string | null {
   const trimmed = prompt.trim();
-  if (!trimmed) return "Add a prompt";
+  if (!trimmed) return translate?.("Add a prompt") ?? "Add a prompt";
   if (trimmed.length > AUTOMATION_PROMPT_MAX_LENGTH) {
-    return `Prompt must be ${AUTOMATION_PROMPT_MAX_LENGTH.toLocaleString("en-US")} characters or fewer`;
+    return (
+      translate?.("Prompt must be {count} characters or fewer", {
+        count: AUTOMATION_PROMPT_MAX_LENGTH.toLocaleString("en-US"),
+      }) ??
+      `Prompt must be ${AUTOMATION_PROMPT_MAX_LENGTH.toLocaleString("en-US")} characters or fewer`
+    );
   }
   return null;
 }
@@ -731,25 +815,30 @@ export function automationFormSubmitBlockReason(
   form: AutomationFormState,
   warnings: readonly AutomationDraftWarning[],
   acknowledgedWarningIds: ReadonlySet<AutomationDraftWarningId>,
+  translate?: AutomationTranslate,
 ): string | null {
-  const nameError = automationNameError(form.name);
+  const nameError = automationNameError(form.name, translate);
   if (nameError) return nameError;
-  const promptError = automationPromptError(form.prompt);
+  const promptError = automationPromptError(form.prompt, translate);
   if (promptError) return promptError;
-  if (!form.projectId) return "Pick a project";
+  if (!form.projectId) return translate?.("Pick a project") ?? "Pick a project";
   if (automationRequiresTargetThread(form.mode) && !form.targetThreadId) {
-    return "Pick a target thread";
+    return translate?.("Pick a target thread") ?? "Pick a target thread";
   }
-  const fastIntervalMessage = automationFastIntervalLimitMessage(form);
+  const fastIntervalMessage = automationFastIntervalLimitMessage(form, translate);
   if (fastIntervalMessage) return fastIntervalMessage;
   if (
     form.scheduleKind === "custom" &&
     (!form.intervalAmount.trim() || Number.parseInt(form.intervalAmount, 10) <= 0)
   ) {
-    return "Set a valid interval";
+    return translate?.("Set a valid interval") ?? "Set a valid interval";
   }
-  if (form.scheduleKind === "cron" && !form.cronExpression.trim()) return "Add a cron expression";
-  if (form.scheduleKind === "once" && !form.onceRunAt.trim()) return "Pick a run time";
+  if (form.scheduleKind === "cron" && !form.cronExpression.trim()) {
+    return translate?.("Add a cron expression") ?? "Add a cron expression";
+  }
+  if (form.scheduleKind === "once" && !form.onceRunAt.trim()) {
+    return translate?.("Pick a run time") ?? "Pick a run time";
+  }
   if (
     (form.scheduleKind === "daily" ||
       form.scheduleKind === "weekdays" ||
@@ -757,7 +846,7 @@ export function automationFormSubmitBlockReason(
       form.scheduleKind === "weekly") &&
     !form.timezone.trim()
   ) {
-    return "Add a timezone";
+    return translate?.("Add a timezone") ?? "Add a timezone";
   }
   if (
     (form.scheduleKind === "daily" ||
@@ -765,14 +854,16 @@ export function automationFormSubmitBlockReason(
       form.scheduleKind === "weekly") &&
     !TIME_OF_DAY_PATTERN.test(form.timeOfDay)
   ) {
-    return "Set a valid time";
+    return translate?.("Set a valid time") ?? "Set a valid time";
   }
   if (
     warnings.some(
       (warning) => warning.requiresAcknowledgement && !acknowledgedWarningIds.has(warning.id),
     )
   ) {
-    return "Acknowledge the flagged risks first";
+    return (
+      translate?.("Acknowledge the flagged risks first") ?? "Acknowledge the flagged risks first"
+    );
   }
   return null;
 }

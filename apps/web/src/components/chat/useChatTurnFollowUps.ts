@@ -1,4 +1,5 @@
 import { MessageId, ThreadId, type ProviderKind } from "@synara/contracts";
+import { t } from "~/i18n";
 import { resolveTailUserMessageEditTarget } from "@synara/shared/conversationEdit";
 import { providerSupportsNativeTurnSteering } from "@synara/shared/providerMetadata";
 import { deriveAssociatedWorktreeMetadata } from "@synara/shared/threadWorkspace";
@@ -467,7 +468,12 @@ export function useChatTurnFollowUps({
       effort: selectedPromptEffort,
       text: implementationPrompt,
     });
-    const nextThreadTitle = truncateTitle(buildPlanImplementationThreadTitle(planMarkdown));
+    const nextThreadTitle = truncateTitle(
+      buildPlanImplementationThreadTitle(planMarkdown, {
+        fallbackLabel: t("Implement plan"),
+        titleLabel: (title) => t("Implement {title}", { title }),
+      }),
+    );
     const computerControlSequenceForImplementation = computerControlChangeSequence.current;
     const implementationDispatchSettings = planImplementationDispatchSettings(turnDispatchSettings);
     const sourceProposedPlan = buildSourceProposedPlanReference({
@@ -567,9 +573,11 @@ export function useChatTurnFollowUps({
         }
         toastManager.add({
           type: "error",
-          title: "Could not start implementation thread",
+          title: t("Could not start implementation thread"),
           description:
-            err instanceof Error ? err.message : "An error occurred while creating the new thread.",
+            err instanceof Error
+              ? err.message
+              : t("An error occurred while creating the new thread."),
         });
       })
       .then(finish, finish);

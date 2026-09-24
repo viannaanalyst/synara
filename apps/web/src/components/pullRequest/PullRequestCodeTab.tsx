@@ -20,6 +20,7 @@ import {
 } from "~/lib/diffRendering";
 import { pullRequestDiffQueryOptions } from "~/lib/pullRequestReactQuery";
 import { cn } from "~/lib/utils";
+import { useT } from "~/i18n";
 import { PullRequestDiffStat } from "./PullRequestDiffStat";
 import { PullRequestMetaLine } from "./PullRequestMetaLine";
 import { PR_META_TEXT_CLASS_NAME } from "./pullRequestText";
@@ -32,6 +33,7 @@ export function PullRequestCodeTab({
   input: PullRequestDetailInput;
   detail: PullRequestDetail;
 }) {
+  const t = useT();
   const { resolvedTheme } = useTheme();
   const [collapsedFiles, setCollapsedFiles] = useState<Set<string>>(() => new Set());
   const diffQuery = useQuery(pullRequestDiffQueryOptions(input));
@@ -58,7 +60,7 @@ export function PullRequestCodeTab({
       <div className="flex h-full min-h-0 flex-col">
         {diffQuery.data?.truncated ? (
           <PullRequestWarningNote shape="banner">
-            Diff exceeded 8 MiB and was truncated.
+            {t("Diff exceeded 8 MiB and was truncated.")}
           </PullRequestWarningNote>
         ) : null}
         {patchTotals ? (
@@ -68,7 +70,7 @@ export function PullRequestCodeTab({
               "border-b border-border/60 px-3 py-2 text-muted-foreground",
             )}
           >
-            <span>{patchTotals.fileCount} files</span>
+            <span>{t("{count} files", { count: patchTotals.fileCount })}</span>
             <PullRequestDiffStat
               additions={patchTotals.additions}
               deletions={patchTotals.deletions}
@@ -77,7 +79,7 @@ export function PullRequestCodeTab({
           </PullRequestMetaLine>
         ) : null}
         {diffQuery.isPending ? (
-          <DiffPanelLoadingState label="Loading pull request diff…" />
+          <DiffPanelLoadingState label={t("Loading pull request diff…")} />
         ) : (
           <DiffPanelPatchViewport
             renderablePatch={renderablePatch}
@@ -101,12 +103,12 @@ export function PullRequestCodeTab({
               diffQuery.isError
                 ? diffQuery.error instanceof Error
                   ? diffQuery.error.message
-                  : "Could not load diff."
+                  : t("Could not load diff.")
                 : null
             }
-            loadingLabel="Loading pull request diff…"
-            emptyLabel="This pull request has no file changes."
-            unavailableLabel="The pull request diff is unavailable."
+            loadingLabel={t("Loading pull request diff…")}
+            emptyLabel={t("This pull request has no file changes.")}
+            unavailableLabel={t("The pull request diff is unavailable.")}
             viewKind="repo"
           />
         )}

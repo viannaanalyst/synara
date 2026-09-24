@@ -19,6 +19,7 @@
 import type { DeviceFamily, DeviceHardwareButton } from "@synara/contracts";
 import { memo, useId, useMemo, type CSSProperties, type ReactNode } from "react";
 
+import { useT } from "~/i18n";
 import { cn } from "~/lib/utils";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "../ui/tooltip";
 
@@ -413,6 +414,7 @@ export const DeviceScreen = memo(function DeviceScreen({
   landscape?: boolean;
   onPressButton?: ((button: DeviceHardwareButton) => void) | undefined;
 }) {
+  const t = useT();
   const geo = useMemo(
     () => screenGeometry(kind, pixelWidth, pixelHeight),
     [kind, pixelWidth, pixelHeight],
@@ -483,6 +485,12 @@ export const DeviceScreen = memo(function DeviceScreen({
         {nubs.map(({ name, side, style }) => {
           const action = NUB_ACTIONS[name];
           if (!action) return null;
+          const label =
+            name === "volumeUp"
+              ? t("Volume up")
+              : name === "volumeDown"
+                ? t("Volume down")
+                : t("Lock");
           const press = action.button;
           const interactive = press !== undefined && onPressButton !== undefined;
           if (!interactive && !action.hint) return null;
@@ -493,7 +501,7 @@ export const DeviceScreen = memo(function DeviceScreen({
                   interactive ? (
                     <button
                       type="button"
-                      aria-label={action.label}
+                      aria-label={label}
                       disabled={buttonsDisabled}
                       onClick={() => onPressButton?.(press)}
                       className={cn(
@@ -510,7 +518,7 @@ export const DeviceScreen = memo(function DeviceScreen({
                     // tab stop and offers no press affordance — only the
                     // tooltip that says why.
                     <span
-                      aria-label={action.label}
+                      aria-label={label}
                       className="absolute cursor-default rounded-full"
                       style={style}
                     />
@@ -518,7 +526,7 @@ export const DeviceScreen = memo(function DeviceScreen({
                 }
               />
               <TooltipPopup side={side === "top" ? "top" : side}>
-                {action.hint ? `${action.label} — ${action.hint}` : action.label}
+                {action.hint ? `${label} — ${t(action.hint)}` : label}
               </TooltipPopup>
             </Tooltip>
           );

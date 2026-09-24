@@ -10,6 +10,7 @@
 
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { t } from "~/i18n";
 
 import { useAppSettings } from "../appSettings";
 import {
@@ -136,7 +137,9 @@ function StudioIndexRouteView() {
       <SplashScreen
         errorMessage={
           pathsWaitTimedOut
-            ? "Studio is taking too long to load — the server has not reported its Studio folder yet."
+            ? t(
+                "Studio is taking too long to load — the server has not reported its Studio folder yet.",
+              )
             : null
         }
         onRetry={pathsWaitTimedOut ? () => setPathsWaitTimedOut(false) : null}

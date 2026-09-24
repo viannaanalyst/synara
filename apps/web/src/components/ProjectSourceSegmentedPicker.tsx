@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { useT } from "~/i18n";
 
 import { GitHubIcon } from "~/lib/icons";
 import { cn } from "~/lib/utils";
@@ -35,6 +36,7 @@ export function ProjectSourceSegmentedPicker(props: {
   readonly onValueChange: (value: ProjectSource) => void;
   readonly className?: string;
 }) {
+  const t = useT();
   const activeIndex = PROJECT_SOURCES.findIndex((source) => source.value === props.value);
   const cell = `(100% - 0.25rem) / ${PROJECT_SOURCES.length}`;
   const overhang = "5px";
@@ -46,7 +48,7 @@ export function ProjectSourceSegmentedPicker(props: {
     <div className={cn("px-1", props.className)}>
       <div
         role="radiogroup"
-        aria-label="Project source"
+        aria-label={t("Project source")}
         className="sidebar-segmented-picker relative isolate inline-flex w-full rounded-lg p-0.5"
       >
         <div
@@ -68,7 +70,9 @@ export function ProjectSourceSegmentedPicker(props: {
               aria-checked={active}
               disabled={props.disabled || sourceUnavailable}
               title={
-                sourceUnavailable ? "Update the Synara server to add GitHub projects." : undefined
+                sourceUnavailable
+                  ? t("Update the Synara server to add GitHub projects.")
+                  : undefined
               }
               className={cn(
                 "relative z-10 flex flex-1 items-center justify-center gap-1.5 rounded-md px-2.5 py-1 text-ui-sm font-medium transition-colors duration-200 disabled:opacity-50",
@@ -83,7 +87,7 @@ export function ProjectSourceSegmentedPicker(props: {
                 style={{ transform: `translateX(${labelShift})` }}
               >
                 {source.icon}
-                {source.label}
+                {source.value === "local" ? t("Folder") : t("GitHub")}
               </span>
             </button>
           );

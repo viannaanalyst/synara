@@ -12,6 +12,7 @@ import type {
   PullRequestComment,
 } from "@synara/contracts";
 import { pluralize } from "@synara/shared/text";
+import { t } from "~/i18n";
 
 import {
   type PullRequestContextDraft,
@@ -26,6 +27,8 @@ export interface PullRequestChecksSummary {
   tone: PullRequestChecksTone;
 }
 
+type PullRequestTranslator = (key: string, params?: { count?: number }) => string;
+
 // Single tone → status-color contract for the check rollup, shared by the Environment section
 // icon and the detail panel's summary text so both agree on what "failing"/"pending" looks like.
 export const PULL_REQUEST_CHECKS_TONE_TEXT_CLASS: Record<PullRequestChecksTone, string> = {
@@ -38,27 +41,43 @@ export const PULL_REQUEST_CHECKS_TONE_TEXT_CLASS: Record<PullRequestChecksTone, 
 // Failure outranks pending so a red state never hides behind "N pending checks".
 export function summarizePullRequestChecks(
   checks: ReadonlyArray<GitPullRequestCheck>,
+  translate: PullRequestTranslator = t,
 ): PullRequestChecksSummary {
   const failing = checks.filter((check) => check.status === "failure").length;
   if (failing > 0) {
-    return { label: `${failing} ${pluralize(failing, "failing check")}`, tone: "failure" };
+    return {
+      label: translate(failing === 1 ? "{count} failing check" : "{count} failing checks", {
+        count: failing,
+      }),
+      tone: "failure",
+    };
   }
   const cancelled = checks.filter((check) => check.status === "cancelled").length;
   if (cancelled > 0) {
-    return { label: `${cancelled} ${pluralize(cancelled, "cancelled check")}`, tone: "failure" };
+    return {
+      label: translate(cancelled === 1 ? "{count} cancelled check" : "{count} cancelled checks", {
+        count: cancelled,
+      }),
+      tone: "failure",
+    };
   }
   const pending = checks.filter((check) => check.status === "pending").length;
   if (pending > 0) {
-    return { label: `${pending} ${pluralize(pending, "pending check")}`, tone: "pending" };
+    return {
+      label: translate(pending === 1 ? "{count} pending check" : "{count} pending checks", {
+        count: pending,
+      }),
+      tone: "pending",
+    };
   }
   if (checks.length === 0) {
-    return { label: "No checks", tone: "none" };
+    return { label: translate("No checks"), tone: "none" };
   }
   const successful = checks.filter((check) => check.status === "success").length;
   if (successful === 0) {
-    return { label: "No required checks", tone: "none" };
+    return { label: translate("No required checks"), tone: "none" };
   }
-  return { label: "All checks passed", tone: "success" };
+  return { label: translate("All checks passed"), tone: "success" };
 }
 
 export const PULL_REQUEST_CHECK_STATUS_LABELS: Record<GitPullRequestCheck["status"], string> = {
@@ -109,10 +128,16 @@ export function summarizePullRequestDiffStat(pr: {
   };
 }
 
-export function summarizePullRequestComments(count: number, truncated = false): string {
-  if (count === 0) return truncated ? "Comments may exist" : "No comments";
-  const noun = pluralize(count, "comment");
-  return truncated ? `${count}+ ${noun}` : `${count} ${noun}`;
+export function summarizePullRequestComments(
+  count: number,
+  truncated = false,
+  translate: PullRequestTranslator = t,
+): string {
+  if (count === 0) return truncated ? translate("Comments may exist") : translate("No comments");
+  if (truncated) {
+    return translate(count === 1 ? "{count}+ comment" : "{count}+ comments", { count });
+  }
+  return translate(count === 1 ? "{count} comment" : "{count} comments", { count });
 }
 
 export interface PullRequestCommentDisplay {
@@ -183,7 +208,7 @@ export function describePullRequestComment(
     .filter((line) => line.text.length > 0);
   const first = lines[0];
   if (!first) {
-    return { title: "(empty comment)", snippet: null };
+    return { title: t("(empty comment)"), snippet: null };
   }
   // A badge-only first line folds into the next line: "P2" + "Missing null check" reads as
   // one title instead of a cryptic "P2" row.
@@ -542,7 +567,14 @@ export function buildPullRequestContextCard(input: {
       return createPullRequestContextDraft({
         scope,
         pr,
-        title: `${repairs.comments}${commentsTruncated ? "+" : ""} review ${pluralize(repairs.comments, "comment")}`,
+        title:
+          repairs.comments === 1
+            ? commentsTruncated
+              ? t("1+ review comment")
+              : t("1 review comment")
+            : commentsTruncated
+              ? t("{count}+ review comments", { count: repairs.comments })
+              : t("{count} review comments", { count: repairs.comments }),
         subtitle: paths.length > 0 ? joinCardList(paths) : prLabel,
         text: buildFixReviewCommentsPrompt({
           prNumber: pr.number,
@@ -560,7 +592,9 @@ export function buildPullRequestContextCard(input: {
       return createPullRequestContextDraft({
         scope,
         pr,
-        title: `${failing.length} failing ${pluralize(failing.length, "check")}`,
+        title: t(failing.length === 1 ? "{count} failing check" : "{count} failing checks", {
+          count: failing.length,
+        }),
         subtitle: joinCardList(failing.map((check) => check.name)),
         text: buildFixFailingChecksPrompt({
           prNumber: pr.number,
@@ -577,8 +611,8 @@ export function buildPullRequestContextCard(input: {
       return createPullRequestContextDraft({
         scope,
         pr,
-        title: "Merge conflicts",
-        subtitle: `Conflicts with ${pr.baseBranch}`,
+        title: t("Merge conflicts"),
+        subtitle: t("Conflicts with {branch}", { branch: pr.baseBranch }),
         text: buildResolveConflictsPrompt({
           prNumber: pr.number,
           prUrl: pr.url,
@@ -592,18 +626,26 @@ export function buildPullRequestContextCard(input: {
       }
       const parts: string[] = [];
       if (repairs.comments > 0) {
-        parts.push(`${repairs.comments} ${pluralize(repairs.comments, "comment")}`);
+        parts.push(
+          t(repairs.comments === 1 ? "{count} comment" : "{count} comments", {
+            count: repairs.comments,
+          }),
+        );
       }
       if (repairs.failingChecks > 0) {
-        parts.push(`${repairs.failingChecks} failing ${pluralize(repairs.failingChecks, "check")}`);
+        parts.push(
+          t(repairs.failingChecks === 1 ? "{count} failing check" : "{count} failing checks", {
+            count: repairs.failingChecks,
+          }),
+        );
       }
       if (repairs.conflicts) {
-        parts.push("merge conflicts");
+        parts.push(t("merge conflicts"));
       }
       return createPullRequestContextDraft({
         scope,
         pr,
-        title: `Repair PR #${pr.number}`,
+        title: t("Repair PR #{number}", { number: pr.number }),
         subtitle: joinCardList(parts),
         text: buildRepairEverythingPrompt({
           prNumber: pr.number,

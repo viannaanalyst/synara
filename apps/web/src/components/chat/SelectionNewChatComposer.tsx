@@ -19,6 +19,7 @@ import { cn } from "~/lib/utils";
 import { DisclosureRegion } from "../ui/DisclosureRegion";
 import { TRANSCRIPT_SELECTION_ACTION_HEIGHT_PX } from "./chatSelectionActions";
 import type { PendingTranscriptSelectionAction } from "./useTranscriptAssistantSelectionAction";
+import { useT } from "~/i18n";
 
 interface SelectionNewChatComposerProps {
   action: PendingTranscriptSelectionAction;
@@ -37,6 +38,7 @@ export function SelectionNewChatComposer({
   onOpenInChat,
   onClose,
 }: SelectionNewChatComposerProps) {
+  const t = useT();
   const [prompt, setPrompt] = useState("");
   const [cursor, setCursor] = useState(0);
   const [envMode, setEnvMode] = useState(canUseWorktree ? defaultEnvMode : "local");
@@ -128,7 +130,7 @@ export function SelectionNewChatComposer({
       ref={surfaceRef}
       data-transcript-selection-action="true"
       role="dialog"
-      aria-label="New chat from selection"
+      aria-label={t("New chat from selection")}
       className="fixed z-50 w-[320px] max-w-[calc(100vw-16px)] text-foreground"
       // No overflow on this wrapper: a scroll box is square and would clip the rounded
       // surface's shadow into hard corners. The editor caps and scrolls its own height.
@@ -164,7 +166,7 @@ export function SelectionNewChatComposer({
                       type="button"
                       variant="ghost"
                       size="icon-xs"
-                      aria-label="Close new chat composer"
+                      aria-label={t("Close new chat composer")}
                       disabled={busy}
                       onClick={onClose}
                     >
@@ -180,7 +182,7 @@ export function SelectionNewChatComposer({
                   disabled={busy}
                   ariaLabel="Message for new chat"
                   className="min-h-[1lh]"
-                  placeholder="Ask about this selection…"
+                  placeholder={t("Ask about this selection…")}
                   onRemoveTerminalContext={() => {}}
                   onPaste={() => {}}
                   onChange={(value, nextCursor) => {
@@ -214,7 +216,7 @@ export function SelectionNewChatComposer({
                   variant="prominent"
                   size="icon-xs"
                   className="size-7 rounded-full sm:size-7"
-                  aria-label="Send to new chat"
+                  aria-label={t("Send to new chat")}
                   disabled={busy || !prompt.trim()}
                 >
                   {busy ? (

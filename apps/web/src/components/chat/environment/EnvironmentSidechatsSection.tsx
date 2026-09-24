@@ -1,6 +1,7 @@
 import type { ThreadId } from "@synara/contracts";
 
 import { IconButton } from "~/components/ui/icon-button";
+import { useT } from "~/i18n";
 import { PlusIcon, SidechatIcon, TrashCanIcon } from "~/lib/icons";
 import { cn } from "~/lib/utils";
 
@@ -28,6 +29,7 @@ export function EnvironmentSidechatsSection({
   readonly onOpen: (threadId: ThreadId) => void;
   readonly onDelete: (sidechat: EnvironmentSidechatPanelItem) => void;
 }) {
+  const t = useT();
   // No side chats yet: hide the whole section instead of showing an empty header row.
   if (sidechats.length === 0) {
     return null;
@@ -37,8 +39,12 @@ export function EnvironmentSidechatsSection({
       <EnvironmentSectionDivider />
       <div className="flex flex-col gap-0.5">
         <div className="flex items-center justify-between gap-2 pr-2">
-          <EnvironmentSectionLabel>Side chats</EnvironmentSectionLabel>
-          <IconButton label="Start side chat" tooltip="Start side chat" onClick={onCreate}>
+          <EnvironmentSectionLabel>{t("Side chats")}</EnvironmentSectionLabel>
+          <IconButton
+            label={t("Start side chat")}
+            tooltip={t("Start side chat")}
+            onClick={onCreate}
+          >
             <PlusIcon className="size-3.5" />
           </IconButton>
         </div>
@@ -54,7 +60,9 @@ export function EnvironmentSidechatsSection({
                 trailing={
                   <>
                     {expired ? (
-                      <span className="text-[var(--color-text-foreground-secondary)]">Expired</span>
+                      <span className="text-[var(--color-text-foreground-secondary)]">
+                        {t("Expired")}
+                      </span>
                     ) : null}
                     <span
                       aria-hidden
@@ -63,12 +71,16 @@ export function EnvironmentSidechatsSection({
                   </>
                 }
                 className={cn(expired && "opacity-60")}
-                aria-label={`Open side chat ${sidechat.title}${expired ? " (expired)" : ""}`}
+                aria-label={
+                  expired
+                    ? t("Open side chat {title} (expired)", { title: sidechat.title })
+                    : t("Open side chat {title}", { title: sidechat.title })
+                }
                 onClick={() => onOpen(sidechat.id)}
               />
               <IconButton
-                label={`Delete side chat ${sidechat.title}`}
-                tooltip="Delete side chat"
+                label={t("Delete side chat {title}", { title: sidechat.title })}
+                tooltip={t("Delete side chat")}
                 className="absolute top-1/2 right-2 -translate-y-1/2 opacity-0 transition-opacity group-hover/sidechat:opacity-100 focus-visible:opacity-100"
                 onClick={() => onDelete(sidechat)}
               >

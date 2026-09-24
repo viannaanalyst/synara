@@ -6,6 +6,7 @@ import {
 } from "~/lib/contextWindow";
 import { useState } from "react";
 import { useNowMs } from "~/hooks/useNowMs";
+import { useAppLocale, useT } from "~/i18n";
 import { Popover, PopoverPopup, PopoverTrigger } from "../ui/popover";
 import { ClaudeCacheDetails } from "./ClaudeCacheDetails";
 import { Button } from "../ui/button";
@@ -23,10 +24,18 @@ export function ContextWindowMeter(props: {
     onCompact: () => Promise<boolean>;
   };
 }) {
+  const t = useT();
+  const locale = useAppLocale();
   const { usage, cumulativeCostUsd, activeWindowLabel, pendingWindowLabel } = props;
   const [open, setOpen] = useState(false);
   const nowMs = useNowMs(open && usage.claudeCache != null, 10_000);
   const display = deriveContextWindowMeterDisplay(usage);
+  const usedPercentageLabel =
+    usage.usedPercentage === null
+      ? null
+      : `${new Intl.NumberFormat(locale, {
+          maximumFractionDigits: usage.usedPercentage < 10 ? 1 : 0,
+        }).format(usage.usedPercentage)}%`;
   const radius = 6;
   const circumference = 2 * Math.PI * radius;
   const dashOffset = circumference - (display.normalizedPercentage / 100) * circumference;
@@ -47,7 +56,11 @@ export function ContextWindowMeter(props: {
           <button
             type="button"
             className="group inline-flex shrink-0 items-center justify-center rounded-full p-0.5 transition-opacity hover:opacity-80"
-            aria-label={display.ariaLabel}
+            aria-label={
+              usedPercentageLabel
+                ? t("Context window {usage} used", { usage: usedPercentageLabel })
+                : t("Context window {usage} tokens used", { usage: display.tokenUsageLabel })
+            }
           >
             <span className="relative flex h-4 w-4 items-center justify-center">
               <svg
@@ -83,64 +96,76 @@ export function ContextWindowMeter(props: {
       />
       <PopoverPopup tooltipStyle side="top" align="end" className="w-max max-w-none px-3 py-2">
         <div className="space-y-1.5 leading-tight">
-          <div className="text-ui-sm font-medium text-muted-foreground">Context window</div>
+          <div className="text-ui-sm font-medium text-muted-foreground">{t("Context window")}</div>
           {pendingWindowLabel ? (
             <div className="text-ui leading-snug text-muted-foreground">
-              Current session: {activeWindowLabel ?? "Unknown"}
+              {t("Current session: {active}.", { active: activeWindowLabel ?? t("Unknown") })}
             </div>
           ) : null}
-          {display.usedPercentageLabel ? (
+          {usedPercentageLabel ? (
             <div className="whitespace-nowrap text-ui leading-snug font-medium text-foreground">
-              <span>{display.usedPercentageLabel}</span>
+              <span>{usedPercentageLabel}</span>
               {display.hasReliableTokenRatio ? (
                 <>
                   <span className="mx-1">⋅</span>
                   <span>{display.tokenUsageLabel}</span>
                   <span>/</span>
-                  <span>{formatContextWindowTokens(usage.maxTokens)} context used</span>
+                  <span>
+                    {t("{tokens} context used", {
+                      tokens: formatContextWindowTokens(usage.maxTokens),
+                    })}
+                  </span>
                 </>
               ) : (
-                <span className="ml-1">context used</span>
+                <span className="ml-1">{t("context used")}</span>
               )}
             </div>
           ) : (
             <div className="text-ui leading-snug text-foreground">
-              {display.tokenUsageLabel} tokens used so far
+              {t("{tokens} tokens used so far", { tokens: display.tokenUsageLabel })}
             </div>
           )}
           {usage.maxTokens !== null ? (
             <div className="text-ui leading-snug text-muted-foreground">
-              Active context limit: {formatContextWindowTokens(usage.maxTokens)} tokens
+              {t("Active context limit: {tokens} tokens", {
+                tokens: formatContextWindowTokens(usage.maxTokens),
+              })}
             </div>
           ) : null}
           {props.showClaudeCache && activeWindowLabel ? (
             <div className="max-w-72 space-y-1 text-ui leading-snug text-muted-foreground">
-              <div>Auto-compact target: {activeWindowLabel}</div>
+              <div>{t("Auto-compact target: {label}", { label: activeWindowLabel })}</div>
               <p className="leading-relaxed">
-                The session's auto-compact target can be lower than the model's supported window.
+                {t(
+                  "The session's auto-compact target can be lower than the model's supported window.",
+                )}
               </p>
             </div>
           ) : null}
           {pendingWindowLabel ? (
             <div className="text-ui leading-snug text-muted-foreground">
-              Next turn: {pendingWindowLabel}
+              {t("Next turn: {label}", { label: pendingWindowLabel })}
             </div>
           ) : null}
           {(usage.totalProcessedTokens ?? null) !== null &&
           (usage.totalProcessedTokens ?? 0) > usage.usedTokens ? (
             <div className="text-ui leading-snug text-muted-foreground">
-              {usage.tokenAccountingVersion === 1 ? "Estimated total processed" : "Total processed"}
-              : {formatContextWindowTokens(usage.totalProcessedTokens ?? null)} tokens
+              {t(
+                usage.tokenAccountingVersion === 1
+                  ? "Estimated total processed"
+                  : "Total processed",
+              )}
+              : {formatContextWindowTokens(usage.totalProcessedTokens ?? null)} {t("tokens")}
             </div>
           ) : null}
           {usage.compactsAutomatically ? (
             <div className="text-ui leading-snug text-muted-foreground">
-              Automatically compacts its context when needed.
+              {t("Automatically compacts its context when needed.")}
             </div>
           ) : null}
           {cumulativeCostUsd !== null && cumulativeCostUsd !== undefined ? (
             <div className="text-ui leading-snug text-muted-foreground">
-              Session cost: {formatCostUsd(cumulativeCostUsd)}
+              {t("Session cost: {cost}", { cost: formatCostUsd(cumulativeCostUsd) })}
             </div>
           ) : null}
           {usage.claudeCache || props.showClaudeCache ? (
@@ -159,11 +184,13 @@ export function ContextWindowMeter(props: {
                   void props.compactAction?.onCompact();
                 }}
               >
-                {props.compactAction.isSubmitting ? "Starting compaction..." : "Compact now"}
+                {props.compactAction.isSubmitting ? t("Starting compaction...") : t("Compact now")}
               </Button>
               <p className="text-ui leading-relaxed text-muted-foreground">
                 {props.compactAction.disabledReason ??
-                  "Compaction processes this conversation and consumes usage. Later turns use its summary."}
+                  t(
+                    "Compaction processes this conversation and consumes usage. Later turns use its summary.",
+                  )}
               </p>
             </div>
           ) : null}

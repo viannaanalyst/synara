@@ -9,6 +9,7 @@ import { ProviderIcon } from "~/components/ProviderIcon";
 import { Button } from "~/components/ui/button";
 import { Checkbox } from "~/components/ui/checkbox";
 import { Input } from "~/components/ui/input";
+import { useT } from "~/i18n";
 import { CheckIcon, LoaderCircleIcon } from "~/lib/icons";
 import { cn } from "~/lib/utils";
 import { ensureNativeApi } from "~/nativeApi";
@@ -38,6 +39,7 @@ export function ProjectImportPanel(props: {
     created: boolean,
   ) => void;
 }) {
+  const t = useT();
   const [providers, setProviders] = useState<readonly ProjectImportProvider[]>(
     props.initialProviders ?? IMPORT_PROVIDERS,
   );
@@ -92,6 +94,7 @@ export function ProjectImportPanel(props: {
   const failures = Object.entries(outcomes).filter(([, value]) => value.error !== null);
   const retryQueue = queue.filter((item) => outcomes[item.key]?.error);
   const projectCount = new Set(queue.map((item) => item.input.projectKey)).size;
+  const selectedConversationCount = queue.filter((item) => item.input.threadKey !== null).length;
 
   const scan = async () => {
     setScanning(true);
@@ -111,7 +114,7 @@ export function ProjectImportPanel(props: {
       setProgress(null);
     } catch (caught) {
       if (mountedRef.current)
-        setError(caught instanceof Error ? caught.message : "Could not find local projects.");
+        setError(caught instanceof Error ? caught.message : t("Could not find local projects."));
     } finally {
       if (mountedRef.current) setScanning(false);
     }
@@ -143,7 +146,7 @@ export function ProjectImportPanel(props: {
             ...current,
             [item.key]: {
               title: item.title,
-              error: caught instanceof Error ? caught.message : "Import failed. Try again.",
+              error: caught instanceof Error ? caught.message : t("Import failed. Try again."),
             },
           }));
         }
@@ -157,7 +160,7 @@ export function ProjectImportPanel(props: {
       }
     } catch (caught) {
       if (mountedRef.current)
-        setError(caught instanceof Error ? caught.message : "Could not start the import.");
+        setError(caught instanceof Error ? caught.message : t("Could not start the import."));
     } finally {
       if (mountedRef.current) setRunning(false);
     }
@@ -216,12 +219,13 @@ export function ProjectImportPanel(props: {
           onClick={() => void scan()}
         >
           {scanning ? <LoaderCircleIcon className="size-3.5 animate-spin" aria-hidden /> : null}
-          {scanning ? "Finding projects…" : catalog ? "Scan again" : "Find projects"}
+          {scanning ? t("Finding projects…") : catalog ? t("Scan again") : t("Find projects")}
         </Button>
       </div>
       <p className={cn("leading-relaxed text-muted-foreground", "text-ui-sm")}>
-        Projects keep their existing folders, and conversations are copied into Synara. Nothing in
-        your current projects changes.
+        {t(
+          "Projects keep their existing folders, and conversations are copied into Synara. Nothing in your current projects changes.",
+        )}
       </p>
       {error ? (
         <p role="alert" className={cn("text-destructive", "text-ui-sm")}>
@@ -239,8 +243,8 @@ export function ProjectImportPanel(props: {
         <>
           <div className="flex flex-wrap items-center gap-3">
             <Input
-              aria-label="Search imported projects"
-              placeholder="Search projects or folders…"
+              aria-label={t("Search imported projects")}
+              placeholder={t("Search projects or folders…")}
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               className="h-8 min-w-40 flex-1 rounded-lg text-ui sm:text-ui"
@@ -251,7 +255,7 @@ export function ProjectImportPanel(props: {
                 disabled={busy || scanning}
                 onCheckedChange={setIncludeArchived}
               />
-              Include archived
+              {t("Include archived")}
             </label>
             <Button
               variant="outline"
@@ -260,14 +264,14 @@ export function ProjectImportPanel(props: {
               disabled={busy || scanning || selectableKeys.length === 0}
               onClick={() => select(selectableKeys, !allSelected)}
             >
-              {allSelected ? "Remove all" : "Select all"}
+              {t(allSelected ? "Remove all" : "Select all")}
             </Button>
           </div>
           <div className="-mr-2 min-h-0 flex-1 overflow-y-auto pr-2">
             {visibleProjects.length > 0 ? (
               <div
                 className="divide-y divide-foreground/8 overflow-hidden rounded-xl border border-foreground/10"
-                aria-label="Projects available to import"
+                aria-label={t("Projects available to import")}
               >
                 {visibleProjects.map((project) => (
                   <ProjectImportProjectCard
@@ -289,16 +293,26 @@ export function ProjectImportPanel(props: {
             ) : (
               <p className="py-6 text-center text-muted-foreground">
                 {catalog.projects.length
-                  ? "No projects match your search."
-                  : "No local projects found for these providers."}
+                  ? t("No projects match your search.")
+                  : t("No local projects found for these providers.")}
               </p>
             )}
           </div>
           <p className={cn("shrink-0 leading-relaxed text-muted-foreground/80", "text-ui-sm")}>
             {queue.length > 0 && !running
-              ? `${queue.filter((item) => item.input.threadKey !== null).length} conversations across ${projectCount} project${projectCount === 1 ? "" : "s"} selected. `
+              ? `${
+                  projectCount === 1
+                    ? t("{conversations} conversations across {projects} project selected.", {
+                        conversations: selectedConversationCount,
+                        projects: projectCount,
+                      })
+                    : t("{conversations} conversations across {projects} projects selected.", {
+                        conversations: selectedConversationCount,
+                        projects: projectCount,
+                      })
+                } `
               : null}
-            History shows text messages; tool details and attachments may be missing.
+            {t("History shows text messages; tool details and attachments may be missing.")}
           </p>
         </>
       ) : null}
@@ -310,8 +324,11 @@ export function ProjectImportPanel(props: {
                 <LoaderCircleIcon className="size-3.5 animate-spin" aria-hidden />
                 <span>
                   {stopRequested
-                    ? "Stopping after this conversation…"
-                    : `Importing ${progress.current} of ${progress.total}`}
+                    ? t("Stopping after this conversation…")
+                    : t("Importing {current} of {total}", {
+                        current: progress.current,
+                        total: progress.total,
+                      })}
                 </span>
               </div>
               <p className={cn("mt-0.5 truncate text-muted-foreground", "text-ui-sm")}>
@@ -321,9 +338,9 @@ export function ProjectImportPanel(props: {
           ) : (
             <p className="flex items-center gap-2">
               <CheckIcon className="size-3.5 text-success" aria-hidden />
-              {completedKeys.size} imported or already present
+              {t("{count} imported or already present", { count: completedKeys.size })}
               {stopRequested
-                ? ". Import stopped; remaining selections are ready to continue."
+                ? ` ${t("Import stopped; remaining selections are ready to continue.")}`
                 : "."}
             </p>
           )}
@@ -331,7 +348,7 @@ export function ProjectImportPanel(props: {
       ) : null}
       {failures.length > 0 ? (
         <ul
-          aria-label="Import failures"
+          aria-label={t("Import failures")}
           className={cn("space-y-1.5 text-destructive", "text-ui-sm")}
         >
           {failures.map(([key, failure]) => (
@@ -354,7 +371,7 @@ export function ProjectImportPanel(props: {
                 setStopRequested(true);
               }}
             >
-              Stop after current
+              {t("Stop after current")}
             </Button>
           ) : (
             <>
@@ -366,7 +383,7 @@ export function ProjectImportPanel(props: {
                   disabled={busy || scanning}
                   onClick={() => void run(retryQueue)}
                 >
-                  Retry failed ({retryQueue.length})
+                  {t("Retry failed ({count})", { count: retryQueue.length })}
                 </Button>
               ) : null}
               <Button
@@ -375,7 +392,7 @@ export function ProjectImportPanel(props: {
                 disabled={busy || scanning || queue.length === 0}
                 onClick={() => void run(queue)}
               >
-                {progress ? "Import remaining" : "Import selected"}
+                {t(progress ? "Import remaining" : "Import selected")}
               </Button>
             </>
           )}

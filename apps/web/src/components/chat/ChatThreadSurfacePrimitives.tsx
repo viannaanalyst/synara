@@ -2,6 +2,7 @@ import type { FileDiffMetadata } from "@pierre/diffs/react";
 import type { ThreadId, TurnId } from "@synara/contracts";
 import { lazy, type ReactNode, Suspense, useEffect, useState } from "react";
 
+import { useT } from "~/i18n";
 import ChatView from "../ChatView";
 import { DiffWorkerPoolProvider } from "../DiffWorkerPoolProvider";
 import {
@@ -24,12 +25,13 @@ export const LazyDevicePanel = lazy(() => import("../DevicePanel"));
 export const noopChatSurfaceAction = () => {};
 
 function DiffLoadingFallback(props: { mode: DiffPanelMode; hideHeader?: boolean }) {
+  const t = useT();
   return (
     <DiffPanelShell
       mode={props.mode}
       header={props.hideHeader ? null : <DiffPanelHeaderSkeleton />}
     >
-      <DiffPanelLoadingState label="Loading diff viewer..." />
+      <DiffPanelLoadingState label={t("Loading diff viewer...")} />
     </DiffPanelShell>
   );
 }

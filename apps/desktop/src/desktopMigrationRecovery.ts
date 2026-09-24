@@ -6,6 +6,8 @@ import * as ChildProcess from "node:child_process";
 import * as FS from "node:fs";
 import * as Path from "node:path";
 import { promisify } from "node:util";
+
+import { t } from "./desktopI18n";
 import {
   migrationBackupProvenancePath,
   migrationRecoveryMarkerPath,
@@ -62,12 +64,15 @@ export function invalidMigrationStartupRecoveryChoices(input: {
 }): ReadonlyArray<DesktopMigrationRecoveryChoice> {
   const choices: Array<DesktopMigrationRecoveryChoice> = [];
   if (input.canInstallUpdate) {
-    choices.push({ label: "Update Synara and restart", decision: "install-update" });
+    choices.push({ label: t("Update Synara and restart"), decision: "install-update" });
   }
   if (input.canOpenReleasePage) {
-    choices.push({ label: "Download latest release", decision: "open-release-page" });
+    choices.push({ label: t("Download latest release"), decision: "open-release-page" });
   }
-  choices.push({ label: "Open logs", decision: "open-logs" }, { label: "Quit", decision: "quit" });
+  choices.push(
+    { label: t("Open logs"), decision: "open-logs" },
+    { label: t("Quit"), decision: "quit" },
+  );
   return choices;
 }
 

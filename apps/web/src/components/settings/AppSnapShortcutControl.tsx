@@ -26,6 +26,7 @@ import { cn } from "~/lib/utils";
 import { Button } from "~/components/ui/button";
 import { Kbd, KbdGroup } from "~/components/ui/kbd";
 import { toastManager } from "~/components/ui/toast";
+import { useT } from "~/i18n";
 
 type ShortcutCheckState =
   | { status: "idle"; availability: null }
@@ -64,6 +65,7 @@ export function AppSnapShortcutControl({
   keybindings: ResolvedKeybindingsConfig;
   onSaved: (shortcut: DesktopAppSnapShortcut, state: DesktopAppSnapState) => void;
 }) {
+  const t = useT();
   const [capture, setCapture] = useState<CaptureState>(IDLE_CAPTURE);
   const [candidate, setCandidate] = useState<DesktopAppSnapShortcut>(shortcut);
   const [checkState, setCheckState] = useState<ShortcutCheckState>({
@@ -88,7 +90,7 @@ export function AppSnapShortcutControl({
     const conflictCommand = appSnapShortcutConflictCommand(nextCandidate, keybindings);
     if (conflictCommand) {
       const commandLabel = shortcutSheetCommandLabel(conflictCommand) ?? conflictCommand;
-      reportUnavailable(`Synara already uses this for “${commandLabel}”.`);
+      reportUnavailable(t("Synara already uses this for “{command}”.", { command: commandLabel }));
       return;
     }
     const systemConflict = appSnapShortcutSystemConflict(nextCandidate);
@@ -98,7 +100,7 @@ export function AppSnapShortcutControl({
     }
     const bridge = window.desktopBridge?.appSnap;
     if (!bridge) {
-      reportUnavailable("Requires the Synara desktop app on macOS.");
+      reportUnavailable(t("Requires the Synara desktop app on macOS."));
       return;
     }
     setCheckState({ status: "checking", availability: null });
@@ -109,7 +111,9 @@ export function AppSnapShortcutControl({
       }
     } catch (error) {
       if (checkId !== checkIdRef.current) return;
-      reportUnavailable(error instanceof Error ? error.message : "Could not check this shortcut.");
+      reportUnavailable(
+        error instanceof Error ? error.message : t("Could not check this shortcut."),
+      );
     }
   }
 
@@ -144,19 +148,22 @@ export function AppSnapShortcutControl({
       return;
     }
     if (!isAppSnapShortcutKey(code)) {
-      setCapture((previous) => ({ ...previous, hint: "That key isn't supported — try another." }));
+      setCapture((previous) => ({
+        ...previous,
+        hint: t("That key isn't supported — try another."),
+      }));
       return;
     }
     if (modifiers.length === 0) {
       setCapture((previous) => ({
         ...previous,
-        hint: "Hold ⌘, ⌃, ⌥ or ⇧ first, then press the other key.",
+        hint: t("Hold ⌘, ⌃, ⌥ or ⇧ first, then press the other key."),
       }));
       return;
     }
     const modifier = modifiers[0];
     if (modifiers.length > 1 || modifier === undefined) {
-      setCapture((previous) => ({ ...previous, hint: "Hold only one modifier." }));
+      setCapture((previous) => ({ ...previous, hint: t("Hold only one modifier.") }));
       return;
     }
     const nextCandidate: DesktopAppSnapKeyChord = { kind: "key-chord", modifier, key: code };
@@ -188,15 +195,15 @@ export function AppSnapShortcutControl({
     if (result.availability.available) {
       toastManager.add({
         type: "success",
-        title: "AppSnap shortcut saved",
+        title: t("AppSnap shortcut saved"),
         description: enabled
-          ? "The shortcut is reserved while AppSnap is enabled."
-          : "The shortcut will be reserved when you enable AppSnap.",
+          ? t("The shortcut is reserved while AppSnap is enabled.")
+          : t("The shortcut will be reserved when you enable AppSnap."),
       });
     } else if (result.availability.reason) {
       toastManager.add({
         type: "error",
-        title: "AppSnap shortcut saved, but unavailable",
+        title: t("AppSnap shortcut saved, but unavailable"),
         description: result.availability.reason,
       });
     }
@@ -205,26 +212,28 @@ export function AppSnapShortcutControl({
   const statusText = capture.capturing
     ? (capture.hint ??
       (capturedModifiers.length > 0
-        ? "Now press the other key…"
-        : "Hold a modifier, then press one other key. Esc cancels."))
+        ? t("Now press the other key…")
+        : t("Hold a modifier, then press one other key. Esc cancels.")))
     : checkState.status === "checking"
-      ? "Checking macOS and other apps…"
+      ? t("Checking macOS and other apps…")
       : checkState.availability
         ? checkState.availability.available
-          ? "Available — save to apply."
+          ? t("Available — save to apply.")
           : checkState.availability.reason
+            ? t(checkState.availability.reason)
+            : t("Current shortcut")
         : changed
-          ? "Check a new combination before saving."
+          ? t("Check a new combination before saving.")
           : reserved && candidate.kind === "key-chord"
-            ? "Available and reserved"
-            : "Current shortcut";
+            ? t("Available and reserved")
+            : t("Current shortcut");
 
   return (
     <div className="flex w-full flex-col items-stretch gap-2 sm:w-auto sm:items-end">
       <div className="flex flex-wrap items-center gap-2 sm:justify-end">
         <button
           type="button"
-          aria-label="Record AppSnap shortcut"
+          aria-label={t("Record AppSnap shortcut")}
           aria-pressed={capture.capturing}
           onClick={startCapture}
           onKeyDown={captureKeyDown}
@@ -250,7 +259,7 @@ export function AppSnapShortcutControl({
               </KbdGroup>
             ) : (
               <span className="animate-pulse px-1 text-ui leading-snug font-medium text-muted-foreground">
-                Press two keys…
+                {t("Press two keys…")}
               </span>
             )
           ) : (
@@ -263,7 +272,7 @@ export function AppSnapShortcutControl({
         </button>
         {changed ? (
           <Button size="xs" disabled={!canSave} onClick={() => void saveShortcut(candidate)}>
-            Save
+            {t("Save")}
           </Button>
         ) : candidate.kind !== "both-option-keys" ? (
           <Button
@@ -271,7 +280,7 @@ export function AppSnapShortcutControl({
             variant="ghost"
             onClick={() => void saveShortcut(DEFAULT_APP_SNAP_SHORTCUT)}
           >
-            Reset
+            {t("Reset")}
           </Button>
         ) : null}
       </div>

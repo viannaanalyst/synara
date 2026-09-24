@@ -20,7 +20,7 @@ import type {
   ThreadDeviceState,
 } from "@synara/contracts";
 
-import { DEVICE_CAPABILITY_LABELS } from "@synara/contracts";
+import { t } from "~/i18n";
 
 // ── Frame gating ─────────────────────────────────────────────────────
 //
@@ -501,18 +501,39 @@ export function describeDegradedCapabilities(
   const broken = capabilities.filter((capability) => !capability.ok);
   const working = capabilities.filter((capability) => capability.ok);
   const list = (entries: readonly DeviceCapabilityStatus[]): string => {
-    const names = entries.map((entry) => DEVICE_CAPABILITY_LABELS[entry.id]);
+    const names = entries.map((entry) => {
+      switch (entry.id) {
+        case "framebuffer":
+          return t("Screen capture");
+        case "hid":
+          return t("Touch and keyboard input");
+        case "accessibility":
+          return t("Accessibility inspection");
+        case "encoder":
+          return t("Video encoding");
+      }
+    });
     if (names.length <= 1) return names[0] ?? "";
-    return `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]!.toLowerCase()}`;
+    return t("{items} and {last}", {
+      items: names.slice(0, -1).join(", "),
+      last: names[names.length - 1]!.toLowerCase(),
+    });
   };
 
   const xcode = toolchain?.xcodeVersion
-    ? ` with Xcode ${toolchain.xcodeVersion}`
+    ? t(" with Xcode {version}", { version: toolchain.xcodeVersion })
     : toolchain?.xcodeBuild
-      ? ` with Xcode build ${toolchain.xcodeBuild}`
+      ? t(" with Xcode build {version}", { version: toolchain.xcodeBuild })
       : "";
-  const unaffected = working.length > 0 ? ` — ${list(working).toLowerCase()} unaffected` : "";
-  return `${list(broken)} unavailable${xcode}${unaffected}.`;
+  const unaffected =
+    working.length > 0
+      ? t(" — {capabilities} unaffected", { capabilities: list(working).toLowerCase() })
+      : "";
+  return t("{capabilities} unavailable{toolchain}{unaffected}.", {
+    capabilities: list(broken),
+    toolchain: xcode,
+    unaffected,
+  });
 }
 
 /**

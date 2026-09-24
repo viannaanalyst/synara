@@ -3,6 +3,7 @@
 // Layer: web profile feature (no I/O, safe to use during html-to-image render).
 
 import type { ProviderKind } from "@synara/contracts";
+import { getLocale, t } from "~/i18n";
 
 // Compact token/count formatting matching the reference card ("17bn", "538m", "1.2k").
 export function formatCompact(value: number | null | undefined): string {
@@ -24,7 +25,7 @@ export function formatCompact(value: number | null | undefined): string {
 
 function trimZero(value: number): string {
   const rounded = Math.round(value * 10) / 10;
-  return Number.isInteger(rounded) ? `${rounded}` : rounded.toFixed(1);
+  return new Intl.NumberFormat(getLocale(), { maximumFractionDigits: 1 }).format(rounded);
 }
 
 // Thousands-separated integer ("4,934").
@@ -32,11 +33,14 @@ export function formatNumber(value: number | null | undefined): string {
   if (value === null || value === undefined || !Number.isFinite(value)) {
     return "—";
   }
-  return WHOLE_NUMBER_FORMATTER.format(value);
+  return new Intl.NumberFormat(getLocale(), { maximumFractionDigits: 0 }).format(value);
 }
 
 export function formatDays(value: number): string {
-  return `${formatNumber(value)} ${value === 1 ? "day" : "days"}`;
+  if (value === 1) {
+    return t("{count} day", { count: value });
+  }
+  return t("{count} days", { count: value });
 }
 
 // Title-case a home-directory basename into a friendly display name.
@@ -73,7 +77,11 @@ export function formatShortDate(day: string | null): string | null {
   if (!year || !month || !date) {
     return null;
   }
-  return MONTH_DAY_FORMATTER.format(new Date(Date.UTC(year, month - 1, date)));
+  return new Intl.DateTimeFormat(getLocale(), {
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(Date.UTC(year, month - 1, date)));
 }
 
 export function formatProviderLabel(provider: ProviderKind): string {
@@ -100,8 +108,5 @@ export function formatProviderLabel(provider: ProviderKind): string {
 }
 
 export function formatProfileUsageBasis(metric: "tokens" | "turns"): string {
-  return metric === "tokens" ? "tracked tokens" : "turns";
+  return metric === "tokens" ? t("tracked tokens") : t("turns");
 }
-
-const WHOLE_NUMBER_FORMATTER = new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 });
-const MONTH_DAY_FORMATTER = new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" });

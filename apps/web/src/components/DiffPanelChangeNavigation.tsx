@@ -1,4 +1,5 @@
 import { ChevronDownIcon, ChevronUpIcon } from "~/lib/icons";
+import { useT } from "~/i18n";
 
 import { IconButton } from "./ui/icon-button";
 
@@ -19,7 +20,10 @@ export function DiffPanelChangeNavigationButtons(props: {
   navigation: DiffPanelChangeNavigation;
   className?: string;
 }) {
+  const t = useT();
   const { navigation } = props;
+  const previousLabel = t("Previous change");
+  const nextLabel = t("Next change");
   return (
     <>
       <IconButton
@@ -27,8 +31,8 @@ export function DiffPanelChangeNavigationButtons(props: {
         size="icon-xs"
         className={props.className}
         disabled={!navigation.canGoToPrevious}
-        label="Previous change"
-        title={withShortcut("Previous change", navigation.previousShortcutLabel)}
+        label={previousLabel}
+        title={withShortcut(previousLabel, navigation.previousShortcutLabel)}
         onClick={navigation.onGoToPrevious}
       >
         <ChevronUpIcon className="size-3.5" />
@@ -38,8 +42,8 @@ export function DiffPanelChangeNavigationButtons(props: {
         size="icon-xs"
         className={props.className}
         disabled={!navigation.canGoToNext}
-        label="Next change"
-        title={withShortcut("Next change", navigation.nextShortcutLabel)}
+        label={nextLabel}
+        title={withShortcut(nextLabel, navigation.nextShortcutLabel)}
         onClick={navigation.onGoToNext}
       >
         <ChevronDownIcon className="size-3.5" />

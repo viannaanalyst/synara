@@ -12,6 +12,8 @@ export interface ExternalMcpClientConfiguration {
   readonly instruction: string;
 }
 
+type Translate = (key: string, params?: Record<string, string | number>) => string;
+
 export type ExternalMcpSetupAction = "resume-pairing" | "revoke" | "done" | null;
 
 export function externalMcpSetupAction(input: {
@@ -116,15 +118,34 @@ export function buildExternalMcpClientConfiguration(
   };
 }
 
-export function buildExternalMcpExamplePrompt(projectTitle: string | null): string {
+export function buildExternalMcpExamplePrompt(
+  projectTitle: string | null,
+  translate?: Translate,
+): string {
   return [
     projectTitle === null
-      ? "Use Synara to create a new task: call synara_overview first, pick the most relevant project, and tell me which one you chose."
-      : `Use Synara to create a new task in the project named ${JSON.stringify(projectTitle)}.`,
-    "First inspect Synara's capabilities and choose an exact available provider and model; do not guess model names.",
-    "Use an isolated managed worktree and approval-required execution.",
-    "Goal: [DESCRIBE THE WORK].",
-    "Wait for the task to finish, then read the result and summarize it for me.",
+      ? translate
+        ? translate(
+            "Use Synara to create a new task: call synara_overview first, pick the most relevant project, and tell me which one you chose.",
+          )
+        : "Use Synara to create a new task: call synara_overview first, pick the most relevant project, and tell me which one you chose."
+      : translate
+        ? translate("Use Synara to create a new task in the project named {project}.", {
+            project: JSON.stringify(projectTitle),
+          })
+        : `Use Synara to create a new task in the project named ${JSON.stringify(projectTitle)}.`,
+    translate
+      ? translate(
+          "First inspect Synara's capabilities and choose an exact available provider and model; do not guess model names.",
+        )
+      : "First inspect Synara's capabilities and choose an exact available provider and model; do not guess model names.",
+    translate
+      ? translate("Use an isolated managed worktree and approval-required execution.")
+      : "Use an isolated managed worktree and approval-required execution.",
+    translate ? translate("Goal: [DESCRIBE THE WORK].") : "Goal: [DESCRIBE THE WORK].",
+    translate
+      ? translate("Wait for the task to finish, then read the result and summarize it for me.")
+      : "Wait for the task to finish, then read the result and summarize it for me.",
   ].join(" ");
 }
 
@@ -136,34 +157,62 @@ export function buildExternalMcpSetupPrompt(input: {
   readonly setupCommand: string | null;
   readonly stdio: ExternalMcpStdioConfiguration;
   readonly platform?: string;
+  readonly translate?: Translate;
 }): string {
   const platform = input.platform ?? "";
+  const translate = input.translate;
   const codex = buildExternalMcpClientConfiguration("codex", input.stdio, platform);
   const claude = buildExternalMcpClientConfiguration("claudeCode", input.stdio, platform);
   const sections: string[] = [
-    "Connect this coding agent to Synara via MCP. Complete every step yourself, in order, and report what happened.",
+    translate
+      ? translate(
+          "Connect this coding agent to Synara via MCP. Complete every step yourself, in order, and report what happened.",
+        )
+      : "Connect this coding agent to Synara via MCP. Complete every step yourself, in order, and report what happened.",
   ];
   if (input.setupCommand !== null) {
     sections.push(
       [
-        "Step 1 — Pair this computer. Run this exact command in a shell. It exchanges a one-time code (valid for about 10 minutes) for a private credential stored on this computer; no secret ever goes into your MCP configuration:",
+        translate
+          ? translate(
+              "Step 1 — Pair this computer. Run this exact command in a shell. It exchanges a one-time code (valid for about 10 minutes) for a private credential stored on this computer; no secret ever goes into your MCP configuration:",
+            )
+          : "Step 1 — Pair this computer. Run this exact command in a shell. It exchanges a one-time code (valid for about 10 minutes) for a private credential stored on this computer; no secret ever goes into your MCP configuration:",
         "",
         input.setupCommand,
       ].join("\n"),
     );
   } else {
-    sections.push("Step 1 — Pairing is already completed on this computer. Skip it.");
+    sections.push(
+      translate
+        ? translate("Step 1 — Pairing is already completed on this computer. Skip it.")
+        : "Step 1 — Pairing is already completed on this computer. Skip it.",
+    );
   }
   sections.push(
     [
-      'Step 2 — Register Synara as a stdio MCP server named "synara" in your own configuration, using whichever mechanism your app supports:',
+      translate
+        ? translate(
+            'Step 2 — Register Synara as a stdio MCP server named "synara" in your own configuration, using whichever mechanism your app supports:',
+          )
+        : 'Step 2 — Register Synara as a stdio MCP server named "synara" in your own configuration, using whichever mechanism your app supports:',
       "",
-      `If you are Codex, run: ${codex.value}`,
-      `If you are Claude Code, run: ${claude.value}`,
-      "For any other MCP app, merge this into its MCP configuration:",
+      translate
+        ? translate("If you are Codex, run: {command}", { command: codex.value })
+        : `If you are Codex, run: ${codex.value}`,
+      translate
+        ? translate("If you are Claude Code, run: {command}", { command: claude.value })
+        : `If you are Claude Code, run: ${claude.value}`,
+      translate
+        ? translate("For any other MCP app, merge this into its MCP configuration:")
+        : "For any other MCP app, merge this into its MCP configuration:",
       jsonConfiguration(input.stdio),
     ].join("\n"),
-    'Step 3 — Verify. Reload your MCP servers if needed, then call the "synara_overview" tool and summarize the projects, providers, and permissions it returns.',
+    translate
+      ? translate(
+          'Step 3 — Verify. Reload your MCP servers if needed, then call the "synara_overview" tool and summarize the projects, providers, and permissions it returns.',
+        )
+      : 'Step 3 — Verify. Reload your MCP servers if needed, then call the "synara_overview" tool and summarize the projects, providers, and permissions it returns.',
   );
   return sections.join("\n\n");
 }

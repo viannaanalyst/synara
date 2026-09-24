@@ -7,6 +7,7 @@ import { Schema } from "effect";
 import { DEFAULT_MODEL_BY_PROVIDER, DEFAULT_SERVER_SETTINGS_VIEW } from "@synara/contracts";
 import { describe, expect, it } from "vitest";
 
+import { DEFAULT_APP_LOCALE } from "./i18n/locale";
 import {
   AppSettingsSchema,
   applyLocalAppSettingsPatch,
@@ -581,6 +582,19 @@ describe("resolveAppModelSelection", () => {
 describe("timestamp format defaults", () => {
   it("defaults timestamp format to locale", () => {
     expect(DEFAULT_TIMESTAMP_FORMAT).toBe("locale");
+  });
+});
+
+describe("app language defaults", () => {
+  it("defaults the app language to English", () => {
+    expect(AppSettingsSchema.makeUnsafe({}).locale).toBe(DEFAULT_APP_LOCALE);
+    expect(DEFAULT_APP_LOCALE).toBe("en");
+  });
+
+  it("decodes a persisted pt-BR language", () => {
+    const decode = Schema.decodeSync(Schema.fromJsonString(AppSettingsSchema));
+    expect(decode(JSON.stringify({ locale: "pt-BR" })).locale).toBe("pt-BR");
+    expect(decode(JSON.stringify({})).locale).toBe(DEFAULT_APP_LOCALE);
   });
 });
 

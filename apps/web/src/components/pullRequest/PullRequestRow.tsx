@@ -9,9 +9,10 @@ import type { PullRequestListEntry } from "@synara/contracts";
 import { pullRequestListProjectContexts } from "@synara/shared/githubRepository";
 
 import { Tooltip, TooltipPopup, TooltipTrigger } from "~/components/ui/tooltip";
-import { PinStatusIcon, pinActionLabel } from "~/lib/pin";
+import { PinStatusIcon } from "~/lib/pin";
 import { formatRelativeTime } from "~/lib/relativeTime";
 import { cn } from "~/lib/utils";
+import { useT } from "~/i18n";
 import {
   PR_BODY_TEXT_CLASS_NAME,
   PR_FINE_TEXT_CLASS_NAME,
@@ -64,19 +65,29 @@ export const PullRequestRow = function PullRequestRow({
   onClick: (entry: PullRequestListEntry) => void;
   onTogglePinned: (entry: PullRequestListEntry) => void;
 }) {
+  const t = useT();
   const showProjectTitle = showProjectTitleProp ?? false;
   const showDiffColors = showDiffColorsProp ?? true;
   const isPinned = entry.isPinned === true;
   const projectContexts = pullRequestListProjectContexts(entry);
   const projectLabel =
-    projectContexts.length > 1 ? `${projectContexts.length} projects` : entry.projectTitle;
+    projectContexts.length > 1
+      ? t("{count} projects", { count: projectContexts.length })
+      : entry.projectTitle;
   const projectTitle = projectContexts.map((context) => context.projectTitle).join(", ");
-  const pinLabel = pinActionLabel(
-    showProjectTitle
-      ? `pull request #${entry.number} in ${projectLabel}`
-      : `pull request #${entry.number}`,
-    isPinned,
-  );
+  const pinLabel = showProjectTitle
+    ? t(
+        isPinned
+          ? "Unpin pull request #{number} in {project}"
+          : "Pin pull request #{number} in {project}",
+        {
+          number: entry.number,
+          project: projectLabel,
+        },
+      )
+    : t(isPinned ? "Unpin pull request #{number}" : "Pin pull request #{number}", {
+        number: entry.number,
+      });
   return (
     <div
       className={cn(

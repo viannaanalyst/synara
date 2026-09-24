@@ -7,15 +7,16 @@ import type { DesktopAppSnapState, DesktopAppSnapWindowEntry, ThreadId } from "@
 import { useEffect, useRef, useState } from "react";
 
 import { attachAppSnapCapture } from "~/appSnapAttach";
+import { t } from "~/i18n";
 import { toastManager } from "../ui/toast";
 
 const APP_SNAP_WINDOW_LIST_ATTEMPT_LIMIT = 2;
 
 export function appSnapUnavailableMessage(state: DesktopAppSnapState): string {
-  if (!state.enabled || state.status === "disabled") return "Enable AppSnap in Settings";
-  if (state.status === "permission-required") return "Finish AppSnap permissions in Settings";
-  if (state.status === "starting") return "AppSnap is starting…";
-  return state.message?.trim() || "AppSnap is unavailable.";
+  if (!state.enabled || state.status === "disabled") return t("Enable AppSnap in Settings");
+  if (state.status === "permission-required") return t("Finish AppSnap permissions in Settings");
+  if (state.status === "starting") return t("AppSnap is starting…");
+  return state.message?.trim() || t("AppSnap is unavailable.");
 }
 
 export type AppSnapWindowPicker = {
@@ -138,9 +139,11 @@ export function useAppSnapWindows(input: {
       .catch((captureError) => {
         toastManager.add({
           type: "error",
-          title: "AppSnap failed",
+          title: t("AppSnap failed"),
           description:
-            captureError instanceof Error ? captureError.message : "Could not capture the window.",
+            captureError instanceof Error
+              ? captureError.message
+              : t("Could not capture the window."),
           data: { allowCrossThreadVisibility: true },
         });
       })

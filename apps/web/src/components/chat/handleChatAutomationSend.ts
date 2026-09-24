@@ -1,5 +1,6 @@
 import { ThreadId, type ModelSelection, type ProviderStartOptions } from "@synara/contracts";
 import { readNativeApi } from "~/nativeApi";
+import { t } from "~/i18n";
 import {
   automationClarificationPrompt,
   buildComposerAutomationDraft,
@@ -118,10 +119,12 @@ export async function handleChatAutomationSend({
       if (!hasPromptOnlySendableContent || hasLiveTurn) {
         toastManager.add({
           type: "warning",
-          title: "Automation needs a bit more detail",
+          title: t("Automation needs a bit more detail"),
           description:
             automationRequest.reason ??
-            'Add what it should do and how often, e.g. "every weekday at 9am, summarize my PRs".',
+            t(
+              'Add what it should do and how often, e.g. "every weekday at 9am, summarize my PRs".',
+            ),
         });
         return true;
       }

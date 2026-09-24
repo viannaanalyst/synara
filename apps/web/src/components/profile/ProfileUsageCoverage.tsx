@@ -3,6 +3,7 @@
 // Layer: web profile feature.
 
 import type { ProviderKind } from "@synara/contracts";
+import { useT } from "~/i18n";
 import { formatProviderLabel } from "./profileFormatting";
 
 export function ProfileUsageCoverage({
@@ -12,14 +13,16 @@ export function ProfileUsageCoverage({
   readonly unavailableProviders: ReadonlyArray<ProviderKind>;
   readonly className?: string;
 }) {
+  const t = useT();
   if (unavailableProviders.length === 0) {
     return null;
   }
   return (
     <p className={className}>
-      Token usage is unavailable or zero for{" "}
-      {unavailableProviders.map(formatProviderLabel).join(", ")}. Percentages reflect tracked tokens
-      only. Their turns still count toward activity totals.
+      {t(
+        "Token usage is unavailable or zero for {providers}. Percentages reflect tracked tokens only. Their turns still count toward activity totals.",
+        { providers: unavailableProviders.map(formatProviderLabel).join(", ") },
+      )}
     </p>
   );
 }

@@ -51,6 +51,7 @@ import { useSplitViewStore } from "~/splitViewStore";
 import { useTerminalStateStore } from "~/terminalStateStore";
 import { useTemporaryThreadStore } from "~/temporaryThreadStore";
 import { useRightDockStore } from "~/rightDockStore";
+import { t, useT } from "~/i18n";
 
 import { EnvironmentEditorSection } from "./EnvironmentEditorSection";
 import {
@@ -192,7 +193,7 @@ function EnvironmentRecapSection({
   markdownCwd: string | undefined;
 }) {
   return (
-    <EnvironmentCollapsibleSection label="Recap">
+    <EnvironmentCollapsibleSection label={t("Recap")}>
       <div className="flex flex-col gap-1.5 pb-1.5">
         {recap.text ? (
           <div className="px-2">
@@ -257,6 +258,7 @@ export function EnvironmentPanel({
   onRegisterCommitAndPushTrigger,
   railBottom,
 }: EnvironmentPanelProps) {
+  useT();
   const githubRepository = githubRepositoryProp ?? null;
   const githubRepositories = githubRepositoriesProp ?? [];
   const studioFolderPath = studioFolderPathProp ?? null;
@@ -297,15 +299,15 @@ export function EnvironmentPanel({
       ) : null}
 
       <div className="flex items-center justify-between gap-2 px-2 pb-0.5 pt-0.5">
-        <EnvironmentPanelTitle>Environment</EnvironmentPanelTitle>
+        <EnvironmentPanelTitle>{t("Environment")}</EnvironmentPanelTitle>
         {/*
           icon-xs centers the 14px gear inside a 28/24px box, insetting it ~7/5px from the
           content edge; pull it back so the glyph's right edge lines up with the rows' chevrons
           (which sit flush against the same px-2 gutter).
         */}
         <IconButton
-          label="Panel sections"
-          tooltip="Panel sections"
+          label={t("Panel sections")}
+          tooltip={t("Panel sections")}
           className="-mr-[7px] sm:-mr-[5px]"
           onClick={() =>
             void navigate({
@@ -332,8 +334,8 @@ export function EnvironmentPanel({
             if (!api) {
               toastManager.add({
                 type: "error",
-                title: "Unable to open folder",
-                description: "The desktop connection is not available yet.",
+                title: t("Unable to open folder"),
+                description: t("The desktop connection is not available yet."),
               });
               return;
             }
@@ -343,9 +345,9 @@ export function EnvironmentPanel({
               .catch((error) => {
                 toastManager.add({
                   type: "error",
-                  title: "Unable to open folder",
+                  title: t("Unable to open folder"),
                   description:
-                    error instanceof Error ? error.message : "An unknown error occurred.",
+                    error instanceof Error ? error.message : t("An unknown error occurred."),
                 });
               });
           }}
@@ -355,7 +357,7 @@ export function EnvironmentPanel({
       {isGitRepo ? (
         <EnvironmentRow
           icon={<ChangesIcon className={ENVIRONMENT_ROW_ICON_CLASS_NAME} aria-hidden />}
-          label="Changes"
+          label={t("Changes")}
           trailing={hasChanges ? <DiffStat insertions={additions} deletions={deletions} /> : null}
           disabled={changesDisabled}
           onClick={() => {
@@ -387,8 +389,8 @@ export function EnvironmentPanel({
                 if (!createSidechat) {
                   toastManager.add({
                     type: "warning",
-                    title: "Side chat is unavailable",
-                    description: "Open a server-backed main thread before starting a side chat.",
+                    title: t("Side chat is unavailable"),
+                    description: t("Open a server-backed main thread before starting a side chat."),
                   });
                   return;
                 }
@@ -397,11 +399,11 @@ export function EnvironmentPanel({
               .catch((error) => {
                 toastManager.add({
                   type: "error",
-                  title: "Could not start side chat",
+                  title: t("Could not start side chat"),
                   description:
                     error instanceof Error
                       ? error.message
-                      : "An error occurred while creating the side chat.",
+                      : t("An error occurred while creating the side chat."),
                 });
               });
           }}
@@ -417,7 +419,9 @@ export function EnvironmentPanel({
               if (settings.confirmThreadDelete) {
                 const confirmationMessage = [
                   `Delete side chat "${sidechat.title}"?`,
-                  "This permanently clears conversation history for this side chat and its subagents.",
+                  t(
+                    "This permanently clears conversation history for this side chat and its subagents.",
+                  ),
                 ].join("\n");
                 const api = readNativeApi();
                 const confirmed = api
@@ -445,11 +449,11 @@ export function EnvironmentPanel({
             })().catch((error) => {
               toastManager.add({
                 type: "error",
-                title: "Could not delete side chat",
+                title: t("Could not delete side chat"),
                 description:
                   error instanceof Error
                     ? error.message
-                    : "An error occurred while deleting the side chat.",
+                    : t("An error occurred while deleting the side chat."),
               });
             });
           }}
@@ -464,7 +468,7 @@ export function EnvironmentPanel({
       {settings.showEnvironmentUsage ? <EnvironmentUsageSection provider={activeProvider} /> : null}
 
       {settings.showEnvironmentRepository && githubRepository && onOpenGithubRepository ? (
-        <EnvironmentLabeledSection label="Repository">
+        <EnvironmentLabeledSection label={t("Repository")}>
           <EnvironmentRow
             icon={<GitHubIcon className={ENVIRONMENT_ROW_ICON_CLASS_NAME} aria-hidden />}
             label={<span className="truncate">{githubRepository.nameWithOwner}</span>}

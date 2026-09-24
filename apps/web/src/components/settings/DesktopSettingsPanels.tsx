@@ -14,6 +14,7 @@ import { useEffect, useRef, useState } from "react";
 
 import type { AppSettingsBinding } from "~/appSettings";
 import { createLatestAppSnapRequestGuard } from "~/appSnap.logic";
+import { t, useT } from "~/i18n";
 import { useRefreshOnWindowReturn } from "~/hooks/useRefreshOnWindowReturn";
 import { playAppSnapCaptureSound } from "~/lib/appSnapSound";
 import { CentralIcon } from "~/lib/central-icons";
@@ -42,16 +43,16 @@ import { toastManager } from "~/components/ui/toast";
 import { serverConfigQueryOptions } from "~/lib/serverReactQuery";
 
 function appSnapStatusText(state: DesktopAppSnapState | null): string {
-  if (!state) return "Available in the Synara desktop app";
-  if (!state.supported) return state.message ?? "Available on macOS only";
+  if (!state) return t("Available in the Synara desktop app");
+  if (!state.supported) return state.message ?? t("Available on macOS only");
   if (state.status === "ready") {
     const shortcut = state.shortcut;
-    const label = shortcut ? appSnapShortcutLabels(shortcut).join(" + ") : "the shortcut";
-    return `Listening — press ${label} to snap`;
+    const label = shortcut ? appSnapShortcutLabels(shortcut).join(" + ") : t("the shortcut");
+    return t("Listening — press {shortcut} to snap", { shortcut: label });
   }
-  if (state.status === "disabled") return "Off";
-  if (state.status === "starting") return "Starting the capture listener…";
-  return state.message ?? "Permission setup required";
+  if (state.status === "disabled") return t("Off");
+  if (state.status === "starting") return t("Starting the capture listener…");
+  return state.message ?? t("Permission setup required");
 }
 
 const EMPTY_KEYBINDINGS: ResolvedKeybindingsConfig = [];
@@ -62,6 +63,7 @@ export function NotificationsSettingsPanel({
   updateSettings,
   active,
 }: AppSettingsBinding & { readonly active: boolean }) {
+  const t = useT();
   const [browserNotificationPermission, setBrowserNotificationPermission] = useState(
     readBrowserNotificationPermissionState(),
   );
@@ -95,23 +97,23 @@ export function NotificationsSettingsPanel({
     updateSettings({ enableSystemTaskCompletionNotifications: false });
     toastManager.add({
       type: permission === "denied" ? "warning" : "error",
-      title: "Desktop notifications unavailable",
+      title: t("Desktop notifications unavailable"),
       description: buildNotificationSettingsSupportText(permission),
     });
   }
 
   async function sendTestNotification() {
-    const title = "Activity notification";
-    const body = "Notification test for chats and terminal agents.";
+    const title = t("Activity notification");
+    const body = t("Notification test for chats and terminal agents.");
 
     if (window.desktopBridge) {
       const shown = await window.desktopBridge.notifications.show({ title, body, silent: false });
       toastManager.add({
         type: shown ? "success" : "warning",
-        title: shown ? "Test notification sent" : "Notifications unavailable",
+        title: shown ? t("Test notification sent") : t("Notifications unavailable"),
         description: shown
-          ? "Your operating system should show the notification."
-          : "Desktop notifications are not supported on this device.",
+          ? t("Your operating system should show the notification.")
+          : t("Desktop notifications are not supported on this device."),
       });
       return;
     }
@@ -121,7 +123,7 @@ export function NotificationsSettingsPanel({
     if (permission !== "granted") {
       toastManager.add({
         type: permission === "denied" ? "warning" : "error",
-        title: "Desktop notifications unavailable",
+        title: t("Desktop notifications unavailable"),
         description: buildNotificationSettingsSupportText(permission),
       });
       return;
@@ -133,8 +135,8 @@ export function NotificationsSettingsPanel({
     });
     toastManager.add({
       type: "success",
-      title: "Test notification sent",
-      description: "Your browser should show the notification.",
+      title: t("Test notification sent"),
+      description: t("Your browser should show the notification."),
     });
   }
 
@@ -142,14 +144,17 @@ export function NotificationsSettingsPanel({
 
   return (
     <div className="space-y-6">
-      <SettingsSection title="Activity alerts">
+      <SettingsSection title={t("Activity alerts")}>
         <SettingsRow
-          title="Activity toasts"
-          description="Show an in-app toast when a chat or managed terminal agent finishes or needs input."
+          title={t("Activity toasts")}
+          anchorTitle="Activity toasts"
+          description={t(
+            "Show an in-app toast when a chat or managed terminal agent finishes or needs input.",
+          )}
           resetAction={
             settings.enableTaskCompletionToasts !== defaults.enableTaskCompletionToasts ? (
               <SettingResetButton
-                label="activity toasts"
+                label={t("activity toasts")}
                 onClick={() =>
                   updateSettings({
                     enableTaskCompletionToasts: defaults.enableTaskCompletionToasts,
@@ -164,20 +169,23 @@ export function NotificationsSettingsPanel({
               onCheckedChange={(checked) =>
                 updateSettings({ enableTaskCompletionToasts: Boolean(checked) })
               }
-              aria-label="Activity toast notifications"
+              aria-label={t("Activity toast notifications")}
             />
           }
         />
 
         <SettingsRow
-          title="Desktop notifications"
-          description="Show an OS notification when a chat or managed terminal agent finishes or needs input while the app is in the background."
+          title={t("Desktop notifications")}
+          anchorTitle="Desktop notifications"
+          description={t(
+            "Show an OS notification when a chat or managed terminal agent finishes or needs input while the app is in the background.",
+          )}
           status={buildNotificationSettingsSupportText(browserNotificationPermission)}
           resetAction={
             settings.enableSystemTaskCompletionNotifications !==
             defaults.enableSystemTaskCompletionNotifications ? (
               <SettingResetButton
-                label="desktop notifications"
+                label={t("desktop notifications")}
                 onClick={() =>
                   updateSettings({
                     enableSystemTaskCompletionNotifications:
@@ -190,14 +198,14 @@ export function NotificationsSettingsPanel({
           control={
             <div className="flex w-full items-center gap-2 sm:w-auto sm:justify-end">
               <Button size="xs" variant="outline" onClick={() => void sendTestNotification()}>
-                Test
+                {t("Test")}
               </Button>
               <Switch
                 checked={settings.enableSystemTaskCompletionNotifications}
                 onCheckedChange={(checked) => {
                   void setSystemNotificationsEnabled(Boolean(checked));
                 }}
-                aria-label="Desktop activity notifications"
+                aria-label={t("Desktop activity notifications")}
               />
             </div>
           }
@@ -213,6 +221,7 @@ export function AppSnapSettingsPanel({
   updateSettings,
   active,
 }: AppSettingsBinding & { readonly active: boolean }) {
+  const t = useT();
   const [appSnapState, setAppSnapState] = useState<DesktopAppSnapState | null>(null);
   const [openGuidePane, setOpenGuidePane] = useState<DesktopAppSnapSettingsPane | null>(null);
   const appSnapRequestGuardRef = useRef(createLatestAppSnapRequestGuard());
@@ -257,8 +266,8 @@ export function AppSnapSettingsPanel({
     if (!bridge) {
       toastManager.add({
         type: "warning",
-        title: "AppSnap unavailable",
-        description: "AppSnap requires the Synara desktop app on macOS.",
+        title: t("AppSnap unavailable"),
+        description: t("AppSnap requires the Synara desktop app on macOS."),
       });
       return;
     }
@@ -283,8 +292,8 @@ export function AppSnapSettingsPanel({
       } else if (nextEnabled && state.status === "error") {
         toastManager.add({
           type: "warning",
-          title: "Finish AppSnap setup",
-          description: state.message ?? "Allow the required macOS permissions, then try again.",
+          title: t("Finish AppSnap setup"),
+          description: state.message ?? t("Allow the required macOS permissions, then try again."),
         });
       }
     } catch (error) {
@@ -292,8 +301,8 @@ export function AppSnapSettingsPanel({
       updateSettings({ enableAppSnap: false });
       toastManager.add({
         type: "error",
-        title: "AppSnap setup failed",
-        description: error instanceof Error ? error.message : "Could not configure AppSnap.",
+        title: t("AppSnap setup failed"),
+        description: error instanceof Error ? error.message : t("Could not configure AppSnap."),
       });
     }
   }
@@ -311,27 +320,28 @@ export function AppSnapSettingsPanel({
         </span>
         <div className="min-w-0 space-y-1">
           <p className={SETTINGS_CARD_ROW_TITLE_CLASS_NAME}>
-            Take an AppSnap to show your agent another app's window
+            {t("Take an AppSnap to show your agent another app's window")}
           </p>
           <p className={SETTINGS_CARD_ROW_DESCRIPTION_CLASS_NAME}>
-            Press your two-key shortcut while any app is frontmost. Synara captures that window as
-            an image, brings itself forward, and attaches the snap to a task composer — the capture
-            stays on this device until you send the message.
+            {t(
+              "Press your two-key shortcut while any app is frontmost. Synara captures that window as an image, brings itself forward, and attaches the snap to a task composer — the capture stays on this device until you send the message.",
+            )}
           </p>
           {!supported ? (
             <p className={cn(SETTINGS_CARD_ROW_DESCRIPTION_CLASS_NAME, "pt-0.5")}>
               {appSnapState
-                ? (appSnapState.message ?? "AppSnap is available only in the macOS desktop app.")
-                : "AppSnap requires the Synara desktop app on macOS."}
+                ? (appSnapState.message ?? t("AppSnap is available only in the macOS desktop app."))
+                : t("AppSnap requires the Synara desktop app on macOS.")}
             </p>
           ) : null}
         </div>
       </SettingsCard>
 
-      <SettingsSection title="Capture">
+      <SettingsSection title={t("Capture")}>
         <SettingsRow
-          title="Enable AppSnap"
-          description="Run the capture listener in the background while Synara is open."
+          title={t("Enable AppSnap")}
+          anchorTitle="Enable AppSnap"
+          description={t("Run the capture listener in the background while Synara is open.")}
           status={appSnapStatusText(appSnapState)}
           resetAction={
             settings.enableAppSnap !== defaults.enableAppSnap ? (
@@ -346,14 +356,17 @@ export function AppSnapSettingsPanel({
               checked={enabled}
               disabled={!supported}
               onCheckedChange={(checked) => void setAppSnapEnabled(Boolean(checked))}
-              aria-label="Enable AppSnap"
+              aria-label={t("Enable AppSnap")}
             />
           }
         />
 
         <SettingsRow
-          title="Shortcut"
-          description="Choose exactly two keys: one modifier and one other key. Synara checks its own bindings and asks macOS whether another app already owns the shortcut before saving it."
+          title={t("Shortcut")}
+          anchorTitle="Shortcut"
+          description={t(
+            "Choose exactly two keys: one modifier and one other key. Synara checks its own bindings and asks macOS whether another app already owns the shortcut before saving it.",
+          )}
           control={
             <AppSnapShortcutControl
               key={
@@ -374,22 +387,26 @@ export function AppSnapSettingsPanel({
         />
 
         <SettingsRow
-          title="Destination"
-          description="Snaps join the task you interacted with in the last minute, and consecutive snaps stay together. Otherwise Synara opens a fresh task with the capture attached."
+          title={t("Destination")}
+          anchorTitle="Destination"
+          description={t(
+            "Snaps join the task you interacted with in the last minute, and consecutive snaps stay together. Otherwise Synara opens a fresh task with the capture attached.",
+          )}
           control={
             <span className="text-ui leading-snug font-medium text-muted-foreground">
-              Automatic
+              {t("Automatic")}
             </span>
           }
         />
 
         <SettingsRow
-          title="Capture sound"
-          description="Play a short shutter cue when a window is captured."
+          title={t("Capture sound")}
+          anchorTitle="Capture sound"
+          description={t("Play a short shutter cue when a window is captured.")}
           resetAction={
             settings.appSnapPlaySound !== defaults.appSnapPlaySound ? (
               <SettingResetButton
-                label="capture sound"
+                label={t("capture sound")}
                 onClick={() => updateSettings({ appSnapPlaySound: defaults.appSnapPlaySound })}
               />
             ) : null
@@ -397,14 +414,14 @@ export function AppSnapSettingsPanel({
           control={
             <div className="flex w-full items-center gap-2 sm:w-auto sm:justify-end">
               <Button size="xs" variant="outline" onClick={() => void playAppSnapCaptureSound()}>
-                Preview
+                {t("Preview")}
               </Button>
               <Switch
                 checked={settings.appSnapPlaySound}
                 onCheckedChange={(checked) =>
                   updateSettings({ appSnapPlaySound: Boolean(checked) })
                 }
-                aria-label="Play a sound when an AppSnap is captured"
+                aria-label={t("Play a sound when an AppSnap is captured")}
               />
             </div>
           }

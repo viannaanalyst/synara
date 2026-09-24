@@ -12,6 +12,7 @@ import { DisclosureRegion } from "~/components/ui/DisclosureRegion";
 import { Input } from "~/components/ui/input";
 import { Switch } from "~/components/ui/switch";
 import { toastManager } from "~/components/ui/toast";
+import { getLocale, t as translate, useT } from "~/i18n";
 import { copyTextToClipboard } from "~/hooks/useCopyToClipboard";
 import { cn, getNavigatorPlatform } from "~/lib/utils";
 import { ensureNativeApi } from "~/nativeApi";
@@ -19,8 +20,6 @@ import {
   buildExternalMcpClientConfiguration,
   buildExternalMcpExamplePrompt,
   buildExternalMcpSetupPrompt,
-  describeExternalMcpPermissions,
-  describeExternalMcpProjects,
   externalMcpSetupAction,
 } from "./externalMcpSetup";
 import { SettingsListRow, SettingsRow, SettingsSection } from "./SettingsPanelPrimitives";
@@ -40,9 +39,13 @@ function dateMillis(value: string): number {
 }
 
 function formatDate(value: string | null): string {
-  if (!value) return "Never";
+  if (!value) return translate("Never");
   const milliseconds = dateMillis(value);
-  return Number.isNaN(milliseconds) ? String(value) : new Date(milliseconds).toLocaleString();
+  return Number.isNaN(milliseconds)
+    ? String(value)
+    : new Intl.DateTimeFormat(getLocale(), { dateStyle: "short", timeStyle: "short" }).format(
+        new Date(milliseconds),
+      );
 }
 
 function copyWithToast(value: string, title: string): void {
@@ -51,15 +54,16 @@ function copyWithToast(value: string, title: string): void {
     (error: unknown) =>
       toastManager.add({
         type: "error",
-        title: "Could not copy",
-        description: error instanceof Error ? error.message : "Clipboard access failed.",
+        title: translate("Could not copy"),
+        description: error instanceof Error ? error.message : translate("Clipboard access failed."),
       }),
   );
 }
 
 export function ExternalMcpSettingsPanel(props: { active: boolean }) {
+  const t = useT();
   const queryClient = useQueryClient();
-  const [name, setName] = useState<string>(DEFAULT_NAME);
+  const [name, setName] = useState<string>(() => t(DEFAULT_NAME));
   const [allProjects, setAllProjects] = useState(true);
   const [selectedProjects, setSelectedProjects] = useState<ReadonlySet<string>>(new Set());
   const [advancedOpen, setAdvancedOpen] = useState(false);
@@ -119,15 +123,15 @@ export function ExternalMcpSettingsPanel(props: { active: boolean }) {
       void queryClient.invalidateQueries({ queryKey: INTEGRATIONS_QUERY_KEY });
       toastManager.add({
         type: "success",
-        title: "Connection ready",
-        description: "Give your agent the setup prompt before the one-time code expires.",
+        title: t("Connection ready"),
+        description: t("Give your agent the setup prompt before the one-time code expires."),
       });
     },
     onError: (error: unknown) =>
       toastManager.add({
         type: "error",
-        title: "Could not create connection",
-        description: error instanceof Error ? error.message : "External MCP setup failed.",
+        title: t("Could not create connection"),
+        description: error instanceof Error ? error.message : t("External MCP setup failed."),
       }),
   });
 
@@ -142,15 +146,15 @@ export function ExternalMcpSettingsPanel(props: { active: boolean }) {
       void queryClient.invalidateQueries({ queryKey: INTEGRATIONS_QUERY_KEY });
       toastManager.add({
         type: "success",
-        title: "Connection revoked",
-        description: "Its credential stops working immediately.",
+        title: t("Connection revoked"),
+        description: t("Its credential stops working immediately."),
       });
     },
     onError: (error: unknown) =>
       toastManager.add({
         type: "error",
-        title: "Could not revoke connection",
-        description: error instanceof Error ? error.message : "Revocation failed.",
+        title: t("Could not revoke connection"),
+        description: error instanceof Error ? error.message : t("Revocation failed."),
       }),
   });
 
@@ -162,15 +166,15 @@ export function ExternalMcpSettingsPanel(props: { active: boolean }) {
       void queryClient.invalidateQueries({ queryKey: INTEGRATIONS_QUERY_KEY });
       toastManager.add({
         type: "success",
-        title: "New pairing code ready",
-        description: "Copy the refreshed setup prompt. The new one-time code lasts 10 minutes.",
+        title: t("New pairing code ready"),
+        description: t("Copy the refreshed setup prompt. The new one-time code lasts 10 minutes."),
       });
     },
     onError: (error: unknown) =>
       toastManager.add({
         type: "error",
-        title: "Could not resume pairing",
-        description: error instanceof Error ? error.message : "Pairing refresh failed.",
+        title: t("Could not resume pairing"),
+        description: error instanceof Error ? error.message : t("Pairing refresh failed."),
       }),
   });
 
@@ -234,6 +238,7 @@ export function ExternalMcpSettingsPanel(props: { active: boolean }) {
         setupCommand: paired ? null : setup.setupCommand,
         stdio: setup.stdio,
         platform,
+        translate: t,
       })
     : null;
   const manualConfiguration = setup
@@ -244,29 +249,36 @@ export function ExternalMcpSettingsPanel(props: { active: boolean }) {
         setup.integration.projectScope === "all"
           ? null
           : (setup.integration.allowedProjects[0]?.title ?? null),
+        t,
       )
     : null;
 
   return (
     <div className="space-y-6">
       {!setup ? (
-        <SettingsSection title="Connect a coding agent">
+        <SettingsSection title={t("Connect a coding agent")}>
           <SettingsRow
-            title="Name"
-            description="How this connection appears in Synara. Works with Codex, Claude, and any other MCP-capable agent."
+            title={t("Name")}
+            anchorTitle="Name"
+            description={t(
+              "How this connection appears in Synara. Works with Codex, Claude, and any other MCP-capable agent.",
+            )}
             control={
               <Input
                 className="w-full sm:w-64"
                 value={name}
                 maxLength={120}
-                placeholder={DEFAULT_NAME}
+                placeholder={t(DEFAULT_NAME)}
                 onChange={(event) => setName(event.target.value)}
               />
             }
           />
           <SettingsRow
-            title="Access all of Synara"
-            description="The agent can discover and work in every project, including ones you add later. Turn off to pick specific projects."
+            title={t("Access all of Synara")}
+            anchorTitle="Access all of Synara"
+            description={t(
+              "The agent can discover and work in every project, including ones you add later. Turn off to pick specific projects.",
+            )}
             control={<Switch checked={allProjects} onCheckedChange={setAllProjects} />}
           >
             <DisclosureRegion open={!allProjects} contentClassName="mt-3">
@@ -299,15 +311,18 @@ export function ExternalMcpSettingsPanel(props: { active: boolean }) {
                 })}
                 {projects.length === 0 ? (
                   <span className="text-ui leading-snug text-muted-foreground">
-                    No projects are available.
+                    {t("No projects are available.")}
                   </span>
                 ) : null}
               </div>
             </DisclosureRegion>
           </SettingsRow>
           <SettingsRow
-            title="Advanced permissions"
-            description="Optional access for existing tasks, shared checkouts, or execution without approvals. The safe defaults are recommended."
+            title={t("Advanced permissions")}
+            anchorTitle="Advanced permissions"
+            description={t(
+              "Optional access for existing tasks, shared checkouts, or execution without approvals. The safe defaults are recommended.",
+            )}
             control={
               <Button
                 size="xs"
@@ -315,7 +330,7 @@ export function ExternalMcpSettingsPanel(props: { active: boolean }) {
                 aria-expanded={advancedOpen}
                 onClick={() => setAdvancedOpen((current) => !current)}
               >
-                Review
+                {t("Review")}
                 <DisclosureChevron open={advancedOpen} className="ml-1 size-3.5" />
               </Button>
             }
@@ -326,9 +341,11 @@ export function ExternalMcpSettingsPanel(props: { active: boolean }) {
             >
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <div className="text-ui leading-snug font-medium">Read other project tasks</div>
+                  <div className="text-ui leading-snug font-medium">
+                    {t("Read other project tasks")}
+                  </div>
                   <div className="mt-0.5 text-ui-sm leading-relaxed text-muted-foreground">
-                    Without this permission, the agent can read only tasks it creates.
+                    {t("Without this permission, the agent can read only tasks it creates.")}
                   </div>
                 </div>
                 <Switch checked={allowProjectRead} onCheckedChange={setAllowProjectRead} />
@@ -336,11 +353,12 @@ export function ExternalMcpSettingsPanel(props: { active: boolean }) {
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <div className="text-ui leading-snug font-medium">
-                    Use the shared local checkout
+                    {t("Use the shared local checkout")}
                   </div>
                   <div className="mt-0.5 text-ui-sm leading-relaxed text-muted-foreground">
-                    High impact. Tasks may modify the checkout you are actively using instead of an
-                    isolated worktree.
+                    {t(
+                      "High impact. Tasks may modify the checkout you are actively using instead of an isolated worktree.",
+                    )}
                   </div>
                 </div>
                 <Switch checked={allowLocal} onCheckedChange={setAllowLocal} />
@@ -348,21 +366,23 @@ export function ExternalMcpSettingsPanel(props: { active: boolean }) {
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <div className="text-ui leading-snug font-medium">
-                    Run without approval prompts
+                    {t("Run without approval prompts")}
                   </div>
                   <div className="mt-0.5 text-ui-sm leading-relaxed text-muted-foreground">
-                    High impact. The external agent may start full-access execution without asking
-                    you to approve tool actions.
+                    {t(
+                      "High impact. The external agent may start full-access execution without asking you to approve tool actions.",
+                    )}
                   </div>
                 </div>
                 <Switch checked={allowFullAccess} onCheckedChange={setAllowFullAccess} />
               </div>
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <div className="text-xs font-medium">Computer control</div>
-                  <div className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">
-                    High impact. Tasks may drive this Mac&apos;s screen — observe, click, type,
-                    menus, clipboard. Every computer action still asks for your approval.
+                  <div className="text-ui leading-snug font-medium">{t("Computer control")}</div>
+                  <div className="mt-0.5 text-ui-sm leading-relaxed text-muted-foreground">
+                    {t(
+                      "High impact. Tasks may drive this Mac's screen — observe, click, type, menus, clipboard. Every computer action still asks for your approval.",
+                    )}
                   </div>
                 </div>
                 <Switch checked={allowComputerControl} onCheckedChange={setAllowComputerControl} />
@@ -370,11 +390,14 @@ export function ExternalMcpSettingsPanel(props: { active: boolean }) {
             </DisclosureRegion>
           </SettingsRow>
           <SettingsRow
-            title="Create connection"
-            description="The connection lasts 30 days and can be revoked at any time. The next screen gives you one prompt to paste into your agent."
+            title={t("Create connection")}
+            anchorTitle="Create connection"
+            description={t(
+              "The connection lasts 30 days and can be revoked at any time. The next screen gives you one prompt to paste into your agent.",
+            )}
             control={
               <Button size="sm" disabled={!canCreate} onClick={() => createMutation.mutate()}>
-                {createMutation.isPending ? "Creating..." : "Create connection"}
+                {createMutation.isPending ? t("Creating...") : t("Create connection")}
               </Button>
             }
           />
@@ -382,7 +405,7 @@ export function ExternalMcpSettingsPanel(props: { active: boolean }) {
       ) : null}
 
       {setup && setupIntegration && setupPrompt && manualConfiguration && examplePrompt ? (
-        <SettingsSection title={`Connect ${setupIntegration.name}`}>
+        <SettingsSection title={t("Connect {name}", { name: setupIntegration.name })}>
           <SettingsRow
             title={
               <span className="flex items-center gap-2">
@@ -397,26 +420,32 @@ export function ExternalMcpSettingsPanel(props: { active: boolean }) {
                         : "bg-amber-500",
                   )}
                 />
-                {setupStatus}
+                {t(setupStatus)}
               </span>
             }
             description={
               revoked
-                ? "This connection has been revoked and can no longer access Synara."
+                ? t("This connection has been revoked and can no longer access Synara.")
                 : integrationExpired
-                  ? "This connection has expired and can no longer access Synara."
+                  ? t("This connection has expired and can no longer access Synara.")
                   : connected
-                    ? "Synara received a request from this agent. Setup is complete."
+                    ? t("Synara received a request from this agent. Setup is complete.")
                     : paired
-                      ? "The private credential is stored locally. If the agent has not registered Synara yet, give it the setup prompt below."
+                      ? t(
+                          "The private credential is stored locally. If the agent has not registered Synara yet, give it the setup prompt below.",
+                        )
                       : pairingExpired
-                        ? "The one-time pairing code was not used in time. Resume pairing to issue a fresh code without replacing this connection."
-                        : "Paste the setup prompt into your agent. This page updates automatically when pairing succeeds."
+                        ? t(
+                            "The one-time pairing code was not used in time. Resume pairing to issue a fresh code without replacing this connection.",
+                          )
+                        : t(
+                            "Paste the setup prompt into your agent. This page updates automatically when pairing succeeds.",
+                          )
             }
             status={
               connected
-                ? `Last connected ${formatDate(setupIntegration.lastUsedAt)}.`
-                : `Connection expires ${formatDate(setupIntegration.expiresAt)}.`
+                ? t("Last connected {date}.", { date: formatDate(setupIntegration.lastUsedAt) })
+                : t("Connection expires {date}.", { date: formatDate(setupIntegration.expiresAt) })
             }
             control={
               setupAction === "revoke" ? (
@@ -426,7 +455,7 @@ export function ExternalMcpSettingsPanel(props: { active: boolean }) {
                   disabled={revokeMutation.isPending}
                   onClick={() => revokeMutation.mutate(setupIntegration.integrationId)}
                 >
-                  Revoke and start over
+                  {t("Revoke and start over")}
                 </Button>
               ) : setupAction === "resume-pairing" ? (
                 <div className="flex items-center gap-2">
@@ -436,35 +465,38 @@ export function ExternalMcpSettingsPanel(props: { active: boolean }) {
                     disabled={refreshPairingMutation.isPending}
                     onClick={() => refreshPairingMutation.mutate(setupIntegration.integrationId)}
                   >
-                    {refreshPairingMutation.isPending ? "Resuming..." : "Resume pairing"}
+                    {refreshPairingMutation.isPending ? t("Resuming...") : t("Resume pairing")}
                   </Button>
                   <Button size="xs" variant="ghost" onClick={closeSetup}>
-                    Back
+                    {t("Back")}
                   </Button>
                 </div>
               ) : setupAction === "done" ? (
                 <Button size="xs" variant="ghost" onClick={closeSetup}>
-                  Done
+                  {t("Done")}
                 </Button>
               ) : null
             }
           />
           <SettingsRow
-            title="1. Give your agent this prompt"
-            description="Copy the prompt and paste it into the agent you want to connect (Codex, Claude Code, or any MCP-capable app). The agent pairs this computer, registers Synara in its own configuration, and verifies the connection by itself."
+            title={t("1. Give your agent this prompt")}
+            anchorTitle="1. Give your agent this prompt"
+            description={t(
+              "Copy the prompt and paste it into the agent you want to connect (Codex, Claude Code, or any MCP-capable app). The agent pairs this computer, registers Synara in its own configuration, and verifies the connection by itself.",
+            )}
             status={
               paired
-                ? "Paired. The prompt now covers only registration and verification."
-                : `Pairing code expires ${formatDate(setup.pairingExpiresAt)}.`
+                ? t("Paired. The prompt now covers only registration and verification.")
+                : t("Pairing code expires {date}.", { date: formatDate(setup.pairingExpiresAt) })
             }
             control={
               <Button
                 size="xs"
                 variant="outline"
                 disabled={setupUnavailable}
-                onClick={() => copyWithToast(setupPrompt, "Setup prompt copied")}
+                onClick={() => copyWithToast(setupPrompt, t("Setup prompt copied"))}
               >
-                Copy setup prompt
+                {t("Copy setup prompt")}
               </Button>
             }
           >
@@ -473,8 +505,11 @@ export function ExternalMcpSettingsPanel(props: { active: boolean }) {
             </pre>
           </SettingsRow>
           <SettingsRow
-            title="Set up by hand instead"
-            description="For apps without a terminal or chat, like Claude Desktop: run the pairing command in Terminal, then add the JSON below to the app's MCP configuration."
+            title={t("Set up by hand instead")}
+            anchorTitle="Set up by hand instead"
+            description={t(
+              "For apps without a terminal or chat, like Claude Desktop: run the pairing command in Terminal, then add the JSON below to the app's MCP configuration.",
+            )}
             control={
               <Button
                 size="xs"
@@ -482,7 +517,7 @@ export function ExternalMcpSettingsPanel(props: { active: boolean }) {
                 aria-expanded={manualOpen}
                 onClick={() => setManualOpen((current) => !current)}
               >
-                Show
+                {t("Show")}
                 <DisclosureChevron open={manualOpen} className="ml-1 size-3.5" />
               </Button>
             }
@@ -495,15 +530,15 @@ export function ExternalMcpSettingsPanel(props: { active: boolean }) {
                 <div>
                   <div className="mb-2 flex items-center justify-between gap-3">
                     <span className="text-ui leading-snug font-medium">
-                      Pairing command (run in Terminal)
+                      {t("Pairing command (run in Terminal)")}
                     </span>
                     <Button
                       size="xs"
                       variant="outline"
                       disabled={setupUnavailable}
-                      onClick={() => copyWithToast(setup.setupCommand, "Pairing command copied")}
+                      onClick={() => copyWithToast(setup.setupCommand, t("Pairing command copied"))}
                     >
-                      Copy
+                      {t("Copy")}
                     </Button>
                   </div>
                   <pre className="overflow-x-auto rounded-lg border border-border/70 bg-muted/30 p-3 text-ui-sm leading-relaxed">
@@ -513,14 +548,18 @@ export function ExternalMcpSettingsPanel(props: { active: boolean }) {
               ) : null}
               <div>
                 <div className="mb-2 flex items-center justify-between gap-3">
-                  <span className="text-ui leading-snug font-medium">MCP configuration (JSON)</span>
+                  <span className="text-ui leading-snug font-medium">
+                    {t("MCP configuration (JSON)")}
+                  </span>
                   <Button
                     size="xs"
                     variant="outline"
                     disabled={revoked || integrationExpired}
-                    onClick={() => copyWithToast(manualConfiguration.value, "Configuration copied")}
+                    onClick={() =>
+                      copyWithToast(manualConfiguration.value, t("Configuration copied"))
+                    }
                   >
-                    Copy
+                    {t("Copy")}
                   </Button>
                 </div>
                 <pre className="max-h-48 overflow-auto whitespace-pre-wrap break-words rounded-lg border border-border/70 bg-muted/30 p-3 text-ui-sm leading-relaxed">
@@ -530,21 +569,24 @@ export function ExternalMcpSettingsPanel(props: { active: boolean }) {
             </DisclosureRegion>
           </SettingsRow>
           <SettingsRow
-            title="2. Try it"
-            description="Open a new chat in the agent you just connected and send this editable example. You never need to copy project IDs, model IDs, or request IDs yourself."
+            title={t("2. Try it")}
+            anchorTitle="2. Try it"
+            description={t(
+              "Open a new chat in the agent you just connected and send this editable example. You never need to copy project IDs, model IDs, or request IDs yourself.",
+            )}
             status={
               connected
-                ? "Connection verified by Synara."
-                : "Synara will show Connected after the agent makes its first request."
+                ? t("Connection verified by Synara.")
+                : t("Synara will show Connected after the agent makes its first request.")
             }
             control={
               <Button
                 size="xs"
                 variant="outline"
                 disabled={!paired || revoked || integrationExpired}
-                onClick={() => copyWithToast(examplePrompt, "Example prompt copied")}
+                onClick={() => copyWithToast(examplePrompt, t("Example prompt copied"))}
               >
-                Copy example prompt
+                {t("Copy example prompt")}
               </Button>
             }
           >
@@ -557,9 +599,9 @@ export function ExternalMcpSettingsPanel(props: { active: boolean }) {
         </SettingsSection>
       ) : null}
 
-      <SettingsSection title="Connected agents">
+      <SettingsSection title={t("Connected agents")}>
         {integrationsQuery.isLoading ? (
-          <SettingsListRow title="Loading connections..." />
+          <SettingsListRow title={t("Loading connections...")} />
         ) : integrationsQuery.data?.length ? (
           integrationsQuery.data.map((integration) => {
             const active =
@@ -573,6 +615,27 @@ export function ExternalMcpSettingsPanel(props: { active: boolean }) {
               : integration.revokedAt
                 ? "Revoked"
                 : "Expired";
+            const projectSummary =
+              integration.projectScope === "all"
+                ? t("All projects, including future ones")
+                : integration.allowedProjects.length > 0
+                  ? integration.allowedProjects.map((project) => project.title).join(", ")
+                  : t("No projects");
+            const permissionSummary = [
+              t("Create and follow its own tasks"),
+              ...(integration.capabilities.includes("tasks:read-project")
+                ? [t("Read other tasks in selected projects")]
+                : []),
+              ...(integration.capabilities.includes("runtime:local")
+                ? [t("Use the shared local checkout")]
+                : []),
+              ...(integration.capabilities.includes("runtime:full-access")
+                ? [t("Run without approval prompts")]
+                : []),
+              ...(integration.capabilities.includes("computer:control")
+                ? [t("Control this Mac (per-action approval still applies)")]
+                : []),
+            ].join(" · ");
             return (
               <SettingsListRow
                 key={integration.integrationId}
@@ -580,15 +643,19 @@ export function ExternalMcpSettingsPanel(props: { active: boolean }) {
                 title={integration.name}
                 description={
                   <div className="space-y-1">
-                    <div>{status}</div>
-                    <div>Projects: {describeExternalMcpProjects(integration)}</div>
+                    <div>{t(status)}</div>
                     <div>
-                      Permissions: {describeExternalMcpPermissions(integration.capabilities)}
+                      {t("Projects:")} {projectSummary}
                     </div>
                     <div>
-                      Created {formatDate(integration.createdAt)} · Last used{" "}
-                      {formatDate(integration.lastUsedAt)} · Expires{" "}
-                      {formatDate(integration.expiresAt)}
+                      {t("Permissions:")} {permissionSummary}
+                    </div>
+                    <div>
+                      {t("Created {created} · Last used {lastUsed} · Expires {expires}", {
+                        created: formatDate(integration.createdAt),
+                        lastUsed: formatDate(integration.lastUsedAt),
+                        expires: formatDate(integration.expiresAt),
+                      })}
                     </div>
                   </div>
                 }
@@ -604,7 +671,7 @@ export function ExternalMcpSettingsPanel(props: { active: boolean }) {
                           else refreshPairingMutation.mutate(integration.integrationId);
                         }}
                       >
-                        {integration.pairedAt ? "Continue setup" : "Resume pairing"}
+                        {integration.pairedAt ? t("Continue setup") : t("Resume pairing")}
                       </Button>
                       <Button
                         size="xs"
@@ -612,7 +679,7 @@ export function ExternalMcpSettingsPanel(props: { active: boolean }) {
                         disabled={revokeMutation.isPending}
                         onClick={() => revokeMutation.mutate(integration.integrationId)}
                       >
-                        Revoke
+                        {t("Revoke")}
                       </Button>
                     </div>
                   ) : null
@@ -622,8 +689,10 @@ export function ExternalMcpSettingsPanel(props: { active: boolean }) {
           })
         ) : (
           <SettingsListRow
-            title="No connected agents"
-            description="Connect Codex, Claude, or another local MCP agent to create and follow Synara tasks."
+            title={t("No connected agents")}
+            description={t(
+              "Connect Codex, Claude, or another local MCP agent to create and follow Synara tasks.",
+            )}
           />
         )}
       </SettingsSection>

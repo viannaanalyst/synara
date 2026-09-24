@@ -9,6 +9,7 @@ import {
 } from "@synara/shared/localPreviewFiles";
 import { type MouseEvent as ReactMouseEvent } from "react";
 import { useCopyPathToClipboard } from "~/hooks/useCopyToClipboard";
+import { useT } from "~/i18n";
 import {
   ChevronDownIcon,
   CopyIcon,
@@ -50,6 +51,7 @@ function DiffFileHeaderActionsMenu(props: {
   basePath: string | null;
   chatActions: DiffFileChatActions;
 }) {
+  const t = useT();
   const copyPathToClipboard = useCopyPathToClipboard();
 
   return (
@@ -59,8 +61,8 @@ function DiffFileHeaderActionsMenu(props: {
           <IconButton
             variant="ghost"
             size="icon-xs"
-            label="File actions"
-            title="File actions"
+            label={t("File actions")}
+            title={t("File actions")}
             className="text-muted-foreground hover:text-foreground"
           >
             <EllipsisIcon className="size-3.5" />
@@ -75,7 +77,7 @@ function DiffFileHeaderActionsMenu(props: {
             }}
           >
             <PencilIcon className={DIFF_FILE_ACTIONS_MENU_ICON_CLASS_NAME} />
-            <span>Edit file</span>
+            <span>{t("Edit file")}</span>
           </MenuItem>
         ) : null}
         <MenuItem
@@ -84,7 +86,7 @@ function DiffFileHeaderActionsMenu(props: {
           }}
         >
           <MessageCircleIcon className={DIFF_FILE_ACTIONS_MENU_ICON_CLASS_NAME} />
-          <span>Reference in chat</span>
+          <span>{t("Reference in chat")}</span>
         </MenuItem>
         <MenuItem
           onClick={() => {
@@ -92,11 +94,11 @@ function DiffFileHeaderActionsMenu(props: {
           }}
         >
           <MessageCircleIcon className={DIFF_FILE_ACTIONS_MENU_ICON_CLASS_NAME} />
-          <span>Ask why this changed</span>
+          <span>{t("Ask why this changed")}</span>
         </MenuItem>
         <MenuItem onClick={() => copyPathToClipboard(props.filePath)}>
           <CopyIcon className={DIFF_FILE_ACTIONS_MENU_ICON_CLASS_NAME} />
-          <span>Copy path</span>
+          <span>{t("Copy path")}</span>
         </MenuItem>
       </ComposerPickerMenuPopup>
     </Menu>
@@ -240,11 +242,12 @@ export const DiffPanelFileList = function DiffPanelFileList(props: {
   chatActions?: DiffFileChatActions | undefined;
   onBlameLine?: ((target: DiffLineBlameTarget) => void) | undefined;
 }) {
+  const t = useT();
   if (props.renderableFiles.length === 0) {
     return (
       <FileDiffSurface className="h-full min-h-0 overflow-auto px-2 pb-2">
         <PanelStateMessage density="compact" fill="flex">
-          <p>No files in this diff.</p>
+          <p>{t("No files in this diff.")}</p>
         </PanelStateMessage>
       </FileDiffSurface>
     );

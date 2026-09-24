@@ -14,11 +14,13 @@ import {
   DialogTitle,
 } from "~/components/ui/dialog";
 import { Input } from "~/components/ui/input";
+import { useT } from "~/i18n";
 import { cn } from "~/lib/utils";
 import { ShortcutKbd } from "./ui/shortcut-kbd";
 import {
   buildShortcutSheetSections,
   filterShortcutSheetSections,
+  translateShortcutSheetLabel,
   type ShortcutSheetContext,
   type ShortcutSheetSection,
 } from "../shortcutsSheet";
@@ -55,6 +57,7 @@ function ShortcutsDialogContent(props: {
   platform: string;
   context: ShortcutSheetContext;
 }) {
+  const t = useT();
   const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -75,22 +78,32 @@ function ShortcutsDialogContent(props: {
     platform: props.platform,
     context: props.context,
   });
-  const filteredSections = filterShortcutSheetSections(sections, query);
+  const translatedSections = sections.map((section) => ({
+    ...section,
+    title: t(section.title),
+    description: t(section.description),
+    entries: section.entries.map((entry) => ({
+      ...entry,
+      label: translateShortcutSheetLabel(entry.label, t),
+      description: t(entry.description),
+    })),
+  }));
+  const filteredSections = filterShortcutSheetSections(translatedSections, query);
   const hasResults = filteredSections.some((section) => section.entries.length > 0);
 
   return (
     <>
       <DialogHeader className="pb-2">
-        <DialogTitle className="text-base">Keybindings</DialogTitle>
+        <DialogTitle className="text-base">{t("Keybindings")}</DialogTitle>
         <DialogDescription className="text-ui leading-snug">
-          Reflects the bindings active in your current context.
+          {t("Reflects the bindings active in your current context.")}
         </DialogDescription>
         <div className="pt-2">
           <Input
             ref={inputRef}
             type="search"
             size="sm"
-            placeholder="Search shortcuts..."
+            placeholder={t("Search shortcuts...")}
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             onKeyDown={(event) => {
@@ -102,7 +115,7 @@ function ShortcutsDialogContent(props: {
             }}
             className="rounded-md"
             nativeInput
-            aria-label="Search shortcuts"
+            aria-label={t("Search shortcuts")}
           />
         </div>
       </DialogHeader>
@@ -116,7 +129,7 @@ function ShortcutsDialogContent(props: {
           </div>
         ) : (
           <div className="px-6 py-10 text-center text-ui leading-snug text-muted-foreground">
-            No shortcuts match &ldquo;{query}&rdquo;.
+            {t("No shortcuts match “{query}”.", { query })}
           </div>
         )}
       </DialogPanel>

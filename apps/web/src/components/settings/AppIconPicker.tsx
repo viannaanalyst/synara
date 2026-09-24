@@ -6,6 +6,7 @@ import { useState } from "react";
 
 import type { DesktopAppIcon } from "@synara/contracts";
 import { Spinner } from "~/components/ui/spinner";
+import { useT } from "~/i18n";
 import { cn, isMacPlatform } from "~/lib/utils";
 
 interface AppIconOption {
@@ -35,11 +36,17 @@ export function AppIconPicker({
   readonly value: DesktopAppIcon;
   readonly onValueChange: (value: DesktopAppIcon) => void | Promise<void>;
 }) {
+  const t = useT();
   const [pendingIcon, setPendingIcon] = useState<DesktopAppIcon | null>(null);
   const busy = pendingIcon !== null;
 
   return (
-    <div className="flex items-center gap-1" role="group" aria-label="App icon" aria-busy={busy}>
+    <div
+      className="flex items-center gap-1"
+      role="group"
+      aria-label={t("App icon")}
+      aria-busy={busy}
+    >
       {desktopAppIconsForPlatform(platform).map((icon) => {
         const option = APP_ICON_OPTIONS[icon];
         const selected = value === icon;
@@ -48,8 +55,8 @@ export function AppIconPicker({
           <button
             key={icon}
             type="button"
-            title={option.label}
-            aria-label={option.label}
+            title={t(option.label)}
+            aria-label={t(option.label)}
             aria-pressed={selected}
             disabled={busy}
             className={cn(
@@ -85,7 +92,7 @@ export function AppIconPicker({
             />
             {applying ? (
               <Spinner
-                aria-label="Updating app icon"
+                aria-label={t("Updating app icon")}
                 className="absolute size-4 text-foreground motion-reduce:animate-none"
               />
             ) : null}

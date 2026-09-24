@@ -8,6 +8,7 @@ import {
   type ProviderUsageDisplayRow,
 } from "~/lib/providerUsageDisplay";
 import { cn } from "~/lib/utils";
+import { useT } from "~/i18n";
 
 import { UsageProgressTrack } from "./UsageProgressTrack";
 
@@ -20,6 +21,7 @@ function ProviderUsagePaceLine({
   row: ProviderUsageDisplayRow;
   surface: ProviderUsageLimitRowsSurface;
 }) {
+  const t = useT();
   const paceDetails = providerUsagePaceDetails(row);
   if (!paceDetails) return null;
 
@@ -67,15 +69,16 @@ function ProviderUsageTrack({
 }
 
 function SettingsUsageLimitRow({ row }: { row: ProviderUsageDisplayRow }) {
+  const t = useT();
   const trackProps = providerUsageProgressTrackProps(row);
 
   return (
     <div className="space-y-1.5">
       <div className="flex items-center gap-1.5">
-        <span className="text-ui leading-snug font-medium text-foreground">{row.label}</span>
+        <span className="text-ui leading-snug font-medium text-foreground">{t(row.label)}</span>
         <span
           className={cn("size-1.5 shrink-0 rounded-full", trackProps.markerClassName)}
-          title={row.pace ? `Usage pace: ${row.pace.status}` : undefined}
+          title={row.pace ? t("Usage pace: {status}", { status: t(row.pace.status) }) : undefined}
           aria-hidden
         />
       </div>
@@ -90,11 +93,12 @@ function SettingsUsageLimitRow({ row }: { row: ProviderUsageDisplayRow }) {
 }
 
 function PopoverUsageLimitRow({ row }: { row: ProviderUsageDisplayRow }) {
+  const t = useT();
   return (
     <div className="space-y-1 text-chat-meta leading-tight">
       <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-baseline gap-x-3">
         <div className="flex min-w-0 items-baseline gap-1.5">
-          <span className="shrink-0 text-ui-sm font-medium text-foreground">{row.label}</span>
+          <span className="shrink-0 text-ui-sm font-medium text-foreground">{t(row.label)}</span>
           <span className="min-w-0 truncate tabular-nums text-foreground">{row.leftText}</span>
         </div>
         <div className="min-w-0 text-right text-muted-foreground">

@@ -672,6 +672,9 @@ export interface DesktopAgentCursorStyle {
   readonly shadow?: string;
 }
 
+/** UI languages the desktop shell can render its native surfaces in. */
+export type DesktopLocale = "en" | "pt-BR";
+
 export interface DesktopBridge {
   safariAccess?: {
     getInfo: () => Promise<DesktopSafariAccessInfo>;
@@ -692,6 +695,12 @@ export interface DesktopBridge {
   }) => Promise<string | null>;
   confirm: (message: string) => Promise<boolean>;
   setTheme: (theme: DesktopTheme) => Promise<void>;
+  /**
+   * Mirrors the renderer's UI language so the main process can persist it, rebuild
+   * the native menu, and translate dialogs shown before the renderer exists.
+   */
+  setLocale?: (locale: DesktopLocale) => Promise<void>;
+  getLocale?: () => Promise<DesktopLocale>;
   getAppIcon?: () => Promise<DesktopAppIcon>;
   setAppIcon: (icon: DesktopAppIcon) => Promise<void>;
   showContextMenu: <T extends string>(

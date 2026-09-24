@@ -11,6 +11,7 @@ import { useCallback, useEffect, useId, useRef, useState, type KeyboardEvent } f
 
 import { isElectron } from "../env";
 import { useWindowFolderDrop } from "../hooks/useWindowFolderDrop";
+import { useT } from "../i18n";
 import { VOID_SPACE_KEY, spaceKey, toSpaceIconName } from "../lib/spaceGrouping";
 import { createSpace } from "../lib/spaces";
 import { readNativeApi } from "../nativeApi";
@@ -79,6 +80,7 @@ export function CreateProjectDialog(props: {
   onOpenChange: (open: boolean) => void;
   onSubmit: (value: CreateProjectSubmitValue, options: CreateProjectSubmitOptions) => Promise<void>;
 }) {
+  const t = useT();
   const [source, setSource] = useState<"local" | "github">("local");
   const [path, setPath] = useState("");
   const [repositoryInput, setRepositoryInput] = useState("");
@@ -168,12 +170,12 @@ export function CreateProjectDialog(props: {
     return api.projects.onProvisionProgress((event: GitHubProjectProvisionProgressEvent) => {
       if (event.operationId !== activeOperationIdRef.current) return;
       if (event.kind === "completed") {
-        setProvisionProgress("Project added");
+        setProvisionProgress(t("Project added"));
         return;
       }
       setProvisionProgress(event.message);
     });
-  }, [props.open]);
+  }, [props.open, t]);
 
   const applyPickedFolder = useCallback(
     (picked: string) => {
@@ -199,7 +201,7 @@ export function CreateProjectDialog(props: {
     if (isPickingFolder || submitting) return;
     const api = readNativeApi();
     if (!api) {
-      setFormError("The app server is unavailable.");
+      setFormError(t("The app server is unavailable."));
       return;
     }
     setIsPickingFolder(true);
@@ -211,7 +213,7 @@ export function CreateProjectDialog(props: {
         else applyPickedFolder(picked);
       }
     } catch (error) {
-      setFormError(error instanceof Error ? error.message : "Unable to open the folder picker.");
+      setFormError(error instanceof Error ? error.message : t("Unable to open the folder picker."));
     }
     setIsPickingFolder(false);
   };
@@ -229,30 +231,32 @@ export function CreateProjectDialog(props: {
     // The confirm button stays enabled (and white) like the reference dialog;
     // an empty submit explains what is missing instead of being unclickable.
     if (source === "local" && trimmedPath.length === 0) {
-      setFormError("Type a folder path, or drop a folder above.");
+      setFormError(t("Type a folder path, or drop a folder above."));
       return;
     }
     if (source === "github" && !parsedRepository) {
-      setFormError("Enter a GitHub repository as owner/repository or a GitHub.com repository URL.");
+      setFormError(
+        t("Enter a GitHub repository as owner/repository or a GitHub.com repository URL."),
+      );
       return;
     }
     if (source === "github" && !props.githubProvisioningAvailable) {
-      setFormError("Update the Synara server before adding a project from GitHub.");
+      setFormError(t("Update the Synara server before adding a project from GitHub."));
       return;
     }
     if (source === "github" && trimmedDestinationParent.length === 0) {
-      setFormError("Choose the parent folder where the repository should be cloned.");
+      setFormError(t("Choose the parent folder where the repository should be cloned."));
       return;
     }
     if (source === "github" && !normalizedDirectoryName) {
       setFormError(
-        "Choose a valid folder name without slashes, reserved device names, or a trailing dot.",
+        t("Choose a valid folder name without slashes, reserved device names, or a trailing dot."),
       );
       return;
     }
     setSubmitting(true);
     setFormError(null);
-    setProvisionProgress(source === "github" ? "Validating repository" : null);
+    setProvisionProgress(source === "github" ? t("Validating repository") : null);
     const abortController = new AbortController();
     submitAbortRef.current = abortController;
     try {
@@ -290,11 +294,11 @@ export function CreateProjectDialog(props: {
       setFormError(
         abortController.signal.aborted
           ? source === "github"
-            ? "GitHub clone cancelled. You can retry safely."
-            : "Project creation cancelled."
+            ? t("GitHub clone cancelled. You can retry safely.")
+            : t("Project creation cancelled.")
           : error instanceof Error
             ? error.message
-            : "An error occurred while adding the project.",
+            : t("An error occurred while adding the project."),
       );
       setProvisionProgress(null);
       setSubmitting(false);
@@ -316,7 +320,7 @@ export function CreateProjectDialog(props: {
   // as the destination, so one Create click ships the project into it.
   const handleCreateSpace = async (value: SpaceEditorValue) => {
     const api = readNativeApi();
-    if (!api) throw new Error("The app server is unavailable.");
+    if (!api) throw new Error(t("The app server is unavailable."));
     const icon = toSpaceIconName(value.icon);
     const { spaceId } = await createSpace({ api, name: value.name, icon });
     const createdAt = new Date().toISOString();
@@ -344,7 +348,7 @@ export function CreateProjectDialog(props: {
     <Dialog open={props.open} onOpenChange={handleOpenChange}>
       <DialogPopup>
         <DialogHeader className="px-5 pt-5">
-          <DialogTitle>Create project</DialogTitle>
+          <DialogTitle>{t("Create project")}</DialogTitle>
         </DialogHeader>
         <DialogPanel className="space-y-4 px-5">
           <ProjectSourceSegmentedPicker
@@ -373,10 +377,10 @@ export function CreateProjectDialog(props: {
                 <InputGroupInput
                   id={pathInputId}
                   value={path}
-                  aria-label="Project folder path"
+                  aria-label={t("Project folder path")}
                   aria-invalid={formError ? true : undefined}
                   {...(formError ? { "aria-describedby": errorId } : {})}
-                  placeholder="/path/to/project"
+                  placeholder={t("/path/to/project")}
                   spellCheck={false}
                   autoCorrect="off"
                   autoCapitalize="off"
@@ -394,7 +398,7 @@ export function CreateProjectDialog(props: {
                     id={sourceFolderLabelId}
                     className={cn("block", dialogFieldLabelClassName, "text-ui text-foreground")}
                   >
-                    Source folder
+                    {t("Source folder")}
                   </span>
                   <button
                     type="button"
@@ -409,7 +413,7 @@ export function CreateProjectDialog(props: {
                   >
                     <CentralIcon name="folder-add-left" className="size-4.5" aria-hidden="true" />
                     {isPickingFolder ? (
-                      "Opening the folder picker…"
+                      t("Opening the folder picker…")
                     ) : pickedFolderName ? (
                       <span className="flex min-w-0 flex-col">
                         <span className="truncate">{pickedFolderName}</span>
@@ -418,7 +422,7 @@ export function CreateProjectDialog(props: {
                         </span>
                       </span>
                     ) : (
-                      "Drop a folder here, or browse"
+                      t("Drop a folder here, or browse")
                     )}
                   </button>
                 </div>
@@ -466,7 +470,7 @@ export function CreateProjectDialog(props: {
               id={spaceLabelId}
               className={cn("block", dialogFieldLabelClassName, "text-ui text-foreground")}
             >
-              Space
+              {t("Space")}
             </span>
             <div className="flex items-center gap-2">
               <Select
@@ -509,7 +513,7 @@ export function CreateProjectDialog(props: {
               <Button
                 variant="outline"
                 size="icon"
-                aria-label="New space"
+                aria-label={t("New space")}
                 disabled={submitting}
                 className={cn(PROJECT_DIALOG_FIELD_CONTROL_CLASS_NAME, "w-9 shrink-0 sm:h-9")}
                 onClick={() => setSpaceEditorOpen(true)}
@@ -536,7 +540,7 @@ export function CreateProjectDialog(props: {
             onClick={() => handleOpenChange(false)}
             disabled={submitting && source === "local"}
           >
-            {submitting && source === "github" ? "Cancel clone" : "Cancel"}
+            {submitting && source === "github" ? t("Cancel clone") : t("Cancel")}
           </Button>
           <Button
             id={submitButtonId}
@@ -547,11 +551,11 @@ export function CreateProjectDialog(props: {
           >
             {submitting
               ? source === "github"
-                ? "Cloning…"
-                : "Creating…"
+                ? t("Cloning…")
+                : t("Creating…")
               : source === "github"
-                ? "Clone and add"
-                : "Create project"}
+                ? t("Clone and add")
+                : t("Create project")}
           </Button>
         </DialogFooter>
         <SpaceEditorDialog

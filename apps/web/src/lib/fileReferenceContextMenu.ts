@@ -9,15 +9,16 @@ import { copyTextToClipboard } from "~/hooks/useCopyToClipboard";
 import { getNavigatorPlatform, isMacPlatform, isWindowsPlatform } from "~/lib/utils";
 import { readNativeApi } from "~/nativeApi";
 import { toastManager } from "~/components/ui/toast";
+import { t } from "~/i18n";
 
 export function getRevealInFolderLabel(platform: string): string {
   if (isWindowsPlatform(platform)) {
-    return "Open in Explorer";
+    return t("Open in Explorer");
   }
   if (isMacPlatform(platform)) {
-    return "Reveal in Finder";
+    return t("Reveal in Finder");
   }
-  return "Show in folder";
+  return t("Show in folder");
 }
 
 // Right-click menu shared by explorer rows, changed-file rows, and the file
@@ -55,10 +56,10 @@ export async function showFileReferenceContextMenu(input: {
             {
               id: "reference-in-chat" as const,
               label: rangeLabel
-                ? `Reference ${rangeLabel} in chat`
+                ? t("Reference {range} in chat", { range: rangeLabel })
                 : hasSnippet
-                  ? "Reference selection in chat"
-                  : "Reference in chat",
+                  ? t("Reference selection in chat")
+                  : t("Reference in chat"),
             },
           ]
         : []),
@@ -66,7 +67,9 @@ export async function showFileReferenceContextMenu(input: {
         ? [
             {
               id: "ask-why-in-chat" as const,
-              label: rangeLabel ? `Ask why ${rangeLabel} changed` : "Ask why this changed",
+              label: rangeLabel
+                ? t("Ask why {range} changed", { range: rangeLabel })
+                : t("Ask why this changed"),
             },
           ]
         : []),
@@ -78,7 +81,7 @@ export async function showFileReferenceContextMenu(input: {
             },
           ]
         : []),
-      { id: "copy-path" as const, label: "Copy path" },
+      { id: "copy-path" as const, label: t("Copy path") },
     ],
     input.position,
   );
@@ -96,9 +99,9 @@ export async function showFileReferenceContextMenu(input: {
     } catch (error) {
       toastManager.add({
         type: "error",
-        title: "Unable to reveal file",
+        title: t("Unable to reveal file"),
         description:
-          error instanceof Error ? error.message : "An unknown error occurred opening the file.",
+          error instanceof Error ? error.message : t("An unknown error occurred opening the file."),
       });
     }
     return;

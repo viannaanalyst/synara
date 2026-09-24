@@ -1,5 +1,6 @@
 import type { AsyncUserInput, MessageId, UserInputQuestion } from "@synara/contracts";
 import { useMemo, useRef, useState } from "react";
+import { useT } from "~/i18n";
 import { CircleQuestionIcon, CheckIcon } from "~/lib/icons";
 import {
   buildPendingUserInputAnswers,
@@ -22,17 +23,18 @@ export function AsyncUserInputCard({
   input: AsyncUserInput;
   onRespond?: ((messageId: MessageId, answers: readonly string[]) => Promise<void>) | undefined;
 }) {
+  const t = useT();
   // Native questions have no IDs. Their positions are stable within this message.
   const questions = useMemo<ReadonlyArray<UserInputQuestion>>(
     () =>
       input.questions.map((question, index) => ({
         id: `question-${index}`,
-        header: "Question",
+        header: t("Question"),
         question: question.title,
         options: (question.options ?? []).map((label) => ({ label, description: label })),
         multiSelect: false,
       })),
-    [input.questions],
+    [input.questions, t],
   );
   const [answers, setAnswers] = useState<Record<string, PendingUserInputDraftAnswer>>(() =>
     Object.fromEntries(
@@ -81,7 +83,7 @@ export function AsyncUserInputCard({
       setSubmission({ answers: response, responseSequence: input.responseSequence ?? 0 });
     } catch (cause) {
       setError(
-        cause instanceof Error ? cause.message : "The answer could not be submitted. Try again.",
+        cause instanceof Error ? cause.message : t("The answer could not be submitted. Try again."),
       );
     } finally {
       inFlight.current = false;
@@ -93,11 +95,11 @@ export function AsyncUserInputCard({
     <Collapsible open={open} onOpenChange={setOpen} className="my-2">
       <CollapsibleTrigger className="inline-flex items-center gap-1.5 rounded-full border border-border px-2.5 py-1 text-ui leading-snug text-muted-foreground hover:bg-muted/50 hover:text-foreground">
         <CircleQuestionIcon className="size-3.5" aria-hidden="true" />
-        {questions.length} {questions.length === 1 ? "question" : "questions"}
+        {t("{count} question", { count: questions.length })}
         {answered && (
           <>
             <CheckIcon className="size-3" aria-hidden="true" />
-            <span>Answered</span>
+            <span>{t("Answered")}</span>
           </>
         )}
       </CollapsibleTrigger>
@@ -116,7 +118,7 @@ export function AsyncUserInputCard({
             </dl>
           ) : activeQuestion ? (
             <form
-              aria-label="Questions from Codex"
+              aria-label={t("Questions from Codex")}
               onSubmit={(event) => {
                 event.preventDefault();
                 void advance();
@@ -144,14 +146,14 @@ export function AsyncUserInputCard({
               >
                 <div className="mt-3 space-y-2">
                   <Textarea
-                    aria-label={`Answer: ${activeQuestion.question}`}
+                    aria-label={t("Answer: {question}", { question: activeQuestion.question })}
                     value={progress.customAnswer}
                     disabled={disabled}
                     rows={2}
                     placeholder={
                       activeQuestion.options.length > 0
-                        ? "Or type your own answer…"
-                        : "Type your answer…"
+                        ? t("Or type your own answer…")
+                        : t("Type your answer…")
                     }
                     onChange={(event) => {
                       const draft = setPendingUserInputCustomAnswer(
@@ -168,7 +170,7 @@ export function AsyncUserInputCard({
                   )}
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-ui leading-snug text-muted-foreground">
-                      Codex can keep working
+                      {t("Codex can keep working")}
                     </span>
                     <Button
                       type="submit"
@@ -180,10 +182,10 @@ export function AsyncUserInputCard({
                       }
                     >
                       {submitting
-                        ? "Submitting…"
+                        ? t("Submitting…")
                         : progress.isLastQuestion
-                          ? "Send answer"
-                          : "Next"}
+                          ? t("Send answer")
+                          : t("Next")}
                     </Button>
                   </div>
                 </div>

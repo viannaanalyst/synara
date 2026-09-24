@@ -3,6 +3,7 @@
 // Layer: Chat transcript interaction controller
 
 import { PROVIDER_SEND_TURN_MAX_ATTACHMENTS } from "@synara/contracts";
+import { t } from "~/i18n";
 import {
   useEffect,
   useRef,
@@ -202,7 +203,9 @@ export function useTranscriptAssistantSelectionAction(
       setPendingTranscriptSelectionAction(null);
       toastManager.add({
         type: "warning",
-        title: `You can attach up to ${PROVIDER_SEND_TURN_MAX_ATTACHMENTS} references per message.`,
+        title: t("You can attach up to {count} references per message.", {
+          count: PROVIDER_SEND_TURN_MAX_ATTACHMENTS,
+        }),
       });
       return;
     }
@@ -213,7 +216,7 @@ export function useTranscriptAssistantSelectionAction(
       if (getAssistantSelectionValidationError(pendingSelection.selection) === "too-long") {
         toastManager.add({
           type: "warning",
-          title: "Selections can be up to 4,000 characters.",
+          title: t("Selections can be up to 4,000 characters."),
         });
       }
       return;

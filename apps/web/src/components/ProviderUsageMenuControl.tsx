@@ -24,6 +24,7 @@ import type { OpenUsageUsageLine } from "~/lib/openUsageRateLimits";
 import type { ProviderRateLimit } from "~/lib/rateLimits";
 import { useStore } from "~/store";
 import { createAccountRateLimitThreadsSelector } from "~/storeSelectors";
+import { t as translate, useT } from "~/i18n";
 
 import { ComposerPickerMenuPopup } from "./chat/ComposerPickerMenuPopup";
 import { ChatHeaderButton } from "./chat/chatHeaderControls";
@@ -73,12 +74,19 @@ function providerUsageEmptyMessage(
   snapshot: ServerGetProviderUsageSnapshotResult | undefined,
 ): string | undefined {
   switch (snapshot?.status) {
-    case "needs-auth":
-      return snapshot.detail ?? providerUsageNeedsAuthDetail(provider);
+    case "needs-auth": {
+      const detail = snapshot.detail ?? providerUsageNeedsAuthDetail(provider);
+      const command = detail.match(/^Sign in with `([^`]+)` to see usage\.$/)?.[1];
+      return command
+        ? translate("Sign in with `{command}` to see usage.", { command })
+        : translate(detail);
+    }
     case "unsupported":
-      return snapshot.detail ?? "Live usage is not available for this provider configuration.";
+      return translate(
+        snapshot.detail ?? "Live usage is not available for this provider configuration.",
+      );
     case "error":
-      return snapshot.detail ?? "Usage is currently unavailable.";
+      return translate(snapshot.detail ?? "Usage is currently unavailable.");
     default:
       return undefined;
   }
@@ -90,6 +98,7 @@ export function useProviderUsageMenuModel(
     providerSnapshot?: ServerGetProviderUsageSnapshotResult | undefined;
   } = {},
 ): ProviderUsageMenuModel {
+  const t = useT();
   const { settings } = useAppSettings();
   const threads = useStore(selectAccountRateLimitThreads);
   const usageSummary = useProviderUsageSummary({
@@ -100,11 +109,15 @@ export function useProviderUsageMenuModel(
     fetchOpenUsageData: false,
   });
 
-  return buildProviderUsageMenuModel({
+  const model = buildProviderUsageMenuModel({
     provider,
     providerSnapshot: input.providerSnapshot,
     usageSummary,
   });
+  return {
+    ...model,
+    menuTitle: t("{provider} usage", { provider: PROVIDER_DISPLAY_NAMES[provider] }),
+  };
 }
 
 export function ProviderUsageMenuPopup({

@@ -5,6 +5,7 @@
 // Exports: ComposerBranchMismatchBanner
 
 import { ArrowRightIcon, TriangleAlertIcon } from "~/lib/icons";
+import { useT } from "~/i18n";
 import { cn } from "~/lib/utils";
 import { COMPOSER_INPUT_SURFACE_CLASS_NAME } from "./composerPickerStyles";
 
@@ -15,6 +16,7 @@ export function ComposerBranchMismatchBanner({
   threadBranch: string;
   currentBranch: string;
 }) {
+  const t = useT();
   return (
     <div
       className={cn(
@@ -30,19 +32,19 @@ export function ComposerBranchMismatchBanner({
       />
       <div className="min-w-0 flex-1">
         <p className="truncate text-ui leading-5 font-medium text-foreground/95">
-          Sending a message will move this thread to the current branch
+          {t("Sending a message will move this thread to the current branch")}
         </p>
         <div className="mt-0.5 flex min-w-0 items-center gap-2 text-ui-sm leading-5">
           <code
             className="max-w-[40%] truncate text-muted-foreground/80"
-            title={`Thread branch: ${threadBranch}`}
+            title={t("Thread branch: {branch}", { branch: threadBranch })}
           >
             {threadBranch}
           </code>
           <ArrowRightIcon aria-hidden="true" className="size-3 shrink-0 text-muted-foreground/50" />
           <code
             className="min-w-0 truncate font-medium text-foreground/85"
-            title={`Current branch: ${currentBranch}`}
+            title={t("Current branch: {branch}", { branch: currentBranch })}
           >
             {currentBranch}
           </code>

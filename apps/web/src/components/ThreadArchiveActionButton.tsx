@@ -5,6 +5,7 @@
 // Exports: ThreadArchiveActionButton, THREAD_ARCHIVE_ICON
 
 import { HiOutlineArchiveBox } from "react-icons/hi2";
+import { useT } from "~/i18n";
 
 import type { ThreadId } from "@synara/contracts";
 
@@ -26,12 +27,13 @@ export function ThreadArchiveActionButton({
   compact?: boolean;
   onArchive: () => void;
 }) {
+  const t = useT();
   const isCompact = compact === true;
   return (
     <SidebarIconButton
       icon={THREAD_ARCHIVE_ICON}
-      label="Archive thread"
-      title="Archive thread"
+      label={t("Archive thread")}
+      title={t("Archive thread")}
       data-testid={`thread-archive-${threadId}`}
       size={isCompact ? "sm" : "md"}
       // Match the pin and the right-side meta chips (shared trailing-icon size);

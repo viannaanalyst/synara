@@ -14,6 +14,7 @@
 import { useEffect, useState } from "react";
 
 import { basenameOfPath } from "~/file-icons";
+import { useT } from "~/i18n";
 import { Loader2Icon, TriangleAlertIcon } from "~/lib/icons";
 import { buildLocalImageUrl } from "~/lib/localImageUrls";
 import { useContainerSize } from "~/lib/pdf/useContainerSize";
@@ -40,6 +41,7 @@ export function PdfFilePreview(props: {
   onPreviewReady?: (() => void) | undefined;
   onPreviewError?: (() => void) | undefined;
 }) {
+  const t = useT();
   const previewUrl = buildLocalImageUrl({
     src: props.filePath,
     cwd: props.cwd ?? undefined,
@@ -132,7 +134,7 @@ export function PdfFilePreview(props: {
               className="rounded-md px-2 py-1 text-ui leading-snug hover:bg-foreground/8"
               onClick={props.onReload}
             >
-              Reload file from disk
+              {t("Reload file from disk")}
             </button>
           ) : null}
         </div>
@@ -145,7 +147,7 @@ export function PdfFilePreview(props: {
       <div
         className="flex min-h-0 flex-1 items-center justify-center"
         role="status"
-        aria-label="Loading PDF..."
+        aria-label={t("Loading PDF...")}
       >
         <Loader2Icon className="size-4 animate-spin opacity-60" aria-hidden="true" />
       </div>

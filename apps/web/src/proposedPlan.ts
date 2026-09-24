@@ -23,6 +23,7 @@ export function buildCollapsedProposedPlanPreviewMarkdown(
   planMarkdown: string,
   options?: {
     maxLines?: number;
+    emptyLabel?: string;
   },
 ): string {
   const maxLines = options?.maxLines ?? 8;
@@ -51,7 +52,7 @@ export function buildCollapsedProposedPlanPreviewMarkdown(
   }
 
   if (previewLines.length === 0) {
-    return proposedPlanTitle(planMarkdown) ?? "Plan preview unavailable.";
+    return proposedPlanTitle(planMarkdown) ?? options?.emptyLabel ?? "Plan preview unavailable.";
   }
 
   if (hasMoreContent) {
@@ -92,12 +93,18 @@ export function resolvePlanFollowUpSubmission(input: { draftText: string; planMa
   };
 }
 
-export function buildPlanImplementationThreadTitle(planMarkdown: string): string {
+export function buildPlanImplementationThreadTitle(
+  planMarkdown: string,
+  options?: {
+    fallbackLabel?: string;
+    titleLabel?: (title: string) => string;
+  },
+): string {
   const title = proposedPlanTitle(planMarkdown);
   if (!title) {
-    return "Implement plan";
+    return options?.fallbackLabel ?? "Implement plan";
   }
-  return `Implement ${title}`;
+  return options?.titleLabel?.(title) ?? `Implement ${title}`;
 }
 
 export function buildProposedPlanMarkdownFilename(planMarkdown: string): string {

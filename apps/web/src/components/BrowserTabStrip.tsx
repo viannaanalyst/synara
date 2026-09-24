@@ -7,6 +7,7 @@
 import { useLayoutEffect, useRef } from "react";
 import type { BrowserTabState } from "@synara/contracts";
 import { isBlankBrowserTabUrl } from "@synara/shared/browserSession";
+import { useT } from "~/i18n";
 
 import { GlobeIcon, PlusIcon, XIcon } from "~/lib/icons";
 import { cn } from "~/lib/utils";
@@ -46,6 +47,7 @@ function scrollTabIntoView(strip: HTMLElement, tab: HTMLElement): void {
 }
 
 export function BrowserTabStrip(props: BrowserTabStripProps) {
+  const t = useT();
   const { activeTabId, onCloseTab, onCreateTab, onSelectTab } = props;
   const stripRef = useRef<HTMLDivElement>(null);
 
@@ -73,6 +75,8 @@ export function BrowserTabStrip(props: BrowserTabStripProps) {
         {props.tabs.map((tab) => {
           const isActive = tab.id === activeTabId;
           const tabIsBlank = isBlankBrowserTabUrl(tab);
+          const tabTitle =
+            tabIsBlank && tab.title === "New tab" ? t("New tab") : tab.title || t("Untitled");
           return (
             <div
               key={tab.id}
@@ -89,7 +93,7 @@ export function BrowserTabStrip(props: BrowserTabStripProps) {
               <button
                 type="button"
                 className="flex min-w-0 flex-1 items-center gap-1.5 self-stretch rounded-md pl-2 pr-1 text-left outline-none focus-visible:ring-1 focus-visible:ring-ring/60 focus-visible:ring-inset"
-                title={tab.title || "Untitled"}
+                title={tabTitle}
                 onClick={() => onSelectTab(tab.id)}
               >
                 {tab.faviconUrl ? (
@@ -97,7 +101,7 @@ export function BrowserTabStrip(props: BrowserTabStripProps) {
                 ) : (
                   <GlobeIcon className="size-3 shrink-0 text-muted-foreground" />
                 )}
-                <span className="truncate">{tab.title || "Untitled"}</span>
+                <span className="truncate">{tabTitle}</span>
               </button>
               <Button
                 type="button"
@@ -110,7 +114,7 @@ export function BrowserTabStrip(props: BrowserTabStripProps) {
                 }}
               >
                 <XIcon className="size-3" />
-                <span className="sr-only">Close tab</span>
+                <span className="sr-only">{t("Close tab")}</span>
               </Button>
             </div>
           );
@@ -124,14 +128,14 @@ export function BrowserTabStrip(props: BrowserTabStripProps) {
               variant="ghost"
               size="icon-chip"
               className="text-muted-foreground hover:text-foreground"
-              aria-label="New tab"
+              aria-label={t("New tab")}
               onClick={onCreateTab}
             />
           }
         >
           <PlusIcon className="size-3.5" />
         </TooltipTrigger>
-        <TooltipPopup>New tab</TooltipPopup>
+        <TooltipPopup>{t("New tab")}</TooltipPopup>
       </Tooltip>
       {props.status ? (
         <div

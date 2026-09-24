@@ -3,8 +3,11 @@
 
 import "./storageOriginMigration";
 
+import { bootstrapAppLocale } from "./i18n/bootstrap";
 import { bootstrapSignedOutScreen } from "./authSignedOut";
 import { bootstrapPairingSession } from "./pairingBootstrap";
+
+bootstrapAppLocale();
 
 if (!bootstrapSignedOutScreen()) {
   void bootstrapPairingSession().then((result) => {

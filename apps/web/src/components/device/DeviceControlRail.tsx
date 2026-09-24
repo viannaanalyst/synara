@@ -19,6 +19,7 @@ import {
   type LucideIcon,
 } from "~/lib/icons";
 import { cn } from "~/lib/utils";
+import { useT } from "~/i18n";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "../ui/tooltip";
 
 export type DeviceRailAction = "home" | "screenshot" | "record" | "rotate" | "shutdown" | "detach";
@@ -82,6 +83,7 @@ export function DeviceControlRail(props: {
   landscape: boolean;
   onAction: (action: DeviceRailAction) => void;
 }) {
+  const t = useT();
   return (
     <div className={cn("flex items-center justify-center gap-1", DEVICE_RAIL_HEIGHT_CLASS)}>
       {DEVICE_RAIL_GROUPS.map((group, groupIndex) => (
@@ -92,7 +94,20 @@ export function DeviceControlRail(props: {
           {group.items.map((item) => {
             const isRecordStop = item.id === "record" && props.recording;
             const Icon = isRecordStop ? DeviceRecordStopIcon : item.Icon;
-            const label = isRecordStop ? "Stop recording" : item.label;
+            const label =
+              item.id === "home"
+                ? t("Home")
+                : item.id === "rotate"
+                  ? t("Rotate view")
+                  : item.id === "screenshot"
+                    ? t("Save screenshot")
+                    : item.id === "record"
+                      ? isRecordStop
+                        ? t("Stop recording")
+                        : t("Record video")
+                      : item.id === "shutdown"
+                        ? t("Shut down simulator")
+                        : t("Detach simulator");
             const pressed =
               item.id === "record"
                 ? props.recording

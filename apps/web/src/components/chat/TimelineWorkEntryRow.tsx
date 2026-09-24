@@ -18,6 +18,7 @@ import {
 } from "react";
 
 import { basenameOfPath } from "~/file-icons";
+import { useT } from "~/i18n";
 import type { TimestampFormat } from "../../appSettings";
 import {
   ArrowUpCircleIcon,
@@ -453,16 +454,20 @@ function isFileChangeWorkEntry(workEntry: TimelineWorkEntry): boolean {
   return isFileChangeWorkLogEntry(workEntry);
 }
 
-function commandTooltipContent(command: string, displayText: string) {
+function commandTooltipContent(
+  command: string,
+  displayText: string,
+  t: (key: string, params?: Record<string, string | number>) => string,
+) {
   return (
     <div className="max-w-96 whitespace-pre-wrap leading-tight">
       <div className="space-y-2">
         <div className="space-y-0.5">
-          <div className="text-muted-foreground/70">Summary</div>
+          <div className="text-muted-foreground/70">{t("Summary")}</div>
           <div>{displayText}</div>
         </div>
         <div className="space-y-0.5">
-          <div className="text-muted-foreground/70">Raw call</div>
+          <div className="text-muted-foreground/70">{t("Raw call")}</div>
           <code className="block whitespace-pre-wrap break-words font-chat-code text-chat-code text-foreground/92">
             {command}
           </code>
@@ -479,9 +484,10 @@ function toolRowTooltipContent(
   rawCommand: string | null | undefined,
   displayText: string,
   fallback: string | undefined,
+  t: (key: string, params?: Record<string, string | number>) => string,
 ): ReactNode {
   if (rawCommand) {
-    return commandTooltipContent(rawCommand, displayText);
+    return commandTooltipContent(rawCommand, displayText, t);
   }
   return fallback ? <span className="whitespace-pre-wrap">{fallback}</span> : null;
 }
@@ -520,6 +526,7 @@ export const TimelineWorkEntryRow = memo(function TimelineWorkEntryRow(props: {
   onEnableComputerControl?: () => void;
   timestampFormat: TimestampFormat;
 }) {
+  const t = useT();
   // Defaults are applied in the body (not in the destructuring pattern): a default
   // value inside a destructuring pattern makes React Compiler bail out on the whole
   // component, silently dropping memoization for every tool-call row.
@@ -608,6 +615,7 @@ export const TimelineWorkEntryRow = memo(function TimelineWorkEntryRow(props: {
   const liveActivityMetaText = workEntry.liveActivity
     ? formatLiveActivityMeta(workEntry.liveActivity, liveActivityNowMs, {
         subagent: workEntry.itemType === "collab_agent_tool_call",
+        t,
       })
     : null;
 
@@ -833,12 +841,12 @@ export const TimelineWorkEntryRow = memo(function TimelineWorkEntryRow(props: {
                 activity={workEntry.liveActivity}
                 detailContent={
                   providerContextLifecycle ? (
-                    <ProviderContextLifecycleDetails info={providerContextLifecycle} />
+                    <ProviderContextLifecycleDetails info={providerContextLifecycle} t={t} />
                   ) : undefined
                 }
                 compact={compact}
                 timestampFormat={timestampFormat}
-                tooltip={toolRowTooltipContent(rawCommand, displayText, displayText)}
+                tooltip={toolRowTooltipContent(rawCommand, displayText, displayText, t)}
               >
                 {rowContentChildren}
               </ToolDetailsDisclosure>
@@ -855,6 +863,7 @@ export const TimelineWorkEntryRow = memo(function TimelineWorkEntryRow(props: {
                 rawCommand,
                 displayText,
                 canOpenReadFile ? (readFilePath ?? hoverText) : hoverText,
+                t,
               )}
             >
               {rowContentChildren}
@@ -964,51 +973,58 @@ function AgentActivityOpenSurface(props: {
 
 function providerContextLifecycleReasonLabel(
   reason: NonNullable<TimelineWorkEntry["providerContextLifecycle"]>["restartReason"],
+  t: (key: string, params?: Record<string, string | number>) => string,
 ): string {
   switch (reason) {
     case "conversation-rebuilt":
-      return "Conversation rebuilt from a summary";
+      return t("Conversation rebuilt from a summary");
     case "fresh-session":
-      return "New session started";
+      return t("New session started");
     case "interrupt-escalation":
-      return "Turn stop escalated to a session restart";
+      return t("Turn stop escalated to a session restart");
     case "native-history-unavailable":
-      return "Previous history unavailable";
+      return t("Previous history unavailable");
     case "native-resume-failed":
-      return "Could not resume the previous session";
+      return t("Could not resume the previous session");
   }
 }
 
 function ProviderContextLifecycleDetails(props: {
   info: NonNullable<TimelineWorkEntry["providerContextLifecycle"]>;
+  t: (key: string, params?: Record<string, string | number>) => string;
 }) {
   const { info } = props;
+  const t = props.t;
   const provider =
     PROVIDER_DESCRIPTORS.find((descriptor) => descriptor.kind === info.provider)?.displayName ??
     info.provider;
   return (
     <div className="space-y-3" data-provider-context-lifecycle-details="true">
       <dl className="grid grid-cols-[max-content_minmax(0,1fr)] gap-x-3 gap-y-1.5 rounded-lg border border-border/45 bg-background/60 px-3 py-2.5 text-ui-sm">
-        <dt className="text-muted-foreground/56">Provider</dt>
+        <dt className="text-muted-foreground/56">{t("Provider")}</dt>
         <dd className="text-foreground/84">{provider}</dd>
-        <dt className="text-muted-foreground/56">Previous history</dt>
+        <dt className="text-muted-foreground/56">{t("Previous history")}</dt>
         <dd className="text-foreground/84">
-          {info.nativeHistory === "available" ? "Available" : "Lost"}
+          {info.nativeHistory === "available" ? t("Available") : t("Lost")}
         </dd>
-        <dt className="text-muted-foreground/56">Session restarted</dt>
-        <dd className="text-foreground/84">{info.sessionRestarted ? "Yes" : "No"}</dd>
-        <dt className="text-muted-foreground/56">Why</dt>
+        <dt className="text-muted-foreground/56">{t("Session restarted")}</dt>
+        <dd className="text-foreground/84">{info.sessionRestarted ? t("Yes") : t("No")}</dd>
+        <dt className="text-muted-foreground/56">{t("Why")}</dt>
         <dd className="text-foreground/84">
-          {providerContextLifecycleReasonLabel(info.restartReason)}
+          {providerContextLifecycleReasonLabel(info.restartReason, t)}
         </dd>
-        <dt className="text-muted-foreground/56">Summary included</dt>
+        <dt className="text-muted-foreground/56">{t("Summary included")}</dt>
         <dd className="text-foreground/84">
-          {info.recapInjected ? `${info.recapCharacters.toLocaleString()} characters` : "No"}
+          {info.recapInjected
+            ? t("{count} characters", { count: info.recapCharacters.toLocaleString() })
+            : t("No")}
         </dd>
       </dl>
       {info.recapPreview ? (
         <section className="space-y-2">
-          <h3 className="text-ui-sm font-medium text-muted-foreground/56">Summary preview</h3>
+          <h3 className="text-ui-sm font-medium text-muted-foreground/56">
+            {t("Summary preview")}
+          </h3>
           <pre
             className="max-h-56 overflow-auto whitespace-pre-wrap break-words rounded-lg border border-border/45 bg-background/60 px-3 py-2.5 font-chat-code text-chat-code leading-relaxed text-foreground/84"
             data-session-context-recap-preview="true"
@@ -1017,7 +1033,7 @@ function ProviderContextLifecycleDetails(props: {
           </pre>
           {info.recapPreviewTruncated ? (
             <p className="text-ui-xs text-muted-foreground/56">
-              Showing a short preview of the summary sent with your message.
+              {t("Showing a short preview of the summary sent with your message.")}
             </p>
           ) : null}
         </section>

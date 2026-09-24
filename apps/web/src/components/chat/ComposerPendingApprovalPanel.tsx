@@ -14,6 +14,7 @@ import { type PendingApproval } from "../../session-logic";
 import { cn } from "~/lib/utils";
 import { ComposerChoiceRow, type ComposerChoiceTone } from "./ComposerChoiceRow";
 import { COMPOSER_INPUT_SURFACE_CLASS_NAME } from "./composerPickerStyles";
+import { useT } from "~/i18n";
 
 interface ComposerPendingApprovalPanelProps {
   approval: PendingApproval;
@@ -84,34 +85,45 @@ export const ComposerPendingApprovalPanel = function ComposerPendingApprovalPane
   isResponding,
   onRespond,
 }: ComposerPendingApprovalPanelProps) {
+  const t = useT();
   const parsed = parseApprovalDetail(approval.detail);
   const requestId = approval.requestId;
   const requestKey = pendingRequestInstanceKey(requestId, approval.lifecycleGeneration);
   const submissionKey = JSON.stringify([requestKey, approval.responseAttemptKey ?? null]);
   const submittedRequestKeyRef = useRef<string | null>(null);
   const computerTask = approval.approvalScope === "computer-task";
+  const localizedActions = APPROVAL_ACTIONS.map((action) => ({
+    ...action,
+    label: t(action.label),
+    description: t(action.description),
+  }));
   const baseActions = computerTask
-    ? APPROVAL_ACTIONS.filter((action) => action.decision !== "acceptForSession").map((action) =>
-        action.decision === "accept"
-          ? {
-              ...action,
-              label: "Allow Computer for this task",
-              description:
-                "Continue routine desktop actions until this response ends. Stop cancels access. Clipboard reads still ask separately.",
-            }
-          : action.decision === "decline"
+    ? localizedActions
+        .filter((action) => action.decision !== "acceptForSession")
+        .map((action) =>
+          action.decision === "accept"
             ? {
                 ...action,
-                description: "Stop desktop for this turn, agent continues without tools",
+                label: t("Allow Computer for this task"),
+                description: t(
+                  "Continue routine desktop actions until this response ends. Stop cancels access. Clipboard reads still ask separately.",
+                ),
               }
-            : {
-                ...action,
-                description: "Stop revokes new input; keys/buttons already sent may still land.",
-              },
-      )
+            : action.decision === "decline"
+              ? {
+                  ...action,
+                  description: t("Stop desktop for this turn, agent continues without tools"),
+                }
+              : {
+                  ...action,
+                  description: t(
+                    "Stop revokes new input; keys/buttons already sent may still land.",
+                  ),
+                },
+        )
     : approval.sessionApprovalAvailable === false
-      ? APPROVAL_ACTIONS.filter((action) => action.decision !== "acceptForSession")
-      : APPROVAL_ACTIONS;
+      ? localizedActions.filter((action) => action.decision !== "acceptForSession")
+      : localizedActions;
   const actions = baseActions;
 
   const respondOnce = (action: ApprovalAction) => {
@@ -159,7 +171,7 @@ export const ComposerPendingApprovalPanel = function ComposerPendingApprovalPane
     >
       <div className="flex items-start justify-between gap-3">
         <p className="min-w-0 text-ui-lg font-medium leading-snug text-foreground/90">
-          {computerTask ? "Allow Computer for this task?" : KIND_PROMPT[approval.requestKind]}
+          {computerTask ? t("Allow Computer for this task?") : t(KIND_PROMPT[approval.requestKind])}
           {!computerTask && (approval.toolName ?? parsed.tool) ? (
             <span className="ml-1.5 text-ui-sm font-normal text-muted-foreground/50">
               {approval.toolName ?? parsed.tool}
@@ -206,6 +218,7 @@ function ApprovalDetail({
   toolName?: string;
   toolParamsDisplay?: PendingApproval["toolParamsDisplay"];
 }) {
+  const t = useT();
   if (permissionProfile) {
     return (
       <div className="mt-2">
@@ -216,7 +229,7 @@ function ApprovalDetail({
         ) : null}
         <pre
           className="max-h-36 overflow-auto whitespace-pre-wrap break-words rounded-md bg-[var(--color-background-elevated-secondary)] px-2.5 py-2 font-mono text-ui-sm leading-relaxed text-foreground/85"
-          title="Requested permission profile"
+          title={t("Requested permission profile")}
         >
           <code>{JSON.stringify(permissionProfile, null, 2)}</code>
         </pre>
@@ -281,7 +294,9 @@ function ApprovalDetail({
     );
   }
 
-  return <p className="mt-2 text-ui text-muted-foreground/65">Review the request to continue.</p>;
+  return (
+    <p className="mt-2 text-ui text-muted-foreground/65">{t("Review the request to continue.")}</p>
+  );
 }
 
 function formatToolParameterValue(value: unknown): string {

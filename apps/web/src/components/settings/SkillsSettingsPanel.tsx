@@ -11,6 +11,7 @@ import { useMemo } from "react";
 import { ProviderIcon } from "~/components/ProviderIcon";
 import { SettingsRow, SettingsSection } from "~/components/settings/SettingsPanelPrimitives";
 import { Switch } from "~/components/ui/switch";
+import { useT } from "~/i18n";
 import { SkillCubeIcon } from "~/lib/icons";
 import { ensureNativeApi } from "~/nativeApi";
 import {
@@ -26,12 +27,16 @@ import {
 } from "./skillsSettingsModel";
 
 function SkillProviderStack({ providers }: { providers: ReadonlyArray<ProviderKind> }) {
+  const t = useT();
   if (providers.length === 0) {
     return null;
   }
 
   const label = providers.map(providerDisplayName).join(", ");
-  const stackLabel = `Provider ${providers.length === 1 ? "copy" : "copies"}: ${label}`;
+  const stackLabel = `${t(
+    providers.length === 1 ? "Provider {count} copy" : "Provider {count} copies",
+    { count: providers.length },
+  )}: ${label}`;
   return (
     <span
       className="inline-flex shrink-0 items-center -space-x-1"
@@ -51,6 +56,7 @@ function SkillProviderStack({ providers }: { providers: ReadonlyArray<ProviderKi
 }
 
 export function SkillsSettingsPanel() {
+  const t = useT();
   const queryClient = useQueryClient();
   const catalogQuery = useQuery(skillsCatalogQueryOptions());
   const serverSettingsQuery = useQuery(serverSettingsQueryOptions());
@@ -104,10 +110,13 @@ export function SkillsSettingsPanel() {
 
   return (
     <div className="space-y-8">
-      <SettingsSection title="Portable skills">
+      <SettingsSection title={t("Portable skills")}>
         <SettingsRow
-          title="Synara skills folder"
-          description="Skills placed here are available on every provider. When a provider already ships its own copy of a skill, that copy is used; otherwise Synara's copy is the fallback."
+          title={t("Synara skills folder")}
+          anchorTitle="Synara skills folder"
+          description={t(
+            "Skills placed here are available on every provider. When a provider already ships its own copy of a skill, that copy is used; otherwise Synara's copy is the fallback.",
+          )}
           status={
             synaraSkillsDir ? (
               <code className="break-all text-ui-sm text-muted-foreground">{synaraSkillsDir}</code>
@@ -116,34 +125,55 @@ export function SkillsSettingsPanel() {
           control={
             <span className="text-ui leading-snug font-medium text-muted-foreground">
               {catalogQuery.isLoading
-                ? "Scanning…"
-                : `${enabledSkills} of ${totalSkills} skill${totalSkills === 1 ? "" : "s"} enabled`}
+                ? t("Scanning…")
+                : t(
+                    enabledSkills === 1
+                      ? "{count} of {total} skill enabled"
+                      : "{count} of {total} skills enabled",
+                    {
+                      count: enabledSkills,
+                      total: totalSkills,
+                    },
+                  )}
             </span>
           }
         />
       </SettingsSection>
 
       {catalogQuery.isError ? (
-        <SettingsSection title="Skills">
+        <SettingsSection title={t("Skills")}>
           <SettingsRow
-            title="Skill discovery failed"
-            description="Synara could not scan the skill folders. Retry after checking that the server is running."
+            title={t("Skill discovery failed")}
+            anchorTitle="Skill discovery failed"
+            description={t(
+              "Synara could not scan the skill folders. Retry after checking that the server is running.",
+            )}
           />
         </SettingsSection>
       ) : null}
 
       {!catalogQuery.isLoading && !catalogQuery.isError && totalSkills === 0 ? (
-        <SettingsSection title="Skills">
+        <SettingsSection title={t("Skills")}>
           <SettingsRow
-            title="No skills found"
-            description="Add a skill folder containing a SKILL.md to the Synara skills folder above, or install skills for any supported provider."
+            title={t("No skills found")}
+            anchorTitle="No skills found"
+            description={t(
+              "Add a skill folder containing a SKILL.md to the Synara skills folder above, or install skills for any supported provider.",
+            )}
           />
         </SettingsSection>
       ) : null}
 
       {skillSections.map((section) => {
         return (
-          <SettingsSection key={section.key} title={section.title}>
+          <SettingsSection
+            key={section.key}
+            title={
+              section.title === "Shared skills"
+                ? t("Shared skills")
+                : t("From {origin}", { origin: t(section.title.slice("From ".length)) })
+            }
+          >
             {section.groups.map((group) => {
               const enabled = !disabledSkillNames.has(group.key);
               return (
@@ -164,7 +194,7 @@ export function SkillsSettingsPanel() {
                       <span className="flex min-w-0 items-center gap-1.5">
                         <SkillProviderStack providers={group.providers} />
                         <span className="truncate text-ui-sm text-muted-foreground">
-                          {group.sources.map((source) => source.originInfo.label).join(" · ")}
+                          {group.sources.map((source) => t(source.originInfo.label)).join(" · ")}
                         </span>
                       </span>
                       {group.sources.map((source) => (
@@ -183,7 +213,7 @@ export function SkillsSettingsPanel() {
                       onCheckedChange={(checked) =>
                         setSkillEnabled(group.primarySkill.name, Boolean(checked))
                       }
-                      aria-label={`Enable the ${group.displayName} skill`}
+                      aria-label={t("Enable the {skill} skill", { skill: group.displayName })}
                     />
                   }
                 />

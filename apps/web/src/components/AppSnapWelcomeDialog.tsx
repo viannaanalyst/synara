@@ -12,6 +12,7 @@ import { useEffect, useState } from "react";
 import { useLocalStorage } from "../hooks/useLocalStorage";
 import { useOnboardingDialogStore } from "../onboarding/onboardingDialogStore";
 import { CentralIcon } from "../lib/central-icons";
+import { useT } from "~/i18n";
 import { AnnouncementSheet } from "./AnnouncementSheet";
 
 const APP_SNAP_WELCOME_STORAGE_KEY = "synara:appsnap-welcome:v1";
@@ -24,6 +25,7 @@ type AppSnapWelcomeStorage = typeof AppSnapWelcomeStorageSchema.Type;
 const INITIAL_STORAGE: AppSnapWelcomeStorage = { acknowledged: false };
 
 export function AppSnapWelcomeDialog() {
+  const t = useT();
   const navigate = useNavigate();
   const [storage, setStorage] = useLocalStorage(
     APP_SNAP_WELCOME_STORAGE_KEY,
@@ -85,15 +87,16 @@ export function AppSnapWelcomeDialog() {
           <CentralIcon name="screen-capture" className="size-8" />
         </span>
       }
-      title="Synara AppSnaps are live!"
+      title={t("Synara AppSnaps are live!")}
       description={
         <>
-          Press both Option keys (⌥&thinsp;⌥) to snap any app&rsquo;s window into the task
-          you&rsquo;re working in.
+          {t(
+            "Press both Option keys (⌥ ⌥) to snap any app's window into the task you're working in.",
+          )}
         </>
       }
-      dismissLabel="Not now"
-      confirmLabel="Set up AppSnap"
+      dismissLabel={t("Not now")}
+      confirmLabel={t("Set up AppSnap")}
       onDismiss={acknowledge}
       onConfirm={openSettings}
     />

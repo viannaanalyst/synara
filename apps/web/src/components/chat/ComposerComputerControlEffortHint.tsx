@@ -7,11 +7,8 @@
 // Exports: ComposerComputerControlEffortHint
 
 import { MonitorIcon, XIcon } from "~/lib/icons";
+import { useT } from "~/i18n";
 import { IconButton } from "../ui/icon-button";
-import {
-  COMPUTER_CONTROL_HINT_ACTION_LABEL,
-  COMPUTER_CONTROL_HINT_MESSAGE,
-} from "./composerComputerControlHint";
 import { COMPOSER_INLINE_ACTION_PILL_CLASS_NAME } from "./composerPickerStyles";
 import { ComposerStackedPanel } from "./ComposerStackedPanel";
 import {
@@ -32,6 +29,7 @@ export function ComposerComputerControlEffortHint({
   onDismiss,
   attachedToPrevious: attachedToPreviousProp,
 }: ComposerComputerControlEffortHintProps) {
+  const t = useT();
   const attachedToPrevious = attachedToPreviousProp ?? false;
   return (
     <ComposerStackedPanel
@@ -42,7 +40,7 @@ export function ComposerComputerControlEffortHint({
         <ComposerStackedPanelRowMain>
           <MonitorIcon aria-hidden="true" className={COMPOSER_STACKED_PANEL_ICON_CLASS_NAME} />
           <ComposerStackedPanelRowLabel>
-            {COMPUTER_CONTROL_HINT_MESSAGE}
+            {t("Desktop actions are faster at Medium effort")}
           </ComposerStackedPanelRowLabel>
         </ComposerStackedPanelRowMain>
         <div className="flex shrink-0 items-center gap-1">
@@ -51,9 +49,9 @@ export function ComposerComputerControlEffortHint({
             className={COMPOSER_INLINE_ACTION_PILL_CLASS_NAME}
             onClick={onApply}
           >
-            {COMPUTER_CONTROL_HINT_ACTION_LABEL}
+            {t("Use Medium")}
           </button>
-          <IconButton variant="ghost" size="icon-chip" label="Dismiss tip" onClick={onDismiss}>
+          <IconButton variant="ghost" size="icon-chip" label={t("Dismiss tip")} onClick={onDismiss}>
             <XIcon />
           </IconButton>
         </div>

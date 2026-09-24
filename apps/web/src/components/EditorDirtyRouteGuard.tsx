@@ -4,6 +4,7 @@
 import { useBlocker } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { flushWorkspaceEditors, hasUnsavedWorkspaceEditors } from "~/lib/workspaceEditorSession";
+import { t } from "~/i18n";
 import { toastManager } from "./ui/toast";
 
 export function EditorDirtyRouteGuard() {
@@ -15,9 +16,10 @@ export function EditorDirtyRouteGuard() {
       if (!saved)
         toastManager.add({
           type: "error",
-          title: "Could not save editor changes",
-          description:
+          title: t("Could not save editor changes"),
+          description: t(
             "Your draft is preserved. Resolve the save error in the editor before leaving.",
+          ),
         });
       return !saved;
     },

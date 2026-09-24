@@ -5,12 +5,14 @@
 
 import { goBackInAppHistory, goForwardInAppHistory, useAppNavigationState } from "~/appNavigation";
 import { isElectron } from "~/env";
+import { useT } from "~/i18n";
 import { cn, isMacNavigatorPlatform } from "~/lib/utils";
 import { IoIosArrowRoundBack, IoIosArrowRoundForward } from "react-icons/io";
 import { Button } from "./ui/button";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "./ui/tooltip";
 
 export function AppNavigationButtons({ className }: { className?: string }) {
+  const t = useT();
   const { canGoBack, canGoForward } = useAppNavigationState();
   const isMac = isMacNavigatorPlatform();
   const backShortcutLabel = isMac ? "⌘[" : "Alt+Left";
@@ -35,7 +37,7 @@ export function AppNavigationButtons({ className }: { className?: string }) {
               variant="ghost"
               size="icon-sm"
               className="size-8 rounded-lg"
-              aria-label="Back"
+              aria-label={t("Back")}
               disabled={!canGoBack}
               onClick={() => goBackInAppHistory()}
             />
@@ -43,7 +45,9 @@ export function AppNavigationButtons({ className }: { className?: string }) {
         >
           <IoIosArrowRoundBack className="size-6" />
         </TooltipTrigger>
-        <TooltipPopup side="bottom">Back ({backShortcutLabel})</TooltipPopup>
+        <TooltipPopup side="bottom">
+          {t("Back ({shortcut})", { shortcut: backShortcutLabel })}
+        </TooltipPopup>
       </Tooltip>
       <Tooltip>
         <TooltipTrigger
@@ -53,7 +57,7 @@ export function AppNavigationButtons({ className }: { className?: string }) {
               variant="ghost"
               size="icon-sm"
               className="size-8 rounded-lg"
-              aria-label="Forward"
+              aria-label={t("Forward")}
               disabled={!canGoForward}
               onClick={() => goForwardInAppHistory()}
             />
@@ -61,7 +65,9 @@ export function AppNavigationButtons({ className }: { className?: string }) {
         >
           <IoIosArrowRoundForward className="size-6" />
         </TooltipTrigger>
-        <TooltipPopup side="bottom">Forward ({forwardShortcutLabel})</TooltipPopup>
+        <TooltipPopup side="bottom">
+          {t("Forward ({shortcut})", { shortcut: forwardShortcutLabel })}
+        </TooltipPopup>
       </Tooltip>
     </div>
   );

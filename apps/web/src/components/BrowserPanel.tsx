@@ -36,12 +36,10 @@ import {
   isBlankBrowserTabUrl,
   resolveCopyableBrowserTabUrl,
 } from "@synara/shared/browserSession";
-import {
-  BROWSER_COPY_LINK_TOAST_TITLE,
-  isBrowserCopyLinkChord,
-} from "@synara/shared/browserShortcuts";
+import { isBrowserCopyLinkChord } from "@synara/shared/browserShortcuts";
 
 import { isElectron } from "~/env";
+import { useT } from "~/i18n";
 import { CentralIcon } from "~/lib/central-icons";
 import { readNativeApi } from "~/nativeApi";
 import { BrowserVaultButton } from "./BrowserVault";
@@ -145,7 +143,8 @@ export function BrowserAnnotationButton(props: {
   controller: BrowserAnnotationsController;
   disabled: boolean;
 }) {
-  const label = props.controller.active ? "Cancel annotation" : "Annotate page";
+  const t = useT();
+  const label = props.controller.active ? t("Cancel annotation") : t("Annotate page");
   return (
     <Tooltip>
       <TooltipTrigger
@@ -169,8 +168,8 @@ export function BrowserAnnotationButton(props: {
       </TooltipTrigger>
       <TooltipPopup side="bottom">
         {props.controller.active
-          ? "Cancel element selection (Esc)"
-          : "Select an element to annotate"}
+          ? t("Cancel element selection (Esc)")
+          : t("Select an element to annotate")}
       </TooltipPopup>
     </Tooltip>
   );
@@ -230,14 +229,14 @@ const VIEWPORT_TRANSITION_PROPERTIES = new Set([
   "inset-block-start",
   "inset-block-end",
 ]);
-function formatBrowserActionError(error: unknown): string | null {
+function formatBrowserActionError(error: unknown, t: ReturnType<typeof useT>): string | null {
   if (!(error instanceof Error)) {
-    return "Couldn't complete that browser action.";
+    return t("Couldn’t complete that browser action.");
   }
   if (/ERR_ABORTED|\(-3\)/i.test(error.message)) {
     return null;
   }
-  return "Couldn't complete that browser action.";
+  return t("Couldn’t complete that browser action.");
 }
 
 function ignoreBrowserBoundsSyncError(): void {
@@ -387,6 +386,7 @@ function isBrowserPerfLoggingEnabled(): boolean {
 
 // Keeps a restored browser pane visually occupied while the live webview hydrates.
 function BrowserRuntimePreview(props: { title: string; detail: string }) {
+  const t = useT();
   return (
     <div
       className="absolute inset-0 flex items-center justify-center bg-background/35 p-6"
@@ -410,7 +410,9 @@ function BrowserRuntimePreview(props: { title: string; detail: string }) {
           </div>
         </div>
         <div className="mt-4 min-w-0 text-center">
-          <p className="text-ui leading-snug font-medium text-foreground">Restoring browser</p>
+          <p className="text-ui leading-snug font-medium text-foreground">
+            {t("Restoring browser")}
+          </p>
           <p className="mt-1 truncate text-ui-sm text-muted-foreground" title={props.detail}>
             {props.title}
           </p>
@@ -421,6 +423,7 @@ function BrowserRuntimePreview(props: { title: string; detail: string }) {
 }
 
 function BrowserRuntimeError(props: { message: string; onReload: () => void }) {
+  const t = useT();
   return (
     <div
       className="absolute inset-0 z-20 flex items-center justify-center bg-[#0d0d0d] px-6 text-center text-white"
@@ -428,7 +431,9 @@ function BrowserRuntimeError(props: { message: string; onReload: () => void }) {
     >
       <div className="flex max-w-xs flex-col items-center">
         <CircleAlertIcon className="size-7 text-white/35" aria-hidden="true" />
-        <p className="mt-3 text-ui-lg font-medium text-white/80">This page could not be loaded</p>
+        <p className="mt-3 text-ui-lg font-medium text-white/80">
+          {t("This page could not be loaded")}
+        </p>
         <p className="mt-1 text-ui leading-snug text-white/45">{props.message}</p>
         <Button
           type="button"
@@ -437,7 +442,7 @@ function BrowserRuntimeError(props: { message: string; onReload: () => void }) {
           className="mt-4"
           onClick={props.onReload}
         >
-          Reload page
+          {t("Reload page")}
         </Button>
       </div>
     </div>
@@ -499,13 +504,14 @@ function BrowserLocalServersHome({
   onRefresh: () => void;
   servers: readonly ServerLocalServerProcess[];
 }) {
+  const t = useT();
   const hasServers = servers.length > 0;
 
   return (
     <div className="absolute inset-0 z-20 flex flex-col overflow-hidden bg-[#0d0d0d] text-white">
       <div className="mx-auto flex h-full w-full max-w-[52rem] flex-col px-8 py-9">
         <div className="flex shrink-0 items-center justify-between">
-          <p className="text-[15px] font-medium text-white/35">Local</p>
+          <p className="text-ui font-medium text-white/35">{t("Local servers")}</p>
           <Button
             type="button"
             variant="ghost"
@@ -513,8 +519,8 @@ function BrowserLocalServersHome({
             className="size-8 text-white/35 hover:bg-white/[0.06] hover:text-white/70"
             disabled={loading}
             onClick={onRefresh}
-            aria-label="Refresh local servers"
-            title="Refresh local servers"
+            aria-label={t("Refresh local servers")}
+            title={t("Refresh local servers")}
           >
             <RefreshCwIcon className={cn("size-4", loading && "animate-spin")} />
           </Button>
@@ -525,14 +531,18 @@ function BrowserLocalServersHome({
             {loading ? (
               <>
                 <RefreshCwIcon className="mb-4 size-12 animate-spin text-white/20" />
-                <p className="text-base font-semibold text-white">Scanning local servers</p>
-                <p className="mt-2 text-ui leading-snug text-white/35">Checking localhost ports</p>
+                <p className="text-ui-lg font-semibold text-white">{t("Scanning local servers")}</p>
+                <p className="mt-2 text-ui leading-snug text-white/35">
+                  {t("Checking localhost ports")}
+                </p>
               </>
             ) : (
               <>
                 <GlobeIcon className="mb-4 size-16 stroke-[1.5] text-white/30" />
-                <p className="text-base font-semibold text-white">No local servers</p>
-                <p className="mt-2 text-ui leading-snug text-white/35">Try another browser URL</p>
+                <p className="text-ui-lg font-semibold text-white">{t("No local servers")}</p>
+                <p className="mt-2 text-ui leading-snug text-white/35">
+                  {t("Try another browser URL")}
+                </p>
               </>
             )}
           </div>
@@ -579,6 +589,7 @@ export function BrowserPanel({
   // Defaults belong in the body, never in the destructuring pattern: React Compiler cannot lower an
   // AssignmentPattern there and silently drops the whole component's memoization.
   const runtimeMode = runtimeModeProp ?? "live";
+  const t = useT();
   const isFloatingMode = mode === "floating";
   const api = readNativeApi();
   const isLiveRuntime = runtimeMode === "live";
@@ -711,16 +722,19 @@ export function BrowserPanel({
     return false;
   }, [isLiveRuntime, requestLiveRuntime]);
 
-  const runBrowserAction = useCallback(async <T,>(action: () => Promise<T>): Promise<T | null> => {
-    try {
-      const result = await action();
-      setLocalError(null);
-      return result;
-    } catch (error) {
-      setLocalError(formatBrowserActionError(error));
-      return null;
-    }
-  }, []);
+  const runBrowserAction = useCallback(
+    async <T,>(action: () => Promise<T>): Promise<T | null> => {
+      try {
+        const result = await action();
+        setLocalError(null);
+        return result;
+      } catch (error) {
+        setLocalError(formatBrowserActionError(error, t));
+        return null;
+      }
+    },
+    [t],
+  );
 
   // Renderer-owned <webview>s are adopted by the desktop manager. Always detach before
   // removing the DOM node so main never keeps a stale webContents runtime.
@@ -1524,7 +1538,9 @@ export function BrowserPanel({
       composerDraftImageCount + composerDraftFileCount + composerDraftAssistantSelectionCount;
     if (attachmentCount >= PROVIDER_SEND_TURN_MAX_ATTACHMENTS) {
       setLocalError(
-        `You can attach up to ${PROVIDER_SEND_TURN_MAX_ATTACHMENTS} references per message.`,
+        t("You can attach up to {count} references per message.", {
+          count: PROVIDER_SEND_TURN_MAX_ATTACHMENTS,
+        }),
       );
       return;
     }
@@ -1542,13 +1558,17 @@ export function BrowserPanel({
         );
         if (!inserted) {
           throw new Error(
-            `You can attach up to ${PROVIDER_SEND_TURN_MAX_ATTACHMENTS} references per message.`,
+            t("You can attach up to {count} references per message.", {
+              count: PROVIDER_SEND_TURN_MAX_ATTACHMENTS,
+            }),
           );
         }
         setLocalError(null);
       } catch (cause) {
         setLocalError(
-          cause instanceof Error ? cause.message : "The browser screenshot could not be prepared.",
+          cause instanceof Error
+            ? cause.message
+            : t("The browser screenshot could not be prepared."),
         );
       }
     });
@@ -1562,6 +1582,7 @@ export function BrowserPanel({
     ensureLiveRuntime,
     runBrowserAction,
     threadId,
+    t,
   ]);
 
   const onCopyScreenshotToClipboard = useCallback(() => {
@@ -1588,17 +1609,17 @@ export function BrowserPanel({
             anchor,
           },
           timeout: 1_200,
-          title: "Browser screenshot copied",
+          title: t("Browser screenshot copied"),
         });
         return;
       }
 
       toastManager.add({
         type: "success",
-        title: "Browser screenshot copied",
+        title: t("Browser screenshot copied"),
       });
     });
-  }, [activeTab, api, ensureLiveRuntime, runBrowserAction, threadId]);
+  }, [activeTab, api, ensureLiveRuntime, runBrowserAction, threadId, t]);
 
   const copyActiveTabLink = useCallback(() => {
     if (!activeTab) {
@@ -1622,13 +1643,13 @@ export function BrowserPanel({
     }
     void clipboard.writeText(url).then(
       () => {
-        toastManager.add({ type: "success", title: BROWSER_COPY_LINK_TOAST_TITLE });
+        toastManager.add({ type: "success", title: t("Link copied") });
       },
       () => {
         // Clipboard writes can reject without user gesture; nothing actionable to surface.
       },
     );
-  }, [activeTab, api, runBrowserAction, threadId]);
+  }, [activeTab, api, runBrowserAction, threadId, t]);
 
   // React chrome focus path: the native page handles the chord through the desktop main
   // process, so this only fires when the address bar/tab strip (not the page) is focused.
@@ -1671,9 +1692,9 @@ export function BrowserPanel({
       if (event.threadId !== threadId) {
         return;
       }
-      toastManager.add({ type: "success", title: BROWSER_COPY_LINK_TOAST_TITLE });
+      toastManager.add({ type: "success", title: t("Link copied") });
     });
-  }, [api, isLiveRuntime, threadId]);
+  }, [api, isLiveRuntime, threadId, t]);
 
   const onCloseTab = useCallback(
     (tabId: string) => {
@@ -1723,7 +1744,7 @@ export function BrowserPanel({
             }}
           >
             <ArrowLeftIcon className="size-3.5" />
-            <span className="sr-only">Go back</span>
+            <span className="sr-only">{t("Go back")}</span>
           </Button>
           <Button
             type="button"
@@ -1744,7 +1765,7 @@ export function BrowserPanel({
             }}
           >
             <ArrowRightIcon className="size-3.5" />
-            <span className="sr-only">Go forward</span>
+            <span className="sr-only">{t("Go forward")}</span>
           </Button>
           <Button
             type="button"
@@ -1769,7 +1790,7 @@ export function BrowserPanel({
             ) : (
               <RefreshCwIcon className="size-3.5" />
             )}
-            <span className="sr-only">Reload</span>
+            <span className="sr-only">{t("Reload")}</span>
           </Button>
         </div>
         <form
@@ -1814,7 +1835,7 @@ export function BrowserPanel({
                 setAddressSuggestionsSuppressed(false);
               }
             }}
-            placeholder="Search or enter a URL"
+            placeholder={t("Search or enter a URL")}
             className={cn(
               "min-w-0 [-webkit-app-region:no-drag]",
               BROWSER_CHROME_CONTROL_CLASS_NAME,
@@ -1886,12 +1907,12 @@ export function BrowserPanel({
           size="icon-sm"
           className="size-7"
           disabled={!activeTab}
-          aria-label="Copy screenshot"
-          title="Copy screenshot"
+          aria-label={t("Copy screenshot")}
+          title={t("Copy screenshot")}
           onClick={onCopyScreenshotToClipboard}
         >
           <CameraIcon className="size-3.5" />
-          <span className="sr-only">Copy screenshot</span>
+          <span className="sr-only">{t("Copy screenshot")}</span>
         </Button>
         <Button
           type="button"
@@ -1899,12 +1920,12 @@ export function BrowserPanel({
           size="icon-sm"
           className="size-7"
           disabled={!activeTab}
-          aria-label="Copy link"
-          title="Copy link"
+          aria-label={t("Copy link")}
+          title={t("Copy link")}
           onClick={copyActiveTabLink}
         >
           <LinkIcon className="size-3.5" />
-          <span className="sr-only">Copy link</span>
+          <span className="sr-only">{t("Copy link")}</span>
         </Button>
         <Menu modal={false} open={browserActionsMenuOpen} onOpenChange={setBrowserActionsMenuOpen}>
           <MenuTrigger
@@ -1914,7 +1935,7 @@ export function BrowserPanel({
                 variant="ghost"
                 size="icon-sm"
                 className="size-7"
-                aria-label="Browser actions"
+                aria-label={t("Browser actions")}
               />
             }
           >
@@ -1927,7 +1948,7 @@ export function BrowserPanel({
           >
             <MenuItem className={BROWSER_ACTION_MENU_ITEM_CLASS_NAME} onClick={onCreateTab}>
               <BrowserActionMenuIcon icon={PlusIcon} />
-              <span>New tab</span>
+              <span>{t("New tab")}</span>
             </MenuItem>
             <MenuItem
               className={BROWSER_ACTION_MENU_ITEM_CLASS_NAME}
@@ -1935,7 +1956,7 @@ export function BrowserPanel({
               onClick={onCaptureScreenshot}
             >
               <BrowserActionMenuIcon icon={CameraIcon} />
-              <span>Capture screenshot</span>
+              <span>{t("Capture screenshot")}</span>
             </MenuItem>
             <MenuItem
               className={BROWSER_ACTION_MENU_ITEM_CLASS_NAME}
@@ -1947,12 +1968,12 @@ export function BrowserPanel({
               }}
             >
               <BrowserActionMenuIcon icon={ExternalLinkIcon} />
-              <span>Open externally</span>
+              <span>{t("Open externally")}</span>
             </MenuItem>
             <MenuSeparator />
             <MenuItem className={BROWSER_ACTION_MENU_ITEM_CLASS_NAME} onClick={onClosePanel}>
               <BrowserActionMenuIcon icon={XIcon} />
-              <span>Close browser panel</span>
+              <span>{t("Close browser panel")}</span>
             </MenuItem>
           </ComposerPickerMenuPopup>
         </Menu>
@@ -1964,7 +1985,7 @@ export function BrowserPanel({
     return (
       <div className="contents" data-browser-panel="true">
         <DiffPanelShell mode={mode} header={isFloatingMode ? null : header}>
-          <DiffPanelLoadingState label="Browser is unavailable." />
+          <DiffPanelLoadingState label={t("Browser is unavailable.")} />
         </DiffPanelShell>
       </div>
     );
@@ -1988,12 +2009,14 @@ export function BrowserPanel({
           <div className="relative min-h-0 flex-1 bg-transparent">
             {!isLiveRuntime ? (
               <BrowserRuntimePreview
-                title={activeTab?.title || "Browser is sleeping"}
-                detail={activeTab?.lastCommittedUrl ?? activeTab?.url ?? "Restoring cached browser"}
+                title={activeTab?.title || t("Browser is sleeping")}
+                detail={
+                  activeTab?.lastCommittedUrl ?? activeTab?.url ?? t("Restoring cached browser")
+                }
               />
             ) : !workspaceReady ? (
               <div className="absolute inset-0 z-10">
-                <DiffPanelLoadingState label="Starting browser..." />
+                <DiffPanelLoadingState label={t("Starting browser...")} />
               </div>
             ) : null}
             {isLiveRuntime ? (
@@ -2014,7 +2037,7 @@ export function BrowserPanel({
             {isFloatingMode && usesNativeRuntime && previewFrame?.tabId === activeTabId ? (
               <img
                 src={previewFrame.src}
-                alt="Browser preview"
+                alt={t("Browser preview")}
                 draggable={false}
                 className="pointer-events-none absolute inset-0 h-full w-full select-none object-contain"
               />

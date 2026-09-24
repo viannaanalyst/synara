@@ -4,6 +4,7 @@
 // Exports: RecentViewSwitcher plus item shape used by the chat route shell.
 
 import type { KeybindingShortcut } from "@synara/contracts";
+import { useT } from "~/i18n";
 
 import { formatShortcutLabel } from "../keybindings";
 import {
@@ -85,6 +86,7 @@ export function RecentViewSwitcher(props: {
   entries: ReadonlyArray<RecentViewDisplayEntry>;
   selectedIndex: number;
 }) {
+  const t = useT();
   if (props.entries.length === 0) {
     return null;
   }
@@ -98,14 +100,16 @@ export function RecentViewSwitcher(props: {
     <div className="pointer-events-none fixed inset-0 z-[90] flex items-start justify-center pt-[14vh]">
       <div
         role="listbox"
-        aria-label="Recent views"
+        aria-label={t("Recent views")}
         aria-activedescendant={`recent-view-switcher-${selectedIndex}`}
         // Same skin as the ⌘K / ⌘P palettes (ui/command popup): squircle 2xl surface,
         // settings-scale type, 30px single-line rows with the zinc highlight.
         className="palette-surface w-[min(32rem,calc(100vw-2rem))] overflow-hidden rounded-3xl border border-[color:var(--color-border-light)] bg-[var(--color-background-surface-under)] text-[var(--color-text-foreground)] shadow-2xl shadow-black/30 backdrop-blur-xl"
       >
         <div className="flex flex-col p-1.5">
-          <div className="px-2.5 pt-1.5 pb-1 text-ui-xs text-muted-foreground/70">Recent views</div>
+          <div className="px-2.5 pt-1.5 pb-1 text-ui-xs text-muted-foreground/70">
+            {t("Recent views")}
+          </div>
           {props.entries.map((entry, index) => {
             const selected = index === selectedIndex;
             return (
@@ -132,16 +136,16 @@ export function RecentViewSwitcher(props: {
                 ) : null}
                 {entry.isCurrent ? (
                   <span className="shrink-0 rounded-full bg-muted px-1.5 text-ui-2xs leading-4 text-muted-foreground">
-                    Current
+                    {t("Current")}
                   </span>
                 ) : null}
                 {entry.isSplit || entry.isPinned ? (
                   <div className="flex shrink-0 items-center gap-1.5 text-muted-foreground">
                     {entry.isSplit ? (
-                      <PanelLeftIcon className="size-3.5" aria-label="Split view" />
+                      <PanelLeftIcon className="size-3.5" aria-label={t("Split view")} />
                     ) : null}
                     {entry.isPinned ? (
-                      <PinFilledIcon className="size-3.5" aria-label="Pinned" />
+                      <PinFilledIcon className="size-3.5" aria-label={t("Pinned")} />
                     ) : null}
                   </div>
                 ) : null}
@@ -151,7 +155,7 @@ export function RecentViewSwitcher(props: {
         </div>
         <div className="flex items-center justify-between gap-3 px-3.5 pt-0.5 pb-2 text-ui-xs text-muted-foreground/70">
           <span className="shrink-0">
-            {props.entries.length} recent {props.entries.length === 1 ? "view" : "views"}
+            {t("{count} recent view", { count: props.entries.length })}
           </span>
           <div className="pointer-events-auto flex items-center gap-2">
             {SWITCHER_FOOTER_SHORTCUTS.map((shortcut) => (

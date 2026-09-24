@@ -15,6 +15,7 @@ import { ProviderIcon } from "~/components/ProviderIcon";
 import { Checkbox } from "~/components/ui/checkbox";
 import { DisclosureRegion } from "~/components/ui/DisclosureRegion";
 import { useRefreshProviderStatusesNow } from "~/hooks/useProviderStatusRefresh";
+import { useT } from "~/i18n";
 import { RefreshCwIcon, XIcon } from "~/lib/icons";
 import {
   findProviderStatus,
@@ -111,6 +112,7 @@ function useDisabledProvidersDraft(): {
 }
 
 export function ProvidersStep() {
+  const t = useT();
   const statuses = useDetectedProviderStatuses();
   const refreshProviderStatuses = useRefreshProviderStatusesNow();
   const homeDir = useWorkspacePathsStore((store) => store.homeDir);
@@ -208,7 +210,7 @@ export function ProvidersStep() {
                     aria-hidden
                     className={cn("size-1.5 shrink-0 rounded-full", presentation.dotClassName)}
                   />
-                  {presentation.label}
+                  {t(presentation.label)}
                   {canConnectInline ? (
                     <button
                       type="button"
@@ -218,7 +220,7 @@ export function ProvidersStep() {
                         toggleConnect(descriptor.kind);
                       }}
                     >
-                      {isConnecting ? "Done" : "Sign in"}
+                      {isConnecting ? t("Done") : t("Sign in")}
                     </button>
                   ) : null}
                   {state === "not-installed" ? (
@@ -229,7 +231,7 @@ export function ProvidersStep() {
                       className={cn("ml-1", INLINE_ACTION_CLASS_NAME)}
                       onClick={(event) => event.stopPropagation()}
                     >
-                      Guide
+                      {t("Guide")}
                     </a>
                   ) : null}
                 </span>
@@ -237,7 +239,10 @@ export function ProvidersStep() {
               <Checkbox
                 id={checkboxId}
                 checked={enabled}
-                aria-label={`${enabled ? "Disable" : "Enable"} ${descriptor.displayName}`}
+                aria-label={t("{action} {name}", {
+                  action: t(enabled ? "Disable" : "Enable"),
+                  name: descriptor.displayName,
+                })}
                 onCheckedChange={(checked) =>
                   setProviderDisabled(descriptor.kind, checked !== true)
                 }
@@ -249,8 +254,11 @@ export function ProvidersStep() {
 
       <div className="flex items-center justify-between gap-3 text-ui text-muted-foreground">
         <span>
-          {summary.connected} connected · {summary.needsSignIn} need sign-in ·{" "}
-          {summary.notInstalled} not installed
+          {t("{connected} connected · {needsSignIn} need sign-in · {notInstalled} not installed", {
+            connected: summary.connected,
+            needsSignIn: summary.needsSignIn,
+            notInstalled: summary.notInstalled,
+          })}
         </span>
         <button
           type="button"
@@ -259,7 +267,7 @@ export function ProvidersStep() {
           onClick={() => void refresh()}
         >
           <RefreshCwIcon className={cn("size-3.5", refreshing && "animate-spin")} aria-hidden />
-          Re-detect
+          {t("Re-detect")}
         </button>
       </div>
 
@@ -270,7 +278,7 @@ export function ProvidersStep() {
                 provider is detected as connected, but the terminal stays mounted. */}
             <div className="flex items-center justify-between text-ui text-muted-foreground">
               <span>
-                Signing in to {connecting.descriptor.displayName} ·{" "}
+                {t("Signing in to {name}", { name: connecting.descriptor.displayName })} ·{" "}
                 <code className="text-foreground/80">{connectingSignInCommand}</code>
               </span>
               <button
@@ -279,7 +287,7 @@ export function ProvidersStep() {
                 onClick={finishConnect}
               >
                 <XIcon className="size-3.5" aria-hidden />
-                Done
+                {t("Done")}
               </button>
             </div>
             <ProviderConnectTerminal

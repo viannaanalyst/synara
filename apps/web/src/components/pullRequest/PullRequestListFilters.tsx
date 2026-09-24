@@ -13,6 +13,7 @@ import { IconButton } from "~/components/ui/icon-button";
 import { Popover, PopoverPopup, PopoverTrigger } from "~/components/ui/popover";
 import { CheckIcon, FilterIcon } from "~/lib/icons";
 import { cn } from "~/lib/utils";
+import { useT } from "~/i18n";
 import {
   PR_BODY_TEXT_CLASS_NAME,
   PR_FINE_TEXT_CLASS_NAME,
@@ -38,6 +39,7 @@ export function PullRequestFilterPillGroup<T extends string>({
   onChange: (value: T) => void;
   onIntent?: (value: T) => void;
 }) {
+  const t = useT();
   return (
     // Sized off the shared UI font var so the pills track the user's font-size setting like
     // every Button-based control.
@@ -59,7 +61,7 @@ export function PullRequestFilterPillGroup<T extends string>({
               : "text-muted-foreground hover:text-foreground",
           )}
         >
-          {option.label}
+          {t(option.label)}
         </button>
       ))}
     </div>
@@ -75,19 +77,22 @@ export function PullRequestProjectFilterPopover({
   value: ProjectId | undefined;
   onChange: (projectId: ProjectId | undefined) => void;
 }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const active = value !== undefined;
   const selectedProjectName = value
     ? projects.find(([projectId]) => projectId === value)?.[1]
     : undefined;
-  const triggerLabel = `Filter pull requests by project: ${selectedProjectName ?? "All projects"}`;
+  const triggerLabel = t("Filter pull requests by project: {project}", {
+    project: selectedProjectName ?? t("All projects"),
+  });
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger
         render={
           <IconButton
             label={triggerLabel}
-            tooltip="Filter by project"
+            tooltip={t("Filter by project")}
             aria-pressed={active}
             className={cn("relative", active && "text-foreground")}
           >
@@ -103,7 +108,7 @@ export function PullRequestProjectFilterPopover({
       />
       <PopoverPopup align="end" className="w-64 p-1">
         <div className={cn(PR_FINE_TEXT_CLASS_NAME, "px-2 py-1 font-medium text-muted-foreground")}>
-          Project
+          {t("Project")}
         </div>
         <div className="max-h-72 overflow-y-auto">
           <button
@@ -118,7 +123,7 @@ export function PullRequestProjectFilterPopover({
               value === undefined && "text-foreground",
             )}
           >
-            <span className="min-w-0 truncate">All projects</span>
+            <span className="min-w-0 truncate">{t("All projects")}</span>
             {value === undefined ? <CheckIcon aria-hidden className="size-3.5 shrink-0" /> : null}
           </button>
           {projects.map(([id, title]) => (

@@ -12,6 +12,7 @@ import type { PointerEvent as ReactPointerEvent, ReactNode } from "react";
 import type { ResolvedTerminalVisualIdentity } from "@synara/shared/terminalThreads";
 
 import { IconButton } from "~/components/ui/icon-button";
+import { useT } from "~/i18n";
 import {
   Maximize2,
   Minimize2,
@@ -117,6 +118,7 @@ export default function TerminalViewportPane({
   onTogglePanel,
   isPanelOpen,
 }: TerminalViewportPaneProps) {
+  const t = useT();
   const renderNode = (node: ThreadTerminalLayoutNode): ReactNode => {
     if (node.type === "terminal") {
       const activePaneTerminalId = node.terminalIds.includes(node.activeTerminalId)
@@ -145,8 +147,10 @@ export default function TerminalViewportPane({
               {node.terminalIds.map((terminalId) => {
                 const visualIdentity = terminalVisualIdentityById.get(terminalId);
                 const isActiveTab = terminalId === activePaneTerminalId;
-                const tabTitle = visualIdentity?.title ?? "Terminal";
-                const closeTabLabel = `Close ${visualIdentity?.title ?? "terminal"}`;
+                const tabTitle = visualIdentity?.title ?? t("Terminal");
+                const closeTabLabel = t("Close {terminal}", {
+                  terminal: visualIdentity?.title ?? t("terminal"),
+                });
 
                 return (
                   <SurfaceTabChip
@@ -179,7 +183,7 @@ export default function TerminalViewportPane({
 
               {onNewTerminalTab ? (
                 <PaneActionButton
-                  label="New terminal tab"
+                  label={t("New terminal tab")}
                   onClick={() => onNewTerminalTab(activePaneTerminalId)}
                 >
                   <Plus className="size-3.5" />
@@ -190,7 +194,7 @@ export default function TerminalViewportPane({
             <div className="flex shrink-0 items-center gap-0.5">
               {canMoveActiveTerminalToGroup ? (
                 <PaneActionButton
-                  label="Move to its own terminal tab"
+                  label={t("Move to its own terminal tab")}
                   onClick={moveActiveTerminalToGroup}
                 >
                   <TerminalSquareIcon className="size-3.5" />
@@ -198,7 +202,7 @@ export default function TerminalViewportPane({
               ) : null}
               {onSplitTerminalRight ? (
                 <PaneActionButton
-                  label="Split right"
+                  label={t("Split right")}
                   onClick={() => onSplitTerminalRight(activePaneTerminalId)}
                 >
                   <SquareSplitHorizontal className="size-3.5" />
@@ -206,7 +210,7 @@ export default function TerminalViewportPane({
               ) : null}
               {onSplitTerminalDown ? (
                 <PaneActionButton
-                  label="Split down"
+                  label={t("Split down")}
                   onClick={() => onSplitTerminalDown(activePaneTerminalId)}
                 >
                   <SquareSplitVertical className="size-3.5" />
@@ -216,8 +220,8 @@ export default function TerminalViewportPane({
                 <PaneActionButton
                   label={
                     presentationMode === "workspace"
-                      ? "Collapse terminal into chat drawer"
-                      : "Expand terminal into workspace"
+                      ? t("Collapse terminal into chat drawer")
+                      : t("Expand terminal into workspace")
                   }
                   onClick={onTogglePresentationMode}
                 >
@@ -230,7 +234,7 @@ export default function TerminalViewportPane({
               ) : null}
               {onTogglePanel ? (
                 <PaneActionButton
-                  label={isPanelOpen ? "Collapse side panel" : "Open side panel"}
+                  label={isPanelOpen ? t("Collapse side panel") : t("Open side panel")}
                   onClick={onTogglePanel}
                 >
                   <PanelRightCloseIcon />
@@ -238,7 +242,7 @@ export default function TerminalViewportPane({
               ) : null}
               {onCloseTerminal ? (
                 <PaneActionButton
-                  label="Close active terminal tab"
+                  label={t("Close active terminal tab")}
                   onClick={() => onCloseTerminal(activePaneTerminalId)}
                 >
                   <Trash2 className="size-3.5" />

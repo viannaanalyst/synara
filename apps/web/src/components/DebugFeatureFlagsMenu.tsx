@@ -7,8 +7,10 @@ import {
   FEATURE_FLAGS,
   setFeatureFlagEnabled,
   useFeatureFlags,
+  type FeatureFlag,
   type ToggleFeatureFlagId,
 } from "../featureFlags";
+import { useT } from "~/i18n";
 import {
   Menu,
   MenuCheckboxItem,
@@ -48,6 +50,7 @@ function triggerActionFailedToasts(values: Record<ToggleFeatureFlagId, boolean>)
 }
 
 export function DebugFeatureFlagsMenu() {
+  const t = useT();
   const values = useFeatureFlags();
 
   return (
@@ -61,12 +64,13 @@ export function DebugFeatureFlagsMenu() {
         }
       >
         <FlagIcon className="size-[15px]" />
-        <span>Feature flags</span>
+        <span>{t("Feature flags")}</span>
       </MenuTrigger>
       <ComposerPickerMenuPopup align="start" side="top" className="min-w-72">
         <MenuGroup>
-          <MenuGroupLabel>Local feature flags</MenuGroupLabel>
+          <MenuGroupLabel>{t("Local feature flags")}</MenuGroupLabel>
           {FEATURE_FLAGS.map((flag) => {
+            const copy = localizedFeatureFlagCopy(flag, t);
             if (flag.kind === "action") {
               return (
                 <MenuItem
@@ -75,9 +79,9 @@ export function DebugFeatureFlagsMenu() {
                   className="py-2"
                 >
                   <div className="flex min-w-0 flex-col gap-0.5">
-                    <span>{flag.label}</span>
+                    <span>{copy.label}</span>
                     <span className="text-ui-xs leading-4 text-muted-foreground/70">
-                      {flag.description}
+                      {copy.description}
                     </span>
                   </div>
                 </MenuItem>
@@ -95,9 +99,9 @@ export function DebugFeatureFlagsMenu() {
                 className="py-2"
               >
                 <div className="flex min-w-0 flex-col gap-0.5">
-                  <span>{flag.label}</span>
+                  <span>{copy.label}</span>
                   <span className="text-ui-xs leading-4 text-muted-foreground/70">
-                    {flag.description}
+                    {copy.description}
                   </span>
                 </div>
               </MenuCheckboxItem>
@@ -106,9 +110,40 @@ export function DebugFeatureFlagsMenu() {
         </MenuGroup>
         <MenuSeparator />
         <div className="px-2 py-1.5 text-ui-xs leading-4 text-muted-foreground/58">
-          Stored only in this browser profile.
+          {t("Stored only in this browser profile.")}
         </div>
       </ComposerPickerMenuPopup>
     </Menu>
   );
+}
+
+function localizedFeatureFlagCopy(
+  flag: FeatureFlag,
+  t: ReturnType<typeof useT>,
+): { label: string; description: string } {
+  switch (flag.id) {
+    case "trigger-action-failed-toasts":
+      return {
+        label: t("Trigger action failed toasts"),
+        description: t("Show stacked Git action failure toasts for local UI testing."),
+      };
+    case "persist-action-failed-debug-toasts":
+      return {
+        label: t("Keep debug error toasts open"),
+        description: t("Disable auto-dismiss for locally triggered error toasts."),
+      };
+    case "pin-git-progress-toast-preview":
+      return {
+        label: t("Pin git progress toast"),
+        description: t("Keep a looping git progress toast visible for styling."),
+      };
+    case "show-debug-task-banner":
+      return {
+        label: t("Show debug task banner"),
+        description: t("Render a local sample active task banner for UI testing."),
+      };
+  }
+
+  const unreachable: never = flag;
+  throw new Error(`Unhandled feature flag: ${String(unreachable)}`);
 }

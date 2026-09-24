@@ -38,6 +38,19 @@ export interface ShortcutSheetSection {
   entries: ShortcutSheetEntry[];
 }
 
+export function translateShortcutSheetLabel(
+  label: string,
+  translate: (key: string, params?: Record<string, string | number>) => string,
+): string {
+  const spaceJump = /^Jump to space (\d+)$/.exec(label);
+  if (spaceJump?.[1]) return translate("Jump to space {index}", { index: spaceJump[1] });
+  const threadJump = /^Jump to visible thread (\d+)$/.exec(label);
+  if (threadJump?.[1]) return translate("Jump to visible thread {index}", { index: threadJump[1] });
+  const scriptSetup = /^(.+) setup script$/.exec(label);
+  if (scriptSetup?.[1]) return `${scriptSetup[1]} ${translate("setup script")}`;
+  return translate(label);
+}
+
 interface BuildShortcutSheetSectionsOptions {
   keybindings: ResolvedKeybindingsConfig;
   projectScripts: ReadonlyArray<ProjectScript>;

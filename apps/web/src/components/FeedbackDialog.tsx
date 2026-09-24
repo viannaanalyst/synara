@@ -4,6 +4,7 @@
 // Depends on: Feedback delivery logic and the shared dialog primitives.
 
 import { useEffect, useRef, useState } from "react";
+import { useT } from "~/i18n";
 import {
   buildFeedbackSubmission,
   FEEDBACK_CATEGORIES,
@@ -23,7 +24,28 @@ export interface FeedbackDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
+function feedbackCategoryLabel(
+  category: FeedbackCategory,
+  t: (key: string, params?: Record<string, string | number>) => string,
+): string {
+  switch (category) {
+    case "bug":
+      return t("Bug");
+    case "session":
+      return t("Session");
+    case "ui":
+      return t("UI");
+    case "performance":
+      return t("Performance");
+    case "idea":
+      return t("Idea");
+    case "other":
+      return t("Other");
+  }
+}
+
 export function FeedbackDialog({ open, context, onOpenChange }: FeedbackDialogProps) {
+  const t = useT();
   const [isSending, setIsSending] = useState(false);
 
   const handleSubmit = async (category: FeedbackCategory | null, details: string) => {
@@ -34,16 +56,16 @@ export function FeedbackDialog({ open, context, onOpenChange }: FeedbackDialogPr
       onOpenChange(false);
       toastManager.add({
         type: "success",
-        title: "Feedback sent",
-        description: "Thanks for helping make Synara better.",
+        title: t("Feedback sent"),
+        description: t("Thanks for helping make Synara better."),
       });
     } catch (error) {
       setIsSending(false);
       toastManager.add({
         type: "error",
-        title: "Could not send feedback",
+        title: t("Could not send feedback"),
         description:
-          error instanceof Error ? error.message : "An unexpected delivery error occurred.",
+          error instanceof Error ? error.message : t("An unexpected delivery error occurred."),
       });
     }
   };
@@ -57,7 +79,7 @@ export function FeedbackDialog({ open, context, onOpenChange }: FeedbackDialogPr
     >
       <DialogPopup className="max-w-xl" showCloseButton={!isSending}>
         <DialogHeader className="gap-0 px-5 pt-5 pb-3">
-          <DialogTitle className="text-xl tracking-[-0.01em]">Share feedback</DialogTitle>
+          <DialogTitle className="text-xl tracking-[-0.01em]">{t("Share feedback")}</DialogTitle>
         </DialogHeader>
         {/* The form state lives below DialogPopup, which unmounts its children
             once the close transition ends — every open starts from a blank
@@ -75,6 +97,7 @@ function FeedbackDialogForm({
   isSending: boolean;
   onSubmit: (category: FeedbackCategory | null, details: string) => Promise<void>;
 }) {
+  const t = useT();
   const [category, setCategory] = useState<FeedbackCategory | null>(null);
   const [details, setDetails] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -99,7 +122,7 @@ function FeedbackDialogForm({
         void handleSubmit();
       }}
     >
-      <div className="flex flex-wrap gap-1.5" aria-label="Feedback category">
+      <div className="flex flex-wrap gap-1.5" aria-label={t("Feedback category")}>
         {FEEDBACK_CATEGORIES.map((option) => {
           const selected = category === option.value;
           return (
@@ -119,7 +142,7 @@ function FeedbackDialogForm({
               onClick={() => setCategory(selected ? null : option.value)}
             >
               <span aria-hidden="true">{selected ? "−" : "+"}</span>
-              {option.label}
+              {feedbackCategoryLabel(option.value, t)}
             </Button>
           );
         })}
@@ -129,26 +152,27 @@ function FeedbackDialogForm({
         ref={textareaRef}
         value={details}
         maxLength={5_000}
-        placeholder="Share details (required)"
-        aria-label="Feedback details"
+        placeholder={t("Share details (required)")}
+        aria-label={t("Feedback details")}
         disabled={isSending}
         className="[&_[data-slot=textarea]]:min-h-32 [&_[data-slot=textarea]]:resize-y"
         onChange={(event) => setDetails(event.target.value)}
       />
 
       <p className="text-ui leading-relaxed text-muted-foreground">
-        Diagnostics include app version, OS, provider/model, modes, and session state — never
-        prompts, messages, paths, or logs.
+        {t(
+          "Diagnostics include app version, OS, provider/model, modes, and session state — never prompts, messages, paths, or logs.",
+        )}
       </p>
 
       <Button type="submit" className="w-full" disabled={!canSubmit}>
         {isSending ? (
           <>
             <Spinner />
-            Sending…
+            {t("Sending…")}
           </>
         ) : (
-          "Submit"
+          t("Submit")
         )}
       </Button>
     </form>

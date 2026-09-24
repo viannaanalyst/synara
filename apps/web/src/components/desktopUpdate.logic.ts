@@ -5,6 +5,17 @@
 
 import type { DesktopUpdateActionResult, DesktopUpdateState } from "@synara/contracts";
 
+type DesktopUpdateTranslate = (key: string, params?: Record<string, string | number>) => string;
+
+function interpolateDesktopUpdateCopy(
+  key: string,
+  params?: Record<string, string | number>,
+): string {
+  return key.replace(/\{(\w+)\}/g, (match, name: string) =>
+    params && Object.prototype.hasOwnProperty.call(params, name) ? String(params[name]) : match,
+  );
+}
+
 export type DesktopUpdateButtonAction = "check" | "download" | "install" | "none";
 
 export function resolveDesktopUpdateButtonAction(
@@ -77,32 +88,33 @@ export interface DesktopUpdateButtonPresentation {
 
 export function getDesktopUpdateButtonPresentation(
   state: DesktopUpdateState | null,
-  options?: { installing?: boolean },
+  options?: { installing?: boolean; translate?: DesktopUpdateTranslate },
 ): DesktopUpdateButtonPresentation {
+  const translate = options?.translate ?? interpolateDesktopUpdateCopy;
   if (options?.installing) {
     return {
-      label: "Updating...",
+      label: translate("Updating..."),
       secondaryLabel: null,
     };
   }
 
   if (!state) {
     return {
-      label: "Update",
+      label: translate("Update"),
       secondaryLabel: null,
     };
   }
 
   if (state.status === "checking") {
     return {
-      label: "Checking...",
+      label: translate("Checking..."),
       secondaryLabel: null,
     };
   }
 
   if (state.status === "downloading") {
     return {
-      label: "Preparing",
+      label: translate("Preparing"),
       secondaryLabel: null,
     };
   }
@@ -111,35 +123,35 @@ export function getDesktopUpdateButtonPresentation(
   if (action === "download") {
     if (state.errorContext === "download" || state.errorContext === "install") {
       return {
-        label: "Retry",
+        label: translate("Retry"),
         secondaryLabel: null,
       };
     }
     return {
-      label: "Preparing",
+      label: translate("Preparing"),
       secondaryLabel: null,
     };
   }
   if (action === "install") {
     if (state.errorContext === "install") {
       return {
-        label: "Retry",
+        label: translate("Retry"),
         secondaryLabel: null,
       };
     }
     return {
-      label: "Update",
+      label: translate("Update"),
       secondaryLabel: null,
     };
   }
   if (action === "check") {
     return {
-      label: "Check updates",
+      label: translate("Check updates"),
       secondaryLabel: null,
     };
   }
   return {
-    label: "Update",
+    label: translate("Update"),
     secondaryLabel: null,
   };
 }
@@ -156,72 +168,105 @@ export function getDesktopUpdateDownloadPercent(state: DesktopUpdateState | null
   return Math.max(0, Math.min(100, Math.floor(percent)));
 }
 
-export function getArm64IntelBuildWarningDescription(state: DesktopUpdateState): string {
+export function getArm64IntelBuildWarningDescription(
+  state: DesktopUpdateState,
+  translate: DesktopUpdateTranslate = interpolateDesktopUpdateCopy,
+): string {
   if (!shouldShowArm64IntelBuildWarning(state)) {
-    return "This install is using the correct architecture.";
+    return translate("This install is using the correct architecture.");
   }
 
   const action = resolveDesktopUpdateButtonAction(state);
   if (action === "download") {
-    return "This Mac has Apple Silicon, but Synara is still running the Intel build under Rosetta. Synara is preparing the native Apple Silicon update.";
+    return translate(
+      "This Mac has Apple Silicon, but Synara is still running the Intel build under Rosetta. Synara is preparing the native Apple Silicon update.",
+    );
   }
   if (action === "install") {
-    return "This Mac has Apple Silicon, but Synara is still running the Intel build under Rosetta. Click Update to restart into the native Apple Silicon build.";
+    return translate(
+      "This Mac has Apple Silicon, but Synara is still running the Intel build under Rosetta. Click Update to restart into the native Apple Silicon build.",
+    );
   }
-  return "This Mac has Apple Silicon, but Synara is still running the Intel build under Rosetta. The next app update will replace it with the native Apple Silicon build.";
+  return translate(
+    "This Mac has Apple Silicon, but Synara is still running the Intel build under Rosetta. The next app update will replace it with the native Apple Silicon build.",
+  );
 }
 
 export function getDesktopUpdateButtonTooltip(
   state: DesktopUpdateState,
-  options?: { installing?: boolean },
+  options?: {
+    installing?: boolean;
+    translate?: DesktopUpdateTranslate;
+  },
 ): string {
+  const translate = options?.translate ?? interpolateDesktopUpdateCopy;
   if (options?.installing) {
-    return "Applying update...";
+    return translate("Applying update...");
   }
   if (state.status === "idle") {
-    return "Check for updates";
+    return translate("Check for updates");
   }
   if (state.status === "checking") {
-    return "Checking for updates...";
+    return translate("Checking for updates...");
   }
   if (state.status === "up-to-date") {
-    return `You're up to date on ${state.currentVersion}. Click to check again.`;
+    return translate("You're up to date on {version}. Click to check again.", {
+      version: state.currentVersion,
+    });
   }
   if (state.errorContext === "install" && !state.downloadedVersion && state.availableVersion) {
-    return `Synara restarted, but update ${state.availableVersion} was not installed. Click to try again.`;
+    return translate(
+      "Synara restarted, but update {version} was not installed. Click to try again.",
+      {
+        version: state.availableVersion,
+      },
+    );
   }
   if (state.errorContext === "download" && state.availableVersion) {
-    return `Could not prepare update ${state.availableVersion}. Click to retry.`;
+    return translate("Could not prepare update {version}. Click to retry.", {
+      version: state.availableVersion,
+    });
   }
   if (state.errorContext === "install" && (state.downloadedVersion || state.availableVersion)) {
-    return `Could not install update ${state.downloadedVersion ?? state.availableVersion}. Click to retry.`;
+    return translate("Could not install update {version}. Click to retry.", {
+      version: state.downloadedVersion ?? state.availableVersion!,
+    });
   }
   if (state.status === "available") {
-    return `Preparing update ${state.availableVersion ?? ""}`.trim();
+    return state.availableVersion
+      ? translate("Preparing update {version}", { version: state.availableVersion })
+      : translate("Preparing update");
   }
   if (state.status === "downloading") {
-    const progress =
-      typeof state.downloadPercent === "number" ? ` (${Math.floor(state.downloadPercent)}%)` : "";
-    return `Preparing update${progress}`;
+    return typeof state.downloadPercent === "number"
+      ? translate("Preparing update ({progress}%)", { progress: Math.floor(state.downloadPercent) })
+      : translate("Preparing update");
   }
   if (state.status === "downloaded") {
-    return `Update ${state.downloadedVersion ?? state.availableVersion ?? "ready"} is ready. Click to restart and install.`;
+    const version = state.downloadedVersion ?? state.availableVersion;
+    return version
+      ? translate("Update {version} is ready. Click to restart and install.", { version })
+      : translate("The update is ready. Click to restart and install.");
   }
   if (state.status === "error") {
     if (state.errorContext === "check") {
       return state.message
-        ? `${state.message}. Click to check again.`
-        : "Update check failed. Click to try again.";
+        ? translate("{message}. Click to check again.", { message: state.message })
+        : translate("Update check failed. Click to try again.");
     }
     if (state.errorContext === "download" && state.availableVersion) {
-      return `Could not prepare update ${state.availableVersion}. Click to retry.`;
+      return translate("Could not prepare update {version}. Click to retry.", {
+        version: state.availableVersion,
+      });
     }
     if (state.errorContext === "install" && state.downloadedVersion) {
-      return `Could not install update ${state.downloadedVersion}. Click to retry.`;
+      return translate("Could not install update {version}. Click to retry.", {
+        version: state.downloadedVersion,
+      });
     }
-    return state.message ?? "Update failed";
+    return state.message ?? translate("Update failed");
   }
-  return "Update available";
+  return translate("Update available");
 }
 
 export function getDesktopUpdateActionError(result: DesktopUpdateActionResult): string | null {
@@ -240,11 +285,14 @@ export function shouldToastDesktopUpdateActionResult(result: DesktopUpdateAction
 // should show an informational notice instead of silently resetting the button.
 export function getDesktopUpdateAlreadyCurrentNotice(
   result: DesktopUpdateActionResult,
+  translate: DesktopUpdateTranslate = interpolateDesktopUpdateCopy,
 ): string | null {
   if (result.completed || result.state.status !== "up-to-date") {
     return null;
   }
-  return `You're already on the latest version (${result.state.currentVersion}).`;
+  return translate("You're already on the latest version ({version}).", {
+    version: result.state.currentVersion,
+  });
 }
 
 export function shouldRecommendManualDesktopDownload(state: DesktopUpdateState | null): boolean {

@@ -66,6 +66,7 @@ import {
   WorktreeIcon,
 } from "~/lib/icons";
 import { pinActionLabel } from "~/lib/pin";
+import { useT } from "~/i18n";
 import { syncAnimationsToTimelineOrigin } from "~/lib/animationTimelineSync";
 import { Button } from "../ui/button";
 import { composerOverlayScrollMaskImage } from "./composerOverlay";
@@ -243,13 +244,10 @@ export interface MessagesTimelineController {
 
 // Keeps the origin/steer marker visually attached to the whole sent-message stack.
 // Which marker (if any) applies comes from the shared resolveUserTurnMarker predicate.
-const USER_TURN_MARKER_PRESENTATION: Record<
-  UserTurnMarkerKind,
-  { readonly Icon: LucideIcon; readonly label: string }
-> = {
-  automation: { Icon: ClockIcon, label: "Sent via Automation" },
-  agent: { Icon: BotIcon, label: "Sent by agent" },
-  steer: { Icon: SteerIcon, label: "Steering conversation" },
+const USER_TURN_MARKER_PRESENTATION: Record<UserTurnMarkerKind, { readonly Icon: LucideIcon }> = {
+  automation: { Icon: ClockIcon },
+  agent: { Icon: BotIcon },
+  steer: { Icon: SteerIcon },
 };
 
 function UserDispatchModeChip({
@@ -261,12 +259,19 @@ function UserDispatchModeChip({
   dispatchOrigin: TimelineMessage["dispatchOrigin"];
   hasLeadingMedia: boolean;
 }) {
+  const t = useT();
   const markerKind = resolveUserTurnMarker({ dispatchMode, dispatchOrigin });
   if (!markerKind) {
     return null;
   }
 
-  const { Icon, label } = USER_TURN_MARKER_PRESENTATION[markerKind];
+  const { Icon } = USER_TURN_MARKER_PRESENTATION[markerKind];
+  const label =
+    markerKind === "automation"
+      ? t("Sent via Automation")
+      : markerKind === "agent"
+        ? t("Sent by agent")
+        : t("Steering conversation");
   return (
     <div
       className={cn(
@@ -586,11 +591,20 @@ export const MessagesTimeline = memo(function MessagesTimeline({
   contentInsetBottomClearancePx,
   findHighlight: findHighlightProp,
 }: MessagesTimelineProps) {
+  const t = useT();
   // Prop defaults are resolved in the body rather than in the destructuring pattern:
   // an `AssignmentPattern` in the parameter list makes React Compiler bail out on the
   // entire component (silently, since `panicThreshold` is unset), which would drop
   // memoization for the whole transcript. See MessagesTimeline.compiler.test.ts.
   const workingLabel = workingLabelProp ?? "Thinking";
+  const localizedWorkingLabel =
+    workingLabel === "Loading"
+      ? t("Loading")
+      : workingLabel === "Thinking"
+        ? t("Thinking")
+        : t("Starting {provider}…", {
+            provider: workingLabel.slice("Starting ".length, -1),
+          });
   const worktreeSetup = worktreeSetupProp ?? null;
   const worktreeSetupPendingAction = worktreeSetupPendingActionProp ?? null;
   const followLiveOutput = followLiveOutputProp ?? false;
@@ -1745,8 +1759,8 @@ export const MessagesTimeline = memo(function MessagesTimeline({
                         )}
                         {showEditUserMessage && (
                           <MessageActionButton
-                            label="Edit message"
-                            tooltip="Edit and resend"
+                            label={t("Edit message")}
+                            tooltip={t("Edit and resend")}
                             disabled={isRevertingCheckpoint}
                             className={cn(
                               MESSAGE_HOVER_REVEAL_CLASS_NAME,
@@ -1759,8 +1773,8 @@ export const MessagesTimeline = memo(function MessagesTimeline({
                         )}
                         {canRevertAgentWork ? (
                           <MessageActionButton
-                            label="Revert to this message"
-                            tooltip="Revert to this message"
+                            label={t("Revert to this message")}
+                            tooltip={t("Revert to this message")}
                             disabled={isRevertingCheckpoint || isWorking}
                             className={cn(
                               MESSAGE_HOVER_REVEAL_CLASS_NAME,
@@ -2193,8 +2207,8 @@ export const MessagesTimeline = memo(function MessagesTimeline({
                     >
                       <span>
                         {row.collapsedWorkElapsed
-                          ? `Worked for ${row.collapsedWorkElapsed}`
-                          : "Details"}
+                          ? t("Worked for {duration}", { duration: row.collapsedWorkElapsed })
+                          : t("Details")}
                       </span>
                       <DisclosureChevron
                         open={isCollapsedWorkExpanded}
@@ -2484,8 +2498,8 @@ export const MessagesTimeline = memo(function MessagesTimeline({
                     ) : null}
                     {showForkAction ? (
                       <MessageActionButton
-                        label="Fork thread from this turn"
-                        tooltip="Fork from here"
+                        label={t("Fork thread from this turn")}
+                        tooltip={t("Fork from here")}
                         onClick={() => onForkFromMessage?.(row.message.id)}
                       >
                         <GitForkIcon className={MESSAGE_ACTION_ICON_CLASS_NAME} />
@@ -2495,7 +2509,7 @@ export const MessagesTimeline = memo(function MessagesTimeline({
                       // Same Central pin glyph in both states — the darker tint is what
                       // signals "this message is pinned".
                       <MessageActionButton
-                        label={pinActionLabel("message", messagePinned)}
+                        label={pinActionLabel(t("message"), messagePinned, t)}
                         tooltip={messagePinned ? "Unpin from panel" : "Pin to panel"}
                         aria-pressed={messagePinned}
                         className={messagePinned ? "text-foreground" : undefined}
@@ -2552,7 +2566,7 @@ export const MessagesTimeline = memo(function MessagesTimeline({
             className={cn("-ml-0.5 pb-2", MUTED_LABEL_TEXT_CLASS_NAME)}
             style={{ fontSize: chatTypographyStyle.fontSize }}
           >
-            Working for{" "}
+            {t("Working for")}{" "}
             {nowIso ? (
               (formatClockElapsed(row.createdAt, nowIso) ?? "0s")
             ) : (
@@ -2569,7 +2583,7 @@ export const MessagesTimeline = memo(function MessagesTimeline({
           className={cn("shimmer pt-0.5 font-system-ui", MUTED_LABEL_TEXT_CLASS_NAME)}
           style={{ fontSize: `${appTypographyScale.chatPx}px` }}
         >
-          {workingLabel}
+          {localizedWorkingLabel}
         </div>
       )}
 
@@ -3117,11 +3131,12 @@ const UserImageAttachmentThumbnail = memo(function UserImageAttachmentThumbnail(
   onTimelineImageLoad: () => void;
   resolvedTheme: "light" | "dark";
 }) {
+  const t = useT();
   return (
     <button
       type="button"
       className="flex size-15 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border/70 bg-background/82 text-left shadow-[0_1px_0_rgba(255,255,255,0.2)_inset] transition-colors hover:bg-background/94"
-      aria-label={`Preview ${props.image.name}`}
+      aria-label={t("Preview {name}", { name: props.image.name })}
       title={props.image.name}
       onClick={() => {
         const preview = buildExpandedImagePreview(props.userImages, props.image.id);
@@ -3284,6 +3299,7 @@ const UserMessageEditForm = memo(function UserMessageEditForm(props: {
   onCancel: () => void;
   onSubmit: (value: string) => void;
 }) {
+  const t = useT();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [draft, setDraft] = useState(props.initialValue);
   const canSubmit = canSubmitUserMessageEdit({
@@ -3344,7 +3360,7 @@ const UserMessageEditForm = memo(function UserMessageEditForm(props: {
         value={draft}
         disabled={props.disabled}
         rows={1}
-        aria-label="Edit message"
+        aria-label={t("Edit message")}
         className="max-h-60 min-h-0 w-full resize-none overflow-y-auto border-0 bg-transparent p-0 font-system-ui text-foreground outline-none placeholder:text-muted-foreground/45 disabled:opacity-70"
         style={props.chatTypographyStyle}
         onChange={(event) => setDraft(event.target.value)}

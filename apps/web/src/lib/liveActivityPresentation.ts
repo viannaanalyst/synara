@@ -3,6 +3,7 @@
 // Layer: Web presentation helper
 
 import { useSyncExternalStore } from "react";
+import { t } from "~/i18n";
 
 import type { WorkLogLiveActivity } from "../workLog";
 import { formatClockDuration } from "../session-logic";
@@ -100,24 +101,27 @@ export function formatLiveActivityProgress(progress: number): string {
   return `${Math.round(Math.min(100, Math.max(0, percent)))}%`;
 }
 
-export function formatLiveActivityStateLabel(state: WorkLogLiveActivity["state"]): string {
+export function formatLiveActivityStateLabel(
+  state: WorkLogLiveActivity["state"],
+  translate: (key: string) => string = t,
+): string {
   switch (state) {
     case "starting":
-      return "Starting";
+      return translate("Starting");
     case "thinking":
-      return "Thinking";
+      return translate("Thinking");
     case "running_tool":
-      return "Running tool";
+      return translate("Running tool");
     case "waiting":
-      return "Waiting";
+      return translate("Waiting");
     case "streaming":
-      return "Streaming";
+      return translate("Streaming");
     case "completed":
-      return "Completed";
+      return translate("Completed");
     case "failed":
-      return "Failed";
+      return translate("Failed");
     case "cancelled":
-      return "Cancelled";
+      return translate("Cancelled");
   }
 }
 
@@ -133,6 +137,7 @@ export interface LiveActivityMetaOptions {
   // Subagent rows (Cursor/Claude `Task`, Codex collab) only hear back from the child
   // agent when it finishes, so quiet time is the expected state — never idleness.
   readonly subagent?: boolean;
+  readonly t?: (key: string, params?: Record<string, string | number>) => string;
 }
 
 // Live meta only exists to explain work the row can't state on its own: how long
@@ -149,28 +154,29 @@ export function formatLiveActivityMeta(
   }
 
   const parts: string[] = [];
+  const translate: NonNullable<LiveActivityMetaOptions["t"]> = options?.t ?? t;
   const elapsed = formatLiveActivityElapsed(activity, nowMs);
   const lastActivityAtMs = parseTimestamp(activity.lastActivityAt);
 
   if (isLiveActivityInProgress(activity)) {
     if (options?.subagent) {
-      parts.push("Subagent working");
+      parts.push(translate("Subagent working"));
     } else if (lastActivityAtMs !== null) {
       const idleMs = Math.max(0, nowMs - lastActivityAtMs);
       parts.push(
         idleMs >= NO_ACTIVITY_THRESHOLD_MS
-          ? `No activity for ${formatClockDuration(idleMs)}`
+          ? translate("No activity for {duration}", { duration: formatClockDuration(idleMs) })
           : idleMs < 1_000
-            ? "Active now"
-            : `Active ${formatClockDuration(idleMs)} ago`,
+            ? translate("Active now")
+            : translate("Active {duration} ago", { duration: formatClockDuration(idleMs) }),
       );
     }
   } else {
-    parts.push(formatLiveActivityStateLabel(activity.state));
+    parts.push(formatLiveActivityStateLabel(activity.state, translate));
   }
 
   if (elapsed !== null) {
-    parts.push(`${elapsed} elapsed`);
+    parts.push(translate("{duration} elapsed", { duration: elapsed }));
   }
   if (activity.progress !== undefined) {
     parts.push(formatLiveActivityProgress(activity.progress));

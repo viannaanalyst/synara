@@ -16,6 +16,7 @@ import { type ThreadId } from "@synara/contracts";
 import { type TerminalActivityState, type TerminalCliKind } from "@synara/shared/terminalThreads";
 import { Terminal } from "@xterm/xterm";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useT } from "~/i18n";
 import { type TerminalContextSelection } from "~/lib/terminalContext";
 import { readNativeApi } from "~/nativeApi";
 import {
@@ -92,6 +93,7 @@ function getTerminalSelectionRect(mountElement: HTMLElement): DOMRect | null {
 }
 
 function TerminalRuntimeStatusOverlay({ status }: { status: TerminalRuntimeStatus }) {
+  const t = useT();
   if (status !== "error") return null;
 
   return (
@@ -102,7 +104,7 @@ function TerminalRuntimeStatusOverlay({ status }: { status: TerminalRuntimeStatu
       )}
     >
       <TriangleAlertIcon className="size-3" />
-      <span className="truncate">Error</span>
+      <span className="truncate">{t("Error")}</span>
     </div>
   );
 }

@@ -6,6 +6,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { Loader2Icon, XIcon } from "~/lib/icons";
+import { useT } from "~/i18n";
 import { cn } from "~/lib/utils";
 import { Button } from "../ui/button";
 
@@ -25,6 +26,7 @@ const BAR_MIN_HEIGHT_PX = 3;
 const BAR_MAX_HEIGHT_PX = 22;
 
 export function ComposerVoiceRecorderBar(props: ComposerVoiceRecorderBarProps) {
+  const t = useT();
   const trackRef = useRef<HTMLDivElement | null>(null);
   const [visibleBarCount, setVisibleBarCount] = useState(96);
 
@@ -90,7 +92,9 @@ export function ComposerVoiceRecorderBar(props: ComposerVoiceRecorderBarProps) {
       <button
         type="button"
         className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-full bg-zinc-200/80 text-zinc-700 transition-colors hover:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-white/10 dark:text-zinc-100 dark:hover:bg-white/15 sm:h-7 sm:w-7"
-        aria-label={props.isTranscribing ? "Transcribing voice note" : "Cancel voice recording"}
+        aria-label={
+          props.isTranscribing ? t("Transcribing voice note") : t("Cancel voice recording")
+        }
         disabled={props.disabled || props.isTranscribing}
         onClick={props.onDiscard}
       >
@@ -106,7 +110,7 @@ export function ComposerVoiceRecorderBar(props: ComposerVoiceRecorderBarProps) {
         variant="prominent"
         size="icon-xs"
         className="size-7 rounded-full sm:size-7"
-        aria-label={props.isTranscribing ? "Transcribing voice note" : "Stop voice recording"}
+        aria-label={props.isTranscribing ? t("Transcribing voice note") : t("Stop voice recording")}
         disabled={props.disabled || props.isTranscribing}
         onClick={props.onStop}
       >

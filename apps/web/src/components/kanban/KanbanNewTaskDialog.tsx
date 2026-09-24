@@ -58,6 +58,7 @@ import { useProviderModelCatalog } from "~/hooks/useProviderModelCatalog";
 import { useRefreshProviderStatusesNow } from "~/hooks/useProviderStatusRefresh";
 import { useProviderStatusesForLocalConfig } from "~/hooks/useProviderStatusesForLocalConfig";
 import { useComposerDropzone } from "~/hooks/useComposerDropzone";
+import { useT } from "~/i18n";
 import { toastManager } from "~/components/ui/toast";
 import { useTheme } from "~/hooks/useTheme";
 import { ChevronRightIcon, LoaderCircleIcon, PaperclipIcon } from "~/lib/icons";
@@ -115,6 +116,7 @@ export function KanbanNewTaskDialog({
   initialProjectId,
   initialSendAsDraft: initialSendAsDraftProp,
 }: KanbanNewTaskDialogProps) {
+  const t = useT();
   const initialSendAsDraft = initialSendAsDraftProp ?? false;
   const { settings } = useAppSettings();
   const { resolvedTheme } = useTheme();
@@ -410,11 +412,11 @@ export function KanbanNewTaskDialog({
       onUnsupportedFiles: (files) => {
         toastManager.add({
           type: "warning",
-          title: "Only images can be attached to new tasks.",
+          title: t("Only images can be attached to new tasks."),
           description:
             files.length === 1
-              ? "That file was not added."
-              : `${files.length} files were not added.`,
+              ? t("That file was not added.")
+              : t("{count} files were not added.", { count: files.length }),
         });
       },
     },
@@ -465,12 +467,13 @@ export function KanbanNewTaskDialog({
             />
             <ChevronRightIcon className="size-3.5 shrink-0 text-muted-foreground/50" aria-hidden />
             <DialogTitle className="font-system-ui truncate font-medium text-ui leading-none">
-              New task
+              {t("New task")}
             </DialogTitle>
           </div>
           <DialogDescription className="sr-only">
-            Draft a prompt and place it in the board&apos;s Draft column. Drag it to In Progress to
-            send it.
+            {t(
+              "Draft a prompt and place it in the board's Draft column. Drag it to In Progress to send it.",
+            )}
           </DialogDescription>
         </DialogHeader>
         {/* Flush, borderless composer body: same Lexical prompt editor and attachment row as chat. */}
@@ -492,7 +495,7 @@ export function KanbanNewTaskDialog({
                 {isLocalFolderBrowserOpen ? (
                   <ComposerLocalDirectoryMenu
                     mentionQuery={mentionTriggerQuery}
-                    rootLabel={localFolderBrowseRootPath ?? "Local folders unavailable"}
+                    rootLabel={localFolderBrowseRootPath ?? t("Local folders unavailable")}
                     homeDir={serverConfigQuery.data?.homeDir ?? null}
                     onSelectEntry={(absolutePath) =>
                       handleSelectLocalDirectoryMention(absolutePath)
@@ -531,7 +534,7 @@ export function KanbanNewTaskDialog({
                 role="status"
               >
                 <LoaderCircleIcon className="size-3.5 animate-spin" />
-                Optimizing {pendingImageCount === 1 ? "image" : "images"}…
+                {t("Optimizing {count} image…", { count: pendingImageCount })}
               </div>
             ) : null}
             <ComposerPromptEditor
@@ -541,7 +544,9 @@ export function KanbanNewTaskDialog({
               terminalContexts={composerTerminalContexts}
               mentionReferences={composerMentions}
               disabled={voice.isVoiceTranscribing}
-              placeholder="Describe the task, @tag files/folders, paste images, or use / for skills"
+              placeholder={t(
+                "Describe the task, @tag files/folders, paste images, or use / for skills",
+              )}
               className={cn(
                 COMPOSER_EDITOR_MIN_HEIGHT_CLASS_NAME,
                 COMPOSER_EDITOR_TYPOGRAPHY_CLASS_NAME,
@@ -638,8 +643,8 @@ export function KanbanNewTaskDialog({
                   size="icon-sm"
                   variant="ghost"
                   className="mr-1 shrink-0 text-muted-foreground/70 hover:text-foreground"
-                  aria-label="Attach images"
-                  title="Attach images"
+                  aria-label={t("Attach images")}
+                  title={t("Attach images")}
                   onClick={() => fileInputRef.current?.click()}
                 >
                   <PaperclipIcon className="size-4" />
@@ -661,10 +666,14 @@ export function KanbanNewTaskDialog({
                   checked={sendAsDraft}
                   onCheckedChange={(checked) => setSendAsDraft(checked === true)}
                 />
-                Send as draft
+                {t("Send as draft")}
               </label>
               <Button size="sm" onClick={handleCreateRequest} disabled={!canCreate}>
-                {isCreating ? "Creating..." : isPreparingImages ? "Optimizing..." : "Create task"}
+                {isCreating
+                  ? t("Creating...")
+                  : isPreparingImages
+                    ? t("Optimizing...")
+                    : t("Create task")}
               </Button>
             </div>
           </div>

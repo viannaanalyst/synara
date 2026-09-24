@@ -19,6 +19,7 @@ import {
   type WheelEventHandler,
 } from "react";
 import { type TimestampFormat } from "../../appSettings";
+import { useT } from "~/i18n";
 import { type TurnDiffSummary, type WorktreeSetupSnapshot } from "../../types";
 import { ArrowDownIcon } from "~/lib/icons";
 import { cn } from "~/lib/utils";
@@ -191,6 +192,7 @@ export function ChatTranscriptPane({
   onResolveWorktreeSetup,
   findHighlightStore: findHighlightStoreProp,
 }: ChatTranscriptPaneProps) {
+  const t = useT();
   // The composer floats over the transcript's bottom edge, so the scroll-to-bottom
   // affordance rides above it on the same inset the transcript content uses.
   const scrollButtonFrameStyle: CSSProperties | undefined =
@@ -342,7 +344,7 @@ export function ChatTranscriptPane({
               type="button"
               onClick={onScrollToBottom}
               data-scroll-anchor-ignore
-              aria-label="Scroll to bottom"
+              aria-label={t("Scroll to bottom")}
               aria-hidden={!scrollButtonVisible}
               tabIndex={scrollButtonVisible ? 0 : -1}
               className={cn(

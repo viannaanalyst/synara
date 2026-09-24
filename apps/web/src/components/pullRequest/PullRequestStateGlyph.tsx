@@ -9,6 +9,7 @@
 import type { GitPullRequestMergeability, PullRequestState } from "@synara/contracts";
 
 import { cn } from "~/lib/utils";
+import { useT } from "~/i18n";
 import {
   PR_STATE_PRESENTATION_ICONS,
   resolvePrStatePresentation,
@@ -18,18 +19,6 @@ const SIZE_CLASS_NAME = {
   sm: "size-4",
   md: "size-[1.125rem]",
 } as const;
-
-function pullRequestStateLabel(
-  state: PullRequestState,
-  isDraft: boolean,
-  mergeability: GitPullRequestMergeability | undefined,
-): string {
-  if (isDraft && state === "open") return "Draft";
-  if (state === "open" && mergeability === "conflicting") return "Has conflicts";
-  if (state === "open") return "Open";
-  if (state === "merged") return "Merged";
-  return "Closed";
-}
 
 // Draft always shows as draft (a draft isn't heading for a merge); an open non-draft PR
 // with conflicts shows the conflict glyph — precedence lives in resolvePrStatePresentation
@@ -47,15 +36,16 @@ export function PullRequestStateGlyph({
   size?: keyof typeof SIZE_CLASS_NAME;
   className?: string;
 }) {
+  const t = useT();
   const size = sizeProp ?? "sm";
   const presentation = resolvePrStatePresentation({ state, isDraft, mergeability });
   const Icon = PR_STATE_PRESENTATION_ICONS[presentation.iconKind];
   return (
     <span
       className={cn("flex shrink-0 items-center justify-center", SIZE_CLASS_NAME[size], className)}
-      title={pullRequestStateLabel(state, isDraft, mergeability)}
+      title={t(presentation.label)}
       role="img"
-      aria-label={presentation.label}
+      aria-label={t(presentation.label)}
     >
       <Icon className={cn("size-full", presentation.colorClass)} aria-hidden="true" />
     </span>

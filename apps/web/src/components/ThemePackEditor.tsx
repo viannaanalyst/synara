@@ -22,6 +22,7 @@ import { Select, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Switch } from "./ui/switch";
 import { Textarea } from "./ui/textarea";
 import { toastManager } from "./ui/toast";
+import { useT } from "~/i18n";
 import { SettingsCard, SettingsSelectPopup } from "./settings/SettingsPanelPrimitives";
 import { copyTextToClipboard } from "../hooks/useCopyToClipboard";
 import { type ChromeTheme, type ThemeMode, type ThemeVariant, useTheme } from "../hooks/useTheme";
@@ -61,6 +62,7 @@ export function ThemePackEditor({
   isActive: isActiveProp,
   mode: modeProp,
 }: ThemePackEditorProps) {
+  const t = useT();
   const {
     darkTheme,
     lightTheme,
@@ -98,28 +100,31 @@ export function ThemePackEditor({
   const codeThemeLabel =
     CODE_THEME_OPTIONS.find((option) => option.id === pack.codeThemeId)?.label ?? pack.codeThemeId;
   const isPristine = isDefaultThemePack(variant);
-  const titleLabel = variant === "dark" ? "Dark theme" : "Light theme";
+  const titleLabel = variant === "dark" ? t("Dark theme") : t("Light theme");
+  const variantLabel = variant === "dark" ? t("dark") : t("light");
+  const modeLabel =
+    mode === "system" ? t("system mode") : mode === "dark" ? t("dark mode") : t("light mode");
   const contextLabel = isActive
     ? mode === "system"
-      ? `System is currently using this ${variant} slot.`
-      : "This is the active theme right now."
+      ? t("System is currently using this {variant} slot.", { variant: variantLabel })
+      : t("This is the active theme right now.")
     : mode === "system"
-      ? `Used when your system switches to ${variant}.`
-      : `Inactive while the app is locked to ${mode}.`;
+      ? t("Used when your system switches to {variant}.", { variant: variantLabel })
+      : t("Inactive while the app is locked to {mode}.", { mode: modeLabel });
 
   const handleCopy = async () => {
     try {
       await copyTextToClipboard(exportThemeString(variant));
       toastManager.add({
         type: "success",
-        title: "Theme copied",
-        description: `Copied the ${variant} theme share string.`,
+        title: t("Theme copied"),
+        description: t("Copied the {variant} theme share string.", { variant: variantLabel }),
       });
     } catch {
       toastManager.add({
         type: "error",
-        title: "Copy failed",
-        description: "Unable to copy the theme share string.",
+        title: t("Copy failed"),
+        description: t("Unable to copy the theme share string."),
       });
     }
   };
@@ -143,7 +148,7 @@ export function ThemePackEditor({
                 ELEVATED_HOVER_SURFACE_RAISED_TEXT_CLASS_NAME,
               )}
             >
-              Reset
+              {t("Reset")}
             </button>
           ) : null}
         </div>
@@ -154,7 +159,7 @@ export function ThemePackEditor({
             onClick={() => void handleCopy()}
             className={EDITOR_TEXT_ACTION_CLASS_NAME}
           >
-            Copy
+            {t("Copy")}
           </button>
           <Select
             value={pack.codeThemeId}
@@ -166,7 +171,7 @@ export function ThemePackEditor({
             <SelectTrigger
               size="sm"
               className={cn(SETTINGS_CONTROL_RADIUS_CLASS_NAME, "ml-1 min-w-52 gap-2")}
-              aria-label={`${titleLabel} code theme`}
+              aria-label={t("Code theme for the {variant} theme", { variant: variantLabel })}
             >
               <SelectValue className="flex-1 text-left">
                 <CodeThemeSelectOption label={codeThemeLabel} theme={theme} />
@@ -191,14 +196,17 @@ export function ThemePackEditor({
         <span>{contextLabel}</span>
         {!isActive ? (
           <Button variant="outline" size="xs" onClick={() => setTheme(variant)}>
-            Use {variant} theme
+            {variant === "dark" ? t("Use dark theme") : t("Use light theme")}
           </Button>
         ) : null}
       </div>
       <div className="border-b border-[color:var(--color-border)] px-4 pb-3">
         <div
           role="img"
-          aria-label={`${titleLabel} preview: ${codeThemeLabel}`}
+          aria-label={t("{theme} preview: {codeTheme}", {
+            theme: titleLabel,
+            codeTheme: codeThemeLabel,
+          })}
           className="flex items-center justify-between gap-3 rounded-lg border p-3"
           style={
             {
@@ -218,16 +226,16 @@ export function ThemePackEditor({
               color: "var(--color-text-accent)",
             }}
           >
-            Accent preview
+            {t("Accent preview")}
           </span>
         </div>
       </div>
 
       <div className={SETTINGS_STACKED_ROWS_DIVIDER_CLASS_NAME}>
-        <ThemeRow label="Accent">
+        <ThemeRow label={t("Accent")}>
           <ColorPill
             color={theme.accent}
-            ariaLabel={`${titleLabel} accent color`}
+            ariaLabel={t("The {variant} theme accent color", { variant: variantLabel })}
             onChange={(next) => updateThemePack(variant, { accent: next })}
             onReset={
               theme.accent !== defaultTheme.accent
@@ -240,10 +248,10 @@ export function ThemePackEditor({
           />
         </ThemeRow>
 
-        <ThemeRow label="Background">
+        <ThemeRow label={t("Background")}>
           <ColorPill
             color={theme.surface}
-            ariaLabel={`${titleLabel} background color`}
+            ariaLabel={t("The {variant} theme background color", { variant: variantLabel })}
             onChange={(next) => updateThemePack(variant, { surface: next })}
             onReset={
               theme.surface !== defaultTheme.surface
@@ -256,10 +264,10 @@ export function ThemePackEditor({
           />
         </ThemeRow>
 
-        <ThemeRow label="Foreground">
+        <ThemeRow label={t("Foreground")}>
           <ColorPill
             color={theme.ink}
-            ariaLabel={`${titleLabel} foreground color`}
+            ariaLabel={t("The {variant} theme foreground color", { variant: variantLabel })}
             onChange={(next) => updateThemePack(variant, { ink: next })}
             onReset={
               theme.ink !== defaultTheme.ink
@@ -272,28 +280,28 @@ export function ThemePackEditor({
           />
         </ThemeRow>
 
-        <ThemeRow label="UI font">
+        <ThemeRow label={t("UI font")}>
           <div className="flex flex-col items-end gap-1">
             <FontInput
               value={theme.fonts.ui ?? ""}
-              placeholder="System default"
-              ariaLabel={`${titleLabel} UI font`}
+              placeholder={t("System default")}
+              ariaLabel={t("The {variant} theme UI font", { variant: variantLabel })}
               onChange={(next) => updateThemeFonts(variant, { ui: next.length > 0 ? next : null })}
             />
             {systemUiFont ? (
               <span className="text-ui-sm text-muted-foreground">
-                Use system UI font is on; theme fonts are not applied.
+                {t("Use system UI font is on; theme fonts are not applied.")}
               </span>
             ) : null}
           </div>
         </ThemeRow>
 
-        <ThemeRow label="Code font">
+        <ThemeRow label={t("Code font")}>
           <div className="flex flex-col items-end gap-1">
             <FontInput
               value={theme.fonts.code ?? ""}
               placeholder='"JetBrains Mono"'
-              ariaLabel={`${titleLabel} code font`}
+              ariaLabel={t("The {variant} theme code font", { variant: variantLabel })}
               mono
               onChange={(next) =>
                 updateThemeFonts(variant, { code: next.length > 0 ? next : null })
@@ -302,19 +310,21 @@ export function ThemePackEditor({
           </div>
         </ThemeRow>
 
-        <ThemeRow label="Translucent sidebar">
+        <ThemeRow label={t("Translucent sidebar")}>
           <Switch
             checked={!theme.opaqueWindows}
             onCheckedChange={(checked) => updateThemePack(variant, { opaqueWindows: !checked })}
-            aria-label={`${titleLabel} translucent sidebar`}
+            aria-label={t("Translucent sidebar for the {variant} theme", {
+              variant: variantLabel,
+            })}
           />
         </ThemeRow>
 
-        <ThemeRow label="Contrast">
+        <ThemeRow label={t("Contrast")}>
           <ContrastSlider
             value={theme.contrast}
             onChange={(next) => updateThemePack(variant, { contrast: next })}
-            ariaLabel={`${titleLabel} contrast`}
+            ariaLabel={t("Contrast for the {variant} theme", { variant: variantLabel })}
           />
         </ThemeRow>
       </div>
@@ -351,6 +361,7 @@ function ColorPill({
   onChange: (next: string) => void;
   onReset?: (() => void) | undefined;
 }) {
+  const t = useT();
   const commitTimerRef = useRef<number | null>(null);
   const pendingCommitRef = useRef<string | null>(null);
   const colorRef = useRef(color);
@@ -436,8 +447,8 @@ function ColorPill({
             "rounded-md p-1 text-[var(--color-text-foreground-tertiary)]",
             ELEVATED_HOVER_SURFACE_RAISED_TEXT_CLASS_NAME,
           )}
-          aria-label={`Reset ${ariaLabel}`}
-          title="Reset to default"
+          aria-label={t("Reset {label}", { label: ariaLabel })}
+          title={t("Reset to default")}
         >
           <ResetGlyph />
         </button>
@@ -493,7 +504,7 @@ function ColorPill({
                 SETTINGS_CONTROL_RADIUS_CLASS_NAME,
                 "h-8 border border-[color:var(--color-border-light)] bg-[var(--color-background-elevated-secondary)] px-2 text-center font-chat-code text-ui leading-snug uppercase outline-none focus:border-[color:var(--color-border-focus)]",
               )}
-              aria-label={`${ariaLabel} hex value`}
+              aria-label={t("{label} hex value", { label: ariaLabel })}
             />
           </div>
         </PopoverPopup>
@@ -608,23 +619,30 @@ function ImportThemeDialog({
   variant: ThemeVariant;
   onImport: (value: string) => void;
 }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const titleLabel = variant === "dark" ? t("Dark theme") : t("Light theme");
+  const variantLabel = variant === "dark" ? t("dark") : t("light");
 
   const handleSubmit = () => {
     try {
       onImport(value);
       toastManager.add({
         type: "success",
-        title: "Theme imported",
-        description: `Updated the ${variant} theme pack.`,
+        title: t("Theme imported"),
+        description: t("Updated the {variant} theme pack.", { variant: variantLabel }),
       });
       setValue("");
       setError(null);
       setOpen(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unable to import that theme string.");
+      setError(
+        err instanceof Error
+          ? translateThemeImportError(err.message, t)
+          : t("Unable to import that theme string."),
+      );
     }
   };
 
@@ -633,19 +651,25 @@ function ImportThemeDialog({
       <DialogTrigger
         render={
           <button type="button" className={EDITOR_TEXT_ACTION_CLASS_NAME}>
-            Import
+            {t("Import")}
           </button>
         }
       />
       <DialogPopup className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Import {variant} theme</DialogTitle>
-          <p className="text-ui leading-snug text-muted-foreground">
-            Paste a{" "}
-            <code className="rounded bg-muted px-1 py-0.5 font-chat-code">codex-theme-v1:</code>{" "}
-            share string. The embedded variant must match {variant}, and the selected code theme
-            must exist for that variant.
-          </p>
+          <DialogTitle>{t("Import {theme}", { theme: titleLabel })}</DialogTitle>
+          <div className="space-y-2 text-ui leading-snug text-muted-foreground">
+            <p>
+              {t("Paste this theme share string:")}{" "}
+              <code className="rounded bg-muted px-1 py-0.5 font-chat-code">codex-theme-v1:</code>
+            </p>
+            <p>
+              {t(
+                "The embedded variant must match {variant}, and the selected code theme must exist for that variant.",
+                { variant: variantLabel },
+              )}
+            </p>
+          </div>
         </DialogHeader>
         <DialogPanel>
           <Textarea
@@ -658,7 +682,7 @@ function ImportThemeDialog({
             spellCheck={false}
             rows={5}
             className="font-chat-code text-chat-code"
-            aria-label="Theme share string"
+            aria-label={t("Theme share string")}
           />
           {error ? <p className="mt-2 text-ui leading-snug text-destructive">{error}</p> : null}
         </DialogPanel>
@@ -666,7 +690,7 @@ function ImportThemeDialog({
           <DialogClose
             render={
               <Button variant="outline" type="button" size="sm">
-                Cancel
+                {t("Cancel")}
               </Button>
             }
           />
@@ -676,12 +700,76 @@ function ImportThemeDialog({
             disabled={value.trim().length === 0}
             onClick={handleSubmit}
           >
-            Import
+            {t("Import")}
           </Button>
         </DialogFooter>
       </DialogPopup>
     </Dialog>
   );
+}
+
+function translateThemeImportError(message: string, t: ReturnType<typeof useT>): string {
+  const unavailableCodeTheme = /^Code theme "(.+)" is not available for (light|dark)\.$/.exec(
+    message,
+  );
+  if (unavailableCodeTheme) {
+    return t('Code theme "{codeTheme}" is not available for the {variant} theme.', {
+      codeTheme: unavailableCodeTheme[1] ?? "",
+      variant: t(unavailableCodeTheme[2] === "dark" ? "dark" : "light"),
+    });
+  }
+
+  const variantMismatch =
+    /^Theme variant mismatch\. Expected (light|dark), received (light|dark)\.$/.exec(message);
+  if (variantMismatch) {
+    return t("Theme variant mismatch. Expected {expected}, received {received}.", {
+      expected: t(variantMismatch[1] === "dark" ? "dark" : "light"),
+      received: t(variantMismatch[2] === "dark" ? "dark" : "light"),
+    });
+  }
+
+  switch (message) {
+    case "Theme share string must start with codex-theme-v1:":
+      return t("Theme share string must start with codex-theme-v1:");
+    case "Theme share string does not contain valid JSON.":
+      return t("Theme share string does not contain valid JSON.");
+    case "Theme share payload must be an object.":
+      return t("Theme share payload must be an object.");
+    case "Theme share variant must be either light or dark.":
+      return t("Theme share variant must be either light or dark.");
+    case "Theme share theme must be an object.":
+      return t("Theme share theme must be an object.");
+    case "Theme fonts must be an object.":
+      return t("Theme fonts must be an object.");
+    case "Theme semanticColors must be an object.":
+      return t("Theme semanticColors must be an object.");
+    case "Theme contrast must be an integer between 0 and 100.":
+      return t("Theme contrast must be an integer between 0 and 100.");
+    case "Theme share codeThemeId must be a string.":
+      return t("Theme share codeThemeId must be a string.");
+    case "Theme share codeThemeId must not be empty.":
+      return t("Theme share codeThemeId must not be empty.");
+    case "Theme accent must be a 6-digit hex color.":
+      return t("Theme accent must be a 6-digit hex color.");
+    case "Theme ink must be a 6-digit hex color.":
+      return t("Theme ink must be a 6-digit hex color.");
+    case "Theme opaqueWindows must be a boolean.":
+      return t("Theme opaqueWindows must be a boolean.");
+    case "Theme code font must be a string or null.":
+      return t("Theme code font must be a string or null.");
+    case "Theme UI font must be a string or null.":
+      return t("Theme UI font must be a string or null.");
+    case "Theme diffAdded must be a 6-digit hex color.":
+      return t("Theme diffAdded must be a 6-digit hex color.");
+    case "Theme diffRemoved must be a 6-digit hex color.":
+      return t("Theme diffRemoved must be a 6-digit hex color.");
+    case "Theme skill must be a 6-digit hex color.":
+      return t("Theme skill must be a 6-digit hex color.");
+    case "Theme surface must be a 6-digit hex color.":
+      return t("Theme surface must be a 6-digit hex color.");
+    default:
+      return message;
+  }
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────

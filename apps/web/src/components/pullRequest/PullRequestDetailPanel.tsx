@@ -41,6 +41,7 @@ import {
 } from "~/components/ui/menu";
 import { Skeleton } from "~/components/ui/skeleton";
 import { toastManager } from "~/components/ui/toast";
+import { useT } from "~/i18n";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "~/components/ui/tooltip";
 import { addChatPullRequestContext } from "~/lib/chatReferences";
 import {
@@ -138,6 +139,7 @@ export function PullRequestDetailPanel({
   onSelectPullRequest?: (number: number) => void;
   pollingEnabled?: boolean;
 }) {
+  const t = useT();
   const initialTab = initialTabProp ?? "summary";
   const pollingEnabled = pollingEnabledProp ?? true;
   const queryClient = useQueryClient();
@@ -201,18 +203,18 @@ export function PullRequestDetailPanel({
         const title =
           action === "merge" && result.mergeOutcome === "enqueued"
             ? detail?.stack
-              ? "Stack added to merge queue"
-              : "Pull request added to merge queue"
+              ? t("Stack added to merge queue")
+              : t("Pull request added to merge queue")
             : action === "merge" && detail?.stack
-              ? "Stack merged"
-              : ACTION_SUCCESS_LABELS[action];
+              ? t("Stack merged")
+              : t(ACTION_SUCCESS_LABELS[action]);
         toastManager.add({ type: "success", title });
       })
       .catch((error: unknown) => {
         toastManager.add({
           type: "error",
-          title: "Pull request action failed",
-          description: error instanceof Error ? error.message : "GitHub CLI action failed.",
+          title: t("Pull request action failed"),
+          description: error instanceof Error ? error.message : t("GitHub CLI action failed."),
         });
       })
       .finally(() => {
@@ -245,7 +247,8 @@ export function PullRequestDetailPanel({
             fresh: true,
           }),
         ).then((threadId) => {
-          if (!threadId) throw new Error("Could not create a draft thread for this pull request.");
+          if (!threadId)
+            throw new Error(t("Could not create a draft thread for this pull request."));
           addChatPullRequestContext(threadId, card);
         }),
       )
@@ -254,7 +257,7 @@ export function PullRequestDetailPanel({
           type: "error",
           title: errorTitle,
           description:
-            error instanceof Error ? error.message : "The PR thread could not be prepared.",
+            error instanceof Error ? error.message : t("The PR thread could not be prepared."),
         });
       })
       .finally(() => {
@@ -269,7 +272,7 @@ export function PullRequestDetailPanel({
       createPullRequestContextDraft({
         scope: "everything",
         pr: detail,
-        title: "Fix findings",
+        title: t("Fix findings"),
         subtitle: `#${detail.number} ${detail.title}`,
         text: buildFixFindingsPrompt({
           prNumber: detail.number,
@@ -283,7 +286,7 @@ export function PullRequestDetailPanel({
           commentsIncomplete: detail.commentsIncomplete,
         }),
       }),
-      "Could not prepare findings",
+      t("Could not prepare findings"),
     );
   };
 
@@ -294,8 +297,8 @@ export function PullRequestDetailPanel({
       createPullRequestContextDraft({
         scope: "conflicts",
         pr: detail,
-        title: "Merge conflicts",
-        subtitle: `Conflicts with ${detail.baseBranch}`,
+        title: t("Merge conflicts"),
+        subtitle: t("Conflicts with {branch}", { branch: detail.baseBranch }),
         text: buildResolveConflictsPrompt({
           prNumber: detail.number,
           prUrl: detail.url,
@@ -303,7 +306,7 @@ export function PullRequestDetailPanel({
           headBranch: detail.headBranch,
         }),
       }),
-      "Could not prepare conflict resolution",
+      t("Could not prepare conflict resolution"),
     );
   };
 
@@ -331,7 +334,10 @@ export function PullRequestDetailPanel({
       <header className="flex min-h-12 shrink-0 items-center gap-2 px-2">
         {/* No state glyph here: the dock tab above already carries it, and the Summary tab
             spells the state out in words. A third copy in between was pure repetition. */}
-        <nav className="flex min-w-0 items-center gap-0.5" aria-label="Pull request detail tabs">
+        <nav
+          className="flex min-w-0 items-center gap-0.5"
+          aria-label={t("Pull request detail tabs")}
+        >
           {TABS.map((item) => (
             <button
               key={item.value}
@@ -346,7 +352,7 @@ export function PullRequestDetailPanel({
                 tab === item.value && CHAT_SURFACE_CONTROL_ACTIVE_CLASS_NAME,
               )}
             >
-              {item.label}
+              {t(item.label)}
             </button>
           ))}
         </nav>
@@ -362,8 +368,8 @@ export function PullRequestDetailPanel({
               ) : null}
               <IconButton
                 variant="chrome"
-                label="Open in external browser"
-                tooltip="Open in external browser"
+                label={t("Open in external browser")}
+                tooltip={t("Open in external browser")}
                 className={PR_HEADER_ICON_BUTTON_CLASS_NAME}
                 onClick={() => void ensureNativeApi().shell.openExternal(detail.url)}
               >
@@ -374,8 +380,8 @@ export function PullRequestDetailPanel({
                   render={
                     <IconButton
                       variant="chrome"
-                      label="More actions"
-                      title="More actions"
+                      label={t("More actions")}
+                      title={t("More actions")}
                       className={PR_HEADER_ICON_BUTTON_CLASS_NAME}
                     >
                       <EllipsisIcon />
@@ -397,11 +403,11 @@ export function PullRequestDetailPanel({
                       >
                         <MenuRadioItem value="draft" disabled={actionPending}>
                           <GitPullRequestDraftIcon className="size-3.5 shrink-0" />
-                          <span>Draft</span>
+                          <span>{t("Draft")}</span>
                         </MenuRadioItem>
                         <MenuRadioItem value="ready" disabled={actionPending}>
                           <GitPullRequestIcon className="size-3.5 shrink-0" />
-                          <span>Ready for review</span>
+                          <span>{t("Ready for review")}</span>
                         </MenuRadioItem>
                       </MenuRadioGroup>
                       <MenuSeparator />
@@ -423,7 +429,7 @@ export function PullRequestDetailPanel({
                         {allowedMethods.map((method) => (
                           <MenuRadioItem key={method} value={method} disabled={actionPending}>
                             <GitMergeIcon className="size-3.5 shrink-0" />
-                            <span className="capitalize">{method}</span>
+                            <span className="capitalize">{t(method)}</span>
                           </MenuRadioItem>
                         ))}
                       </MenuRadioGroup>
@@ -432,12 +438,14 @@ export function PullRequestDetailPanel({
                   ) : null}
                   <MenuItem onClick={() => copyPullRequestLink(detail.url)}>
                     <LinkIcon className="size-3.5 shrink-0" />
-                    <span>Copy link</span>
+                    <span>{t("Copy link")}</span>
                   </MenuItem>
                   <MenuItem onClick={fixFindings} disabled={preparingThread !== null}>
                     <HammerIcon className="size-3.5 shrink-0" />
                     <span>
-                      {preparingThread === "findings" ? "Preparing findings…" : "Fix findings"}
+                      {preparingThread === "findings"
+                        ? t("Preparing findings…")
+                        : t("Fix findings")}
                     </span>
                   </MenuItem>
                   {/* Sits beside Fix findings because it is the same kind of action: hand the
@@ -448,8 +456,8 @@ export function PullRequestDetailPanel({
                       <GitMergeConflictIcon className="size-3.5 shrink-0" />
                       <span>
                         {preparingThread === "conflicts"
-                          ? "Preparing conflicts…"
-                          : "Resolve conflicts"}
+                          ? t("Preparing conflicts…")
+                          : t("Resolve conflicts")}
                       </span>
                     </MenuItem>
                   ) : null}
@@ -461,12 +469,12 @@ export function PullRequestDetailPanel({
                       onClick={() => setConfirmAction("close")}
                     >
                       <GitPullRequestClosedIcon className="size-3.5 shrink-0" />
-                      <span>Close pull request</span>
+                      <span>{t("Close pull request")}</span>
                     </MenuItem>
                   ) : detail.state === "closed" ? (
                     <MenuItem disabled={actionPending} onClick={() => void runAction("reopen")}>
                       <GitPullRequestIcon className="size-3.5 shrink-0" />
-                      <span>Reopen pull request</span>
+                      <span>{t("Reopen pull request")}</span>
                     </MenuItem>
                   ) : null}
                 </ComposerPickerMenuPopup>
@@ -507,13 +515,13 @@ export function PullRequestDetailPanel({
                   >
                     {detail.stack && stackAssessment ? (
                       <>
-                        <span>Merge stack</span>
+                        <span>{t("Merge stack")}</span>
                         <span className="rounded-full bg-primary-foreground/16 px-1.5 text-ui-xs tabular-nums">
                           {stackAssessment.mergeTargetCount}
                         </span>
                       </>
                     ) : (
-                      "Merge"
+                      t("Merge")
                     )}
                   </TooltipTrigger>
                   <TooltipPopup side="bottom">{mergeBlocker}</TooltipPopup>
@@ -533,17 +541,17 @@ export function PullRequestDetailPanel({
                   {pendingAction === "merge" ? (
                     <>
                       <LoaderIcon className="size-3.5 animate-spin" />
-                      {detail.stack ? "Merging stack…" : "Merging…"}
+                      {detail.stack ? t("Merging stack…") : t("Merging…")}
                     </>
                   ) : detail.stack && stackAssessment ? (
                     <>
-                      <span>Merge stack</span>
+                      <span>{t("Merge stack")}</span>
                       <span className="rounded-full bg-primary-foreground/16 px-1.5 text-ui-xs tabular-nums">
                         {stackAssessment.mergeTargetCount}
                       </span>
                     </>
                   ) : (
-                    "Merge"
+                    t("Merge")
                   )}
                 </Button>
               ) : null}
@@ -552,8 +560,8 @@ export function PullRequestDetailPanel({
           {onClose ? (
             <IconButton
               variant="chrome"
-              label="Close pull request panel"
-              tooltip="Close"
+              label={t("Close pull request panel")}
+              tooltip={t("Close")}
               className={PR_HEADER_ICON_BUTTON_CLASS_NAME}
               onClick={onClose}
             >
@@ -574,20 +582,22 @@ export function PullRequestDetailPanel({
         ) : !detail ? (
           <Empty>
             <EmptyHeader>
-              <EmptyTitle>Pull request not found</EmptyTitle>
-              <EmptyDescription>The selected pull request could not be loaded.</EmptyDescription>
+              <EmptyTitle>{t("Pull request not found")}</EmptyTitle>
+              <EmptyDescription>
+                {t("The selected pull request could not be loaded.")}
+              </EmptyDescription>
             </EmptyHeader>
           </Empty>
         ) : (
           <div className="flex h-full min-h-0 flex-col">
             {detail.stackMetadataIncomplete === true ? (
               <PullRequestWarningNote shape="banner" className="shrink-0" role="status">
-                Stack details could not be loaded. Refresh before merging.
+                {t("Stack details could not be loaded. Refresh before merging.")}
               </PullRequestWarningNote>
             ) : null}
             {detailErrorState.backgroundError ? (
               <PullRequestWarningNote shape="banner" className="shrink-0" role="status">
-                Could not refresh pull request details. Showing saved data.
+                {t("Could not refresh pull request details. Showing saved data.")}
               </PullRequestWarningNote>
             ) : null}
             <div className="min-h-0 flex-1">

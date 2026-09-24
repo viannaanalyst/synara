@@ -21,12 +21,36 @@ import type {
 } from "@synara/contracts";
 import {
   COMPUTER_PERMISSION_KINDS,
-  listComputerPermissions,
   missingComputerAppSnapPermissions,
+  sortComputerPermissions,
 } from "@synara/shared/computerGrants";
 
 import { computerStatusNeedsSetup } from "~/components/ComputerPanel.logic";
 import { isLoopbackHostname } from "~/components/Sidebar.logic";
+import { t } from "~/i18n";
+
+function localizedPermissionList(permissions: readonly ComputerPermission[]): string {
+  const labels = sortComputerPermissions(permissions).map((permission) => {
+    switch (permission) {
+      case "accessibility":
+        return t("Accessibility");
+      case "screenRecording":
+        return t("Screen Recording");
+      case "inputMonitoring":
+        return t("Input Monitoring");
+    }
+  });
+  if (labels.length === 0) return "";
+  if (labels.length === 1) return labels[0]!;
+  if (labels.length === 2) {
+    return t("{first} and {second}", { first: labels[0]!, second: labels[1]! });
+  }
+  return t("{first}, {second}, and {third}", {
+    first: labels[0]!,
+    second: labels[1]!,
+    third: labels[2]!,
+  });
+}
 
 /** The desktop bridge identifies its live server; remote servers own their own grants. */
 export function readLocalComputerPermissionBridge(): DesktopBridge["appSnap"] | null {
@@ -102,14 +126,16 @@ export interface ComputerProvisionToast {
 export function computerProvisionStartToast(
   missing: readonly ComputerPermission[] = [],
 ): ComputerProvisionToast {
-  const labels = listComputerPermissions(missing);
+  const labels = localizedPermissionList(missing);
   return {
     type: "info",
-    title: "Setting up computer control",
+    title: t("Setting up computer control"),
     description:
       labels.length > 0
-        ? `macOS may ask to allow ${labels} for Synara.`
-        : "Setting up the desktop may require installing a helper or allowing the permissions Synara needs.",
+        ? t("macOS may ask to allow {permissions} for Synara.", { permissions: labels })
+        : t(
+            "Setting up the desktop may require installing a helper or allowing the permissions Synara needs.",
+          ),
   };
 }
 
@@ -118,10 +144,10 @@ export function computerProvisionResultToast(
   result: ComputerProvisionResult,
 ): ComputerProvisionToast {
   return computerProvisionOutcome(result) === "ready"
-    ? { type: "success", title: "Computer control is ready", description: result.summary }
+    ? { type: "success", title: t("Computer control is ready"), description: result.summary }
     : {
         type: "warning",
-        title: "Computer control still needs setup",
+        title: t("Computer control still needs setup"),
         description: result.summary,
       };
 }
@@ -129,7 +155,7 @@ export function computerProvisionResultToast(
 export function computerProvisionErrorToast(error: unknown): ComputerProvisionToast {
   return {
     type: "error",
-    title: "Couldn't set up computer control",
+    title: t("Couldn't set up computer control"),
     description: provisionErrorMessage(error),
   };
 }
@@ -137,7 +163,7 @@ export function computerProvisionErrorToast(error: unknown): ComputerProvisionTo
 export function provisionErrorMessage(error: unknown): string {
   return error instanceof Error && error.message.length > 0
     ? error.message
-    : "The server gave no reason.";
+    : t("The server gave no reason.");
 }
 
 /**
@@ -152,15 +178,17 @@ export function computerProvisionNote(state: {
 }): string | undefined {
   if (state.isPending) {
     if (state.missing?.length) {
-      return `Checking ${listComputerPermissions(state.missing)}. Allow access in the macOS prompt or System Settings, then return to Synara.`;
+      return t(
+        "Checking {permissions}. Allow access in the macOS prompt or System Settings, then return to Synara.",
+        { permissions: localizedPermissionList(state.missing) },
+      );
     }
-    return (
-      "Setting up the agent's desktop. This installs or builds whatever this machine still needs, " +
-      "and may ask for your password or for desktop permissions. The first run can take a few minutes."
+    return t(
+      "Setting up the agent's desktop. This installs or builds whatever this machine still needs, and may ask for your password or for desktop permissions. The first run can take a few minutes.",
     );
   }
   if (state.error !== undefined && state.error !== null) {
-    return `Setting up failed. ${provisionErrorMessage(state.error)}`;
+    return t("Setting up failed. {reason}", { reason: provisionErrorMessage(state.error) });
   }
   return state.result?.summary;
 }

@@ -7,6 +7,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
+import { useT } from "~/i18n";
 import { automationNameError, automationPromptError } from "~/lib/automationForm";
 import { useCommitDraft, useCommitDraftBlurHandlers } from "~/lib/automationInlineDraft";
 import { cn } from "~/lib/utils";
@@ -30,10 +31,11 @@ export function AutomationNameField({
   readonly disabled?: boolean | undefined;
   readonly title?: string | undefined;
 }) {
+  const t = useT();
   const draft = useCommitDraft({
     value,
     onCommit,
-    validate: automationNameError,
+    validate: (name) => automationNameError(name, t),
     normalize: trimDraft,
   });
   const { onBlur, revertAndBlur } = useCommitDraftBlurHandlers(draft);
@@ -42,9 +44,9 @@ export function AutomationNameField({
       value={draft.draft}
       disabled={disabled}
       title={title}
-      aria-label="Automation name"
+      aria-label={t("Automation name")}
       aria-invalid={draft.error !== null || undefined}
-      placeholder="Automation name"
+      placeholder={t("Automation name")}
       onChange={(event) => draft.setDraft(event.target.value)}
       onBlur={onBlur}
       onKeyDown={(event) => {
@@ -75,10 +77,11 @@ export function AutomationPromptField({
   readonly disabled?: boolean | undefined;
   readonly title?: string | undefined;
 }) {
+  const t = useT();
   const draft = useCommitDraft({
     value,
     onCommit,
-    validate: automationPromptError,
+    validate: (prompt) => automationPromptError(prompt, t),
     normalize: trimDraft,
   });
   const { onBlur, revertAndBlur } = useCommitDraftBlurHandlers(draft);
@@ -87,9 +90,9 @@ export function AutomationPromptField({
       value={draft.draft}
       disabled={disabled}
       title={title}
-      aria-label="Automation prompt"
+      aria-label={t("Automation prompt")}
       aria-invalid={draft.error !== null || undefined}
-      placeholder="What should this automation do on each run?"
+      placeholder={t("What should this automation do on each run?")}
       rows={1}
       onChange={(event) => draft.setDraft(event.target.value)}
       onBlur={onBlur}
@@ -121,6 +124,7 @@ export function AutomationSaveStatus({
   readonly saving: boolean;
   readonly failed: boolean;
 }) {
+  const t = useT();
   const [showSaved, setShowSaved] = useState(false);
   const wasSaving = useRef(saving);
   useEffect(() => {
@@ -133,7 +137,7 @@ export function AutomationSaveStatus({
   }, [saving, failed]);
   return (
     <p aria-live="polite" className="h-4 text-ui leading-snug text-muted-foreground/70">
-      {saving ? "Saving…" : showSaved ? "Saved" : ""}
+      {saving ? t("Saving…") : showSaved ? t("Saved") : ""}
     </p>
   );
 }

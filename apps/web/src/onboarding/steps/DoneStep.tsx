@@ -3,13 +3,16 @@
 //          in the dialog header.
 // Layer: Web UI component
 
+import { useT } from "~/i18n";
+
 import { TourShortcutList } from "./FeatureTourStep";
 
 export function DoneStep() {
+  const t = useT();
   return (
     <div className="flex flex-col gap-3.5 px-[120px]">
       <p className="text-ui-sm font-medium tracking-[0.04em] text-muted-foreground/70 uppercase">
-        Shortcuts worth learning today
+        {t("Shortcuts worth learning today")}
       </p>
       <TourShortcutList />
     </div>

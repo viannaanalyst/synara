@@ -15,6 +15,7 @@ import type {
 } from "@synara/contracts";
 
 import type { RightDockPane } from "~/rightDockStore.logic";
+import { t } from "~/i18n";
 
 import { pullRequestMarkdownPreview } from "./pullRequestMarkdown.logic";
 
@@ -52,10 +53,10 @@ export function pullRequestDetailInputFromPane(pane: RightDockPane): PullRequest
 // already conveyed by the PullRequestStateGlyph in the header, so this stays neutral text.
 // State only, matching git: conflicts are a merge signal and render as their own row.
 export function describePullRequestState(state: PullRequestState, isDraft: boolean): string {
-  if (isDraft && state === "open") return "Draft";
-  if (state === "open") return "Ready for review";
-  if (state === "merged") return "Merged";
-  return "Closed";
+  if (isDraft && state === "open") return t("Draft");
+  if (state === "open") return t("Ready for review");
+  if (state === "merged") return t("Merged");
+  return t("Closed");
 }
 
 // stripHtmlComments now lives with the rest of the markdown preprocessing.
@@ -84,7 +85,9 @@ export function buildPullRequestTimelineEvents(
     {
       id: "created",
       at: detail.createdAt,
-      title: `${detail.author?.login ?? "Someone"} opened this pull request`,
+      title: t("{author} opened this pull request", {
+        author: detail.author?.login ?? t("Someone"),
+      }),
       body: null,
     },
     ...detail.commits.map((commit) => ({
@@ -96,23 +99,25 @@ export function buildPullRequestTimelineEvents(
         );
         const authorLabel = author?.name?.trim() || author?.login;
         return authorLabel
-          ? `Commit ${commit.oid.slice(0, 7)} by ${authorLabel}`
-          : `Commit ${commit.oid.slice(0, 7)}`;
+          ? t("Commit {sha} by {author}", { sha: commit.oid.slice(0, 7), author: authorLabel })
+          : t("Commit {sha}", { sha: commit.oid.slice(0, 7) });
       })(),
-      body: commit.messageHeadline || "No commit message.",
+      body: commit.messageHeadline || t("No commit message."),
     })),
     ...detail.comments.map((comment) => ({
       id: comment.id,
       at: comment.createdAt,
-      title: `${comment.author?.login ?? "Someone"} ${comment.kind === "review" ? "reviewed" : "commented"}`,
+      title: t(comment.kind === "review" ? "{author} reviewed" : "{author} commented", {
+        author: comment.author?.login ?? t("Someone"),
+      }),
       // Timeline previews are plain text, so raw markdown/HTML would print literally.
       body: pullRequestMarkdownPreview(comment.body) || null,
     })),
     ...(detail.mergedAt
-      ? [{ id: "merged", at: detail.mergedAt, title: "Pull request merged", body: null }]
+      ? [{ id: "merged", at: detail.mergedAt, title: t("Pull request merged"), body: null }]
       : []),
     ...(detail.closedAt && !detail.mergedAt
-      ? [{ id: "closed", at: detail.closedAt, title: "Pull request closed", body: null }]
+      ? [{ id: "closed", at: detail.closedAt, title: t("Pull request closed"), body: null }]
       : []),
   ];
   return events.toSorted((left, right) => left.at.localeCompare(right.at));

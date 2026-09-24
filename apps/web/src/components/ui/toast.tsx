@@ -19,6 +19,7 @@ import { cn } from "~/lib/utils";
 import { Button, buttonVariants } from "~/components/ui/button";
 import { APP_TOOLTIP_SURFACE_CLASS_NAME } from "~/components/chat/composerPickerStyles";
 import { useCopyToClipboard } from "~/hooks/useCopyToClipboard";
+import { useT } from "~/i18n";
 import {
   buildVisibleToastLayout,
   DEFAULT_TOAST_TIMEOUT_MS,
@@ -331,10 +332,11 @@ function ToastCloseButton({
   compact?: boolean;
   onClose?: (() => void) | undefined;
 }) {
+  const t = useT();
   const compact = compactProp ?? false;
   return (
     <Toast.Close
-      aria-label="Dismiss toast"
+      aria-label={t("Dismiss toast")}
       className={cn(
         // pointer-events-auto keeps the X clickable even when a stacked/collapsed
         // toast still gates its content with pointer-events-none.
@@ -345,7 +347,7 @@ function ToastCloseButton({
       onClick={() => {
         onClose?.();
       }}
-      title="Dismiss toast"
+      title={t("Dismiss toast")}
     >
       <XIcon className={compact ? "size-3" : "size-3.5"} />
     </Toast.Close>

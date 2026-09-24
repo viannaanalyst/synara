@@ -5,6 +5,7 @@
 // Exports: ThreadStatusPillChip
 
 import { cn } from "~/lib/utils";
+import { useT } from "~/i18n";
 import type { ThreadStatusPill } from "./Sidebar.logic";
 
 export function ThreadStatusPillChip({
@@ -14,6 +15,7 @@ export function ThreadStatusPillChip({
   pill: ThreadStatusPill;
   className?: string;
 }) {
+  const t = useT();
   return (
     <span
       className={cn("flex min-w-0 items-center gap-1.5 text-ui-sm", pill.colorClass, className)}
@@ -25,7 +27,7 @@ export function ThreadStatusPillChip({
           pill.pulse ? "animate-pulse" : "",
         )}
       />
-      <span className="truncate">{pill.label}</span>
+      <span className="truncate">{t(pill.label)}</span>
     </span>
   );
 }

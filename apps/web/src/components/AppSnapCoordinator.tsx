@@ -11,6 +11,7 @@ import {
 } from "@synara/contracts";
 import { useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef } from "react";
+import { t } from "~/i18n";
 
 import { useAppSettings } from "../appSettings";
 import {
@@ -440,8 +441,8 @@ export function AppSnapCoordinator() {
             if (!cancelled)
               toastManager.add({
                 type: "error",
-                title: "AppSnap could not capture the app",
-                description: error instanceof Error ? error.message : "Capture failed.",
+                title: t("AppSnap could not capture the app"),
+                description: error instanceof Error ? error.message : t("Capture failed."),
               });
           })
           .finally(() => {
@@ -450,10 +451,11 @@ export function AppSnapCoordinator() {
       }, 3_000);
       toastManager.add({
         type: "info",
-        title: "Switch to the app to share",
-        description:
+        title: t("Switch to the app to share"),
+        description: t(
           "A window from the active app will be captured in 3 seconds and attached to this task. Nothing is sent automatically.",
-        actionProps: { children: "Cancel", onClick: cancel },
+        ),
+        actionProps: { children: t("Cancel"), onClick: cancel },
         data: { allowCrossThreadVisibility: true },
       });
     };
@@ -509,10 +511,10 @@ export function AppSnapCoordinator() {
           } catch (error) {
             toastManager.add({
               type: "error",
-              title: "AppSnap could not be added",
-              description: error instanceof Error ? error.message : "AppSnap capture failed.",
+              title: t("AppSnap could not be added"),
+              description: error instanceof Error ? error.message : t("AppSnap capture failed."),
               actionProps: {
-                children: "Retry",
+                children: t("Retry"),
                 onClick: () => {
                   captureIdsRef.current.delete(capture.id);
                   enqueueCapture(capture);
@@ -538,12 +540,12 @@ export function AppSnapCoordinator() {
     const unsubscribeError = bridge.onError((error) => {
       toastManager.add({
         type: "error",
-        title: "AppSnap failed",
+        title: t("AppSnap failed"),
         description: error.message,
         ...(error.code === "helper-stopped"
           ? {
               actionProps: {
-                children: "Restart",
+                children: t("Restart"),
                 onClick: () => {
                   void bridge
                     .setEnabled(enableAppSnapRef.current)

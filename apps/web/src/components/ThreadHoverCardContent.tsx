@@ -11,6 +11,7 @@
 import type { OrchestrationThreadPullRequest } from "@synara/contracts";
 import type { MouseEvent, ReactNode } from "react";
 
+import { useT } from "~/i18n";
 import { FastModeIcon, GitBranchIcon, WorktreeIcon } from "~/lib/icons";
 import type { ThreadModelSummary } from "~/lib/threadModelSummary";
 import { FolderClosed } from "./FolderClosed";
@@ -90,6 +91,7 @@ export function ThreadHoverCardContent({
   model,
   status,
 }: ThreadHoverCardContentProps) {
+  const t = useT();
   const hasMeta =
     Boolean(projectName) ||
     Boolean(sourceProjectName) ||
@@ -126,7 +128,7 @@ export function ThreadHoverCardContent({
                 </span>
               }
             >
-              {status.label}
+              {t(status.label)}
             </MetaRow>
           ) : null}
           {projectName ? (
@@ -178,6 +180,7 @@ function PullRequestRow({
   pr: OrchestrationThreadPullRequest;
   onOpen: ThreadHoverCardContentProps["onOpenPullRequest"];
 }) {
+  const t = useT();
   const presentation = resolvePrStatePresentation(pr);
   const PrIcon = PR_STATE_PRESENTATION_ICONS[presentation.iconKind];
 
@@ -186,7 +189,11 @@ function PullRequestRow({
       href={pr.url}
       target="_blank"
       rel="noopener noreferrer"
-      aria-label={`#${pr.number} ${presentation.label}: ${pr.title}`}
+      aria-label={t("Pull request #{number}, {status}: {title}", {
+        number: pr.number,
+        status: t(presentation.label),
+        title: pr.title,
+      })}
       className={`${META_ROW_CLASS_NAME} cursor-pointer outline-hidden hover:bg-accent/50 focus-visible:ring-1 focus-visible:ring-ring`}
       onClick={(event) => onOpen(event, pr.url)}
       onAuxClick={(event) => {

@@ -7,6 +7,7 @@
 import type { ProjectId } from "@synara/contracts";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useT } from "~/i18n";
 
 import { SidebarHeaderNavigationControls } from "~/components/SidebarHeaderNavigationControls";
 import { Button } from "~/components/ui/button";
@@ -53,6 +54,7 @@ import { useKanbanCardContextMenu } from "./useKanbanCardContextMenu";
 import { overviewVisibleKanbanCards, type KanbanCard } from "./kanban.logic";
 
 export default function KanbanView({ projectId }: { projectId: string | null }) {
+  const t = useT();
   const navigate = useNavigate();
   const board = useKanbanBoard();
   const threadsHydrated = useStore((state) => state.threadsHydrated);
@@ -189,7 +191,7 @@ export default function KanbanView({ projectId }: { projectId: string | null }) 
                   size="icon-xs"
                   variant="ghost"
                   onClick={handleBackToOverview}
-                  aria-label="Back to all projects"
+                  aria-label={t("Back to all projects")}
                 >
                   <ArrowLeftIcon className="size-3.5" />
                 </Button>
@@ -198,7 +200,9 @@ export default function KanbanView({ projectId }: { projectId: string | null }) 
                 {projectBoard ? projectBoard.projectName : "Kanban"}
               </h2>
               <span className="shrink-0 text-ui leading-snug text-muted-foreground/70">
-                {projectBoard ? projectBoard.totalCount : board.totalCount} tasks
+                {t("{count} tasks", {
+                  count: projectBoard ? projectBoard.totalCount : board.totalCount,
+                })}
               </span>
               <Tooltip>
                 <TooltipTrigger
@@ -211,13 +215,13 @@ export default function KanbanView({ projectId }: { projectId: string | null }) 
                       onClick={handleNewTaskInProjectBoard}
                     >
                       <PlusIcon className="size-3.5" />
-                      New task
+                      {t("New task")}
                     </Button>
                   }
                 />
                 <TooltipPopup side="bottom">
                   <span className="flex items-center gap-2">
-                    New task
+                    {t("New task")}
                     <KbdGroup>
                       {NEW_TASK_SHORTCUT_PARTS.map((part) => (
                         <Kbd key={part}>{part}</Kbd>

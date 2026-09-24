@@ -53,6 +53,16 @@ export function requiresFeatureBranchForDefaultBranchAction(
 const SHORT_SHA_LENGTH = 7;
 const TOAST_DESCRIPTION_MAX = 72;
 
+type GitTranslate = (key: string, params?: Record<string, string | number>) => string;
+
+function translateEnglishTemplate(key: string, params?: Record<string, string | number>): string {
+  return params
+    ? key.replace(/\{(\w+)\}/g, (match, name: string) =>
+        Object.prototype.hasOwnProperty.call(params, name) ? String(params[name]) : match,
+      )
+    : key;
+}
+
 function shortenSha(sha: string | undefined): string | null {
   if (!sha) return null;
   return sha.slice(0, SHORT_SHA_LENGTH);
@@ -314,34 +324,48 @@ export function resolveCreatePrBrowserPreparation(
   return { kind: "open_compare" };
 }
 
-export function summarizeGitResult(result: GitRunStackedActionResult): {
+export function summarizeGitResult(
+  result: GitRunStackedActionResult,
+  translate: GitTranslate = translateEnglishTemplate,
+): {
   title: string;
   description?: string;
 } {
   if (result.pr.status === "created" || result.pr.status === "opened_existing") {
-    const prNumber = result.pr.number ? ` #${result.pr.number}` : "";
-    const title = `${result.pr.status === "created" ? "Created PR" : "Opened PR"}${prNumber}`;
+    const title =
+      result.pr.status === "created"
+        ? translate("Created PR {number}", {
+            number: result.pr.number ? `#${result.pr.number}` : "",
+          }).trimEnd()
+        : translate("Opened PR {number}", {
+            number: result.pr.number ? `#${result.pr.number}` : "",
+          }).trimEnd();
     return withDescription(title, truncateText(result.pr.title));
   }
 
   if (result.push.status === "pushed") {
     const shortSha = shortenSha(result.commit.commitSha);
     const branch = result.push.upstreamBranch ?? result.push.branch;
-    const pushedCommitPart = shortSha ? ` ${shortSha}` : "";
-    const branchPart = branch ? ` to ${branch}` : "";
-    return withDescription(
-      `Pushed${pushedCommitPart}${branchPart}`,
-      truncateText(result.commit.subject),
-    );
+    const title =
+      shortSha && branch
+        ? translate("Pushed {sha} to {branch}", { sha: shortSha, branch })
+        : shortSha
+          ? translate("Pushed {sha}", { sha: shortSha })
+          : branch
+            ? translate("Pushed to {branch}", { branch })
+            : translate("Pushed");
+    return withDescription(title, truncateText(result.commit.subject));
   }
 
   if (result.commit.status === "created") {
     const shortSha = shortenSha(result.commit.commitSha);
-    const title = shortSha ? `Committed ${shortSha}` : "Committed changes";
+    const title = shortSha
+      ? translate("Committed {sha}", { sha: shortSha })
+      : translate("Committed changes");
     return withDescription(title, truncateText(result.commit.subject));
   }
 
-  return { title: "Done" };
+  return { title: translate("Done") };
 }
 
 export function buildMenuItems(
@@ -897,40 +921,54 @@ export function requiresDefaultBranchConfirmation(
   );
 }
 
-export function resolveDefaultBranchActionDialogCopy(input: {
-  action: DefaultBranchConfirmableAction;
-  branchName: string;
-  includesCommit: boolean;
-}): DefaultBranchActionDialogCopy {
+export function resolveDefaultBranchActionDialogCopy(
+  input: {
+    action: DefaultBranchConfirmableAction;
+    branchName: string;
+    includesCommit: boolean;
+  },
+  translate: GitTranslate = translateEnglishTemplate,
+): DefaultBranchActionDialogCopy {
   const branchLabel = input.branchName;
-  const suffix = ` on "${branchLabel}". You can continue on this branch or create a feature branch and run the same action there.`;
 
   if (input.action === "push" || input.action === "commit_push") {
     if (input.includesCommit) {
       return {
-        title: "Commit & push to default branch?",
-        description: `This action will commit and push changes${suffix}`,
-        continueLabel: `Commit & push to ${branchLabel}`,
+        title: translate("Commit & push to default branch?"),
+        description: translate(
+          'This action will commit and push changes on "{branch}". You can continue on this branch or create a feature branch and run the same action there.',
+          { branch: branchLabel },
+        ),
+        continueLabel: translate("Commit & push to {branch}", { branch: branchLabel }),
       };
     }
     return {
-      title: "Push to default branch?",
-      description: `This action will push local commits${suffix}`,
-      continueLabel: `Push to ${branchLabel}`,
+      title: translate("Push to default branch?"),
+      description: translate(
+        'This action will push local commits on "{branch}". You can continue on this branch or create a feature branch and run the same action there.',
+        { branch: branchLabel },
+      ),
+      continueLabel: translate("Push to {branch}", { branch: branchLabel }),
     };
   }
 
   if (input.includesCommit) {
     return {
-      title: "Create feature branch, commit & PR?",
-      description: `Pull requests can't be opened from "${branchLabel}" into itself. This action will create a feature branch, commit your changes there, push it, and create the PR.`,
-      continueLabel: "Create feature branch & continue",
+      title: translate("Create feature branch, commit & PR?"),
+      description: translate(
+        'Pull requests can\'t be opened from "{branch}" into itself. This action will create a feature branch, commit your changes there, push it, and create the PR.',
+        { branch: branchLabel },
+      ),
+      continueLabel: translate("Create feature branch & continue"),
     };
   }
   return {
-    title: "Create feature branch & PR?",
-    description: `Pull requests can't be opened from "${branchLabel}" into itself. This action will create a feature branch from your current commits, push it, and create the PR.`,
-    continueLabel: "Create feature branch & continue",
+    title: translate("Create feature branch & PR?"),
+    description: translate(
+      'Pull requests can\'t be opened from "{branch}" into itself. This action will create a feature branch from your current commits, push it, and create the PR.',
+      { branch: branchLabel },
+    ),
+    continueLabel: translate("Create feature branch & continue"),
   };
 }
 

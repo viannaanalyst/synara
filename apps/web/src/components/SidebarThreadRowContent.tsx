@@ -3,9 +3,9 @@
 // Exports: SidebarThreadRowContent and its terminal-status presentation type.
 
 import { useMemo, type ReactNode } from "react";
+import { useT } from "~/i18n";
 
 import { isGenericChatThreadTitle } from "@synara/shared/chatThreads";
-import { pluralize } from "@synara/shared/text";
 
 import { createThreadSelector } from "../storeSelectors";
 import { useStore } from "../store";
@@ -34,14 +34,15 @@ function ProviderAvatarWithTerminal({
   terminalStatus: SidebarThreadTerminalStatus | null;
   terminalCount: number;
 }) {
+  const t = useT();
   const provider = thread.session?.provider ?? thread.modelSelection.provider;
   const handoffSourceProvider = thread.handoff?.sourceProvider ?? null;
   const handoffTooltip = resolveThreadHandoffBadgeLabel(thread);
   const showBadge = terminalCount > 1 || terminalStatus !== null;
   const badgeTooltip =
     terminalCount > 1
-      ? `${terminalCount} ${pluralize(terminalCount, "terminal")} open`
-      : (terminalStatus?.label ?? "Terminal open");
+      ? t("{count} terminals open", { count: terminalCount })
+      : t(terminalStatus?.label ?? "Terminal open");
   const badgeColorClass = terminalStatus?.colorClass ?? "text-muted-foreground/55";
 
   const hasHandoff = Boolean(handoffSourceProvider);
@@ -184,6 +185,7 @@ export function SidebarThreadRowContent({
   pendingStatusColorClass?: string | null | undefined;
   suffix?: ReactNode;
 }) {
+  const t = useT();
   const subagentIndentPx = subagentIndentPxProp ?? 0;
   const isSubagentThread = Boolean(thread.parentThreadId);
   const subagentPresentation =
@@ -252,10 +254,10 @@ export function SidebarThreadRowContent({
         </span>
         {!isSubagentThread && pendingStatusColorClass ? (
           <span
-            aria-label="Pending approval"
+            aria-label={t("Pending approval")}
             className={cn("shrink-0 text-ui-xs font-medium", pendingStatusColorClass)}
           >
-            Pending
+            {t("Pending")}
           </span>
         ) : null}
       </div>

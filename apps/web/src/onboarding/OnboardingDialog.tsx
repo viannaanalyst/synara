@@ -21,6 +21,7 @@ import {
 } from "~/components/ui/dialog";
 import { useProviderStatusesForLocalConfig } from "~/hooks/useProviderStatusesForLocalConfig";
 import { useTheme } from "~/hooks/useTheme";
+import { useT } from "~/i18n";
 import { CheckIcon } from "~/lib/icons";
 import { findProviderStatus } from "~/lib/providerAvailability";
 import { cn } from "~/lib/utils";
@@ -45,8 +46,8 @@ import { ThemeStep } from "./steps/ThemeStep";
 import { WelcomeStep } from "./steps/WelcomeStep";
 
 const STEP_TITLES: Record<OnboardingStep, string> = {
-  welcome: `Welcome to ${APP_BASE_NAME}`,
-  tour: `What ${APP_BASE_NAME} can do`,
+  welcome: "Welcome to {name}",
+  tour: "What {name} can do",
   providers: "Choose your agents",
   theme: "Pick an appearance",
   project: "Add your first project",
@@ -56,9 +57,10 @@ const STEP_TITLES: Record<OnboardingStep, string> = {
 const STEP_DESCRIPTIONS: Record<Exclude<OnboardingStep, "done">, string> = {
   welcome: "A local-first workspace for coding agents. Setup takes about a minute.",
   tour: "",
-  providers: `Detected on this machine. Uncheck any you don't want ${APP_BASE_NAME} to use.`,
+  providers: "Detected on this machine. Uncheck any you don't want {name} to use.",
   theme: "Applies live behind this window. Change it anytime in Settings → Appearance.",
-  project: `A project is a folder ${APP_BASE_NAME} works in. Git repositories unlock branches, worktrees, diffs and pull requests.`,
+  project:
+    "A project is a folder {name} works in. Git repositories unlock branches, worktrees, diffs and pull requests.",
 };
 
 /** Welcome and Done are hero steps: centered header, no step counter, centered body. */
@@ -66,15 +68,12 @@ function isHeroStep(step: OnboardingStep): boolean {
   return step === "welcome" || step === "done";
 }
 
-function plural(count: number, noun: string): string {
-  return `${count} ${noun}${count === 1 ? "" : "s"}`;
-}
-
 function OnboardingFlow(props: {
   onComplete: () => void;
   projectBusy: boolean;
   onProjectBusyChange: (busy: boolean) => void;
 }) {
+  const t = useT();
   const [step, setStep] = useState<OnboardingStep>("welcome");
   const [projectResults, setProjectResults] = useState<ReadonlyArray<OnboardingProjectResult>>([]);
   const { settings } = useAppSettings();
@@ -103,32 +102,36 @@ function OnboardingFlow(props: {
     CODE_THEME_OPTIONS.find((option) => option.id === activeTheme.codeThemeId)?.label ??
     activeTheme.codeThemeId;
   const doneSummary = [
-    `${plural(providerSummary.connected, "agent")} connected`,
-    `${themeLabel} theme`,
+    t("{count} agents connected", { count: providerSummary.connected }),
+    t("{theme} theme", { theme: themeLabel }),
     projectResults.length > 0
-      ? `${plural(projectResults.length, "project")} added`
-      : "No project yet",
+      ? t("{count} projects added", { count: projectResults.length })
+      : t("No project yet"),
   ].join(" · ");
 
-  const description = step === "done" ? doneSummary : STEP_DESCRIPTIONS[step];
+  const description =
+    step === "done" ? doneSummary : t(STEP_DESCRIPTIONS[step], { name: APP_BASE_NAME });
   const stepIndex = ONBOARDING_STEPS.indexOf(step);
   const hero = isHeroStep(step);
 
   const primaryAction = (() => {
     switch (step) {
       case "welcome":
-        return { label: "Get started", onPrimary: goNext };
+        return { label: t("Get started"), onPrimary: goNext };
       case "tour":
-        return { label: "Set up", onPrimary: goNext };
+        return { label: t("Set up"), onPrimary: goNext };
       case "providers":
       case "theme":
-        return { label: "Continue", onPrimary: goNext };
+        return { label: t("Continue"), onPrimary: goNext };
       case "project":
         return projectResults.length > 0
-          ? { label: "Continue", onPrimary: goNext }
-          : { label: "Skip for now", onPrimary: goNext };
+          ? { label: t("Continue"), onPrimary: goNext }
+          : { label: t("Skip for now"), onPrimary: goNext };
       case "done":
-        return { label: `Start using ${APP_BASE_NAME}`, onPrimary: props.onComplete };
+        return {
+          label: t("Start using {name}", { name: APP_BASE_NAME }),
+          onPrimary: props.onComplete,
+        };
     }
   })();
 
@@ -152,10 +155,15 @@ function OnboardingFlow(props: {
         ) : null}
         {hero ? null : (
           <span className="text-ui-sm font-medium tracking-[0.04em] text-muted-foreground/70 uppercase">
-            Step {stepIndex + 1} of {ONBOARDING_STEPS.length}
+            {t("Step {current} of {total}", {
+              current: stepIndex + 1,
+              total: ONBOARDING_STEPS.length,
+            })}
           </span>
         )}
-        <DialogTitle className="text-[22px] tracking-[-0.01em]">{STEP_TITLES[step]}</DialogTitle>
+        <DialogTitle className="text-[22px] tracking-[-0.01em]">
+          {t(STEP_TITLES[step], { name: APP_BASE_NAME })}
+        </DialogTitle>
         {description ? (
           <DialogDescription className="max-w-[560px] text-ui-lg leading-normal">
             {description}

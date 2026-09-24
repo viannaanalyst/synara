@@ -9,6 +9,7 @@
 import type { RightDockPane } from "~/rightDockStore.logic";
 
 import { PanelStateMessage } from "~/components/chat/PanelStateMessage";
+import { useT } from "~/i18n";
 import {
   pullRequestDetailInputFromPane,
   pullRequestDetailInputKey,
@@ -26,10 +27,11 @@ export function PullRequestDockPane({
   onSelectPullRequest?: ((number: number) => void) | undefined;
   pollingEnabled?: boolean;
 }) {
+  const t = useT();
   const pollingEnabled = pollingEnabledProp ?? true;
   const input = pullRequestDetailInputFromPane(pane);
   if (!input) {
-    return <PanelStateMessage>Select a pull request to open it here.</PanelStateMessage>;
+    return <PanelStateMessage>{t("Select a pull request to open it here.")}</PanelStateMessage>;
   }
   return (
     <PullRequestDetailPanel

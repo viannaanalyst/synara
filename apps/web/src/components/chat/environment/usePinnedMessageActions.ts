@@ -11,6 +11,7 @@ import {
 } from "@synara/contracts";
 import { useEffect, useRef } from "react";
 
+import { t } from "~/i18n";
 import { toastManager } from "~/components/ui/toast";
 import {
   addPin,
@@ -54,17 +55,17 @@ function matchesPinState(pin: PinnedMessage | undefined, expected: PinnedMessage
 function handlePinnedMessageDispatchError(error: unknown) {
   toastManager.add({
     type: "error",
-    title: "Failed to update pinned message",
+    title: t("Failed to update pinned message"),
     description:
-      error instanceof Error ? error.message : "The pinned message change could not be saved.",
+      error instanceof Error ? error.message : t("The pinned message change could not be saved."),
   });
 }
 
 function handleThreadNotesDispatchError(error: unknown) {
   toastManager.add({
     type: "error",
-    title: "Failed to save notes",
-    description: error instanceof Error ? error.message : "The note change could not be saved.",
+    title: t("Failed to save notes"),
+    description: error instanceof Error ? error.message : t("The note change could not be saved."),
   });
 }
 
@@ -106,8 +107,10 @@ export function usePinnedMessageActions({
     if (pins.length >= PINNED_MESSAGES_MAX_COUNT) {
       toastManager.add({
         type: "warning",
-        title: "Pinned message limit reached",
-        description: `You can keep up to ${PINNED_MESSAGES_MAX_COUNT} pinned messages in a thread.`,
+        title: t("Pinned message limit reached"),
+        description: t("You can keep up to {count} pinned messages in a thread.", {
+          count: PINNED_MESSAGES_MAX_COUNT,
+        }),
       });
       return;
     }

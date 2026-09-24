@@ -26,6 +26,7 @@ import {
 import { toastManager } from "~/components/ui/toast";
 import { useProviderStatusesForLocalConfig } from "~/hooks/useProviderStatusesForLocalConfig";
 import { useRefreshProviderStatusesNow } from "~/hooks/useProviderStatusRefresh";
+import { useT } from "~/i18n";
 import { resolveProviderSendAvailabilityWithRefresh } from "~/lib/providerAvailability";
 import { dispatchKanbanDraftCard } from "../../lib/kanbanDispatch";
 import { KanbanCardView, type KanbanCardPrLookup } from "./KanbanCardView";
@@ -71,6 +72,7 @@ export function KanbanProjectBoardView({
   nowMs?: number;
 }) {
   const { settings } = useAppSettings();
+  const t = useT();
   const assistantDeliveryMode = resolveAssistantDeliveryMode(settings);
   const providerOptionsForDispatch = getProviderStartOptions(settings);
   const providerStatuses = useProviderStatusesForLocalConfig();
@@ -118,7 +120,7 @@ export function KanbanProjectBoardView({
     if (result.kind === "dispatched") {
       toastManager.add({
         type: "success",
-        title: "Draft sent",
+        title: t("Draft sent"),
         description: card.title,
       });
       return;
@@ -126,13 +128,13 @@ export function KanbanProjectBoardView({
     if (result.kind === "open-thread") {
       const description =
         result.reason === "empty"
-          ? "Nothing to send yet — write the prompt in the composer."
+          ? t("Nothing to send yet — write the prompt in the composer.")
           : result.reason === "worktree-pending"
-            ? "Open the chat to create the worktree with the normal send flow."
-            : "Open the chat to continue this task.";
+            ? t("Open the chat to create the worktree with the normal send flow.")
+            : t("Open the chat to continue this task.");
       toastManager.add({
         type: "info",
-        title: "Finish this draft in the chat",
+        title: t("Finish this draft in the chat"),
         description,
       });
       onOpenCard(card);
@@ -141,14 +143,14 @@ export function KanbanProjectBoardView({
     if (result.kind === "unavailable") {
       toastManager.add({
         type: "error",
-        title: "Not connected",
-        description: "Reconnect to the server before sending drafts.",
+        title: t("Not connected"),
+        description: t("Reconnect to the server before sending drafts."),
       });
       return;
     }
     toastManager.add({
       type: "error",
-      title: "Could not send draft",
+      title: t("Could not send draft"),
       description: result.message,
     });
   };
@@ -212,8 +214,8 @@ export function KanbanProjectBoardView({
     if (targetColumn === "done") {
       toastManager.add({
         type: "info",
-        title: "Done is derived automatically",
-        description: "Cards move here when their runs complete.",
+        title: t("Done is derived automatically"),
+        description: t("Cards move here when their runs complete."),
       });
     }
   };

@@ -1,5 +1,7 @@
 import { type BrowserWindow, dialog } from "electron";
 
+import { t } from "./desktopI18n";
+
 const CONFIRM_BUTTON_INDEX = 1;
 
 export async function showDesktopConfirmDialog(
@@ -13,7 +15,7 @@ export async function showDesktopConfirmDialog(
 
   const options = {
     type: "question" as const,
-    buttons: ["No", "Yes"],
+    buttons: [t("No"), t("Yes")],
     defaultId: CONFIRM_BUTTON_INDEX,
     cancelId: 0,
     noLink: true,

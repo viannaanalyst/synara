@@ -62,6 +62,7 @@ import { SettingResetButton, SettingsSegmentedControl } from "./SettingControls"
 import { SettingsCard, SettingsRow, SettingsSectionShell } from "./SettingsPanelPrimitives";
 import { ComputerGettingStarted } from "./ComputerGettingStarted";
 import { ComputerAuditHistorySection } from "./ComputerAuditHistorySection";
+import { useT } from "~/i18n";
 
 /** Stable identity, so the provision hook's toast copy is not rebuilt every render. */
 const EMPTY_PERMISSIONS: readonly ComputerPermission[] = [];
@@ -97,11 +98,15 @@ const CAPABILITY_LABELS: ReadonlyArray<{
  * frame because the OS has not granted it, and listing "screen capture" in that
  * state is the panel telling the user something the desktop cannot do.
  */
-function capabilitySummary(capabilities: ComputerCapabilities, captureAvailable: boolean): string {
+function capabilitySummary(
+  capabilities: ComputerCapabilities,
+  captureAvailable: boolean,
+  t: (key: string) => string,
+): string {
   const enabled = CAPABILITY_LABELS.filter(
     (entry) => capabilities[entry.key] && (entry.key !== "capture" || captureAvailable),
-  ).map((entry) => entry.label);
-  return enabled.length > 0 ? enabled.join(", ") : "none";
+  ).map((entry) => t(entry.label));
+  return enabled.length > 0 ? enabled.join(", ") : t("none");
 }
 
 /**
@@ -118,6 +123,7 @@ function CursorColorField({
   value: string;
   onChange: (value: string) => void;
 }) {
+  const t = useT();
   const [draft, setDraft] = useState(value);
   // Follow a committed value that landed from elsewhere (Reset, another
   // window) instead of stranding the field on the old draft.
@@ -154,7 +160,7 @@ function CursorColorField({
         maxLength={7}
         spellCheck={false}
         autoComplete="off"
-        aria-label={`${label} color`}
+        aria-label={t("{label} color", { label })}
         aria-invalid={!draftIsValid}
         className="w-24"
       />
@@ -168,6 +174,7 @@ export function ComputerSettingsPanel({
   updateSettings,
   active,
 }: AppSettingsBinding & { readonly active: boolean }) {
+  const t = useT();
   const statusQuery = useQuery({
     ...computerStatusQueryOptions(),
     enabled: active,
@@ -282,11 +289,11 @@ export function ComputerSettingsPanel({
   const availabilityView = statusQuery.isError
     ? {
         kind: "blocked" as const,
-        title: "Computer status is unavailable",
+        title: t("Computer status is unavailable"),
         description:
           statusQuery.error instanceof Error && statusQuery.error.message
             ? statusQuery.error.message
-            : "The server could not be reached.",
+            : t("The server could not be reached."),
       }
     : resolveComputerAvailabilityView(availability, status?.health, grantsConfirmed);
   const backend =
@@ -300,14 +307,21 @@ export function ComputerSettingsPanel({
   // visible plugin-backed desktop may promise it.
   const capabilitiesDescription =
     backend === "cua" && status?.capabilities.input === false
-      ? "This backend can observe desktop windows, but native desktop input is unavailable. Isolated headless browser actions require a verified browser runtime and an available task-scoped Escape shortcut. Use Stop in the chat to interrupt the task."
+      ? t(
+          "This backend can observe desktop windows, but native desktop input is unavailable. Isolated headless browser actions require a verified browser runtime and an available task-scoped Escape shortcut. Use Stop in the chat to interrupt the task.",
+        )
       : backend === COMPUTER_MAC_BACKEND || backend === "cua"
-        ? "The agent shares your Mac desktop and works in the background by default. It can bring a window forward when your task asks to watch. Background input may still affect focus. Use Stop in the chat to interrupt the task. Physical Escape interrupts the current action when Input Monitoring is granted; it does not disable future tasks."
+        ? t(
+            "The agent shares your Mac desktop and works in the background by default. It can bring a window forward when your task asks to watch. Background input may still affect focus. Use Stop in the chat to interrupt the task. Physical Escape interrupts the current action when Input Monitoring is granted; it does not disable future tasks.",
+          )
         : backend !== null &&
             COMPUTER_RELEASE_HOTKEY_BACKENDS.includes(backend) &&
             status?.capabilities.visibleDesktop === true
-          ? `The agent shares the computer described by this backend. Press ${COMPUTER_RELEASE_CONTROL_HOTKEY} at any time to stop it from acting on the desktop, and press it again to let it resume.`
-          : "The agent drives its own seat, so your cursor and focus stay untouched.";
+          ? t(
+              "The agent shares the computer described by this backend. Press {shortcut} at any time to stop it from acting on the desktop, and press it again to let it resume.",
+              { shortcut: COMPUTER_RELEASE_CONTROL_HOTKEY },
+            )
+          : t("The agent drives its own seat, so your cursor and focus stay untouched.");
   /**
    * Screen capture is granted separately from input on every backend that has a
    * permission model at all, so a desktop can be fully driveable and still
@@ -333,9 +347,9 @@ export function ComputerSettingsPanel({
       computerStatusNeedsSetup(status, grantsConfirmed));
   // The one counter worth carrying beside the status sentence; a last failure
   // is already the reconnect sentence, so it is not repeated here.
-  const healthNotes = [computerReconnectsNote(health)].filter(
-    (note): note is string => note !== null,
-  );
+  const healthNotes = [computerReconnectsNote(health)]
+    .filter((note): note is string => note !== null)
+    .map((note) => t(note));
   /**
    * One status row says whether the desktop is ready, connected, or needs the
    * user — a blocked backend, a missing grant, a screen-capture refusal, a
@@ -348,16 +362,20 @@ export function ComputerSettingsPanel({
     availabilityView.kind === "blocked" ||
     (availabilityView.kind === "checking" && (needsSetup || health?.status === "reconnecting"));
   const attentionTitle = nativePermissionSetupError
-    ? "Computer permission setup needs attention"
+    ? t("Computer permission setup needs attention")
     : captureBlocked
-      ? "Screen capture is not allowed yet"
+      ? t("Screen capture is not allowed yet")
       : availabilityView.title;
   const attentionDescription =
-    nativePermissionSetupError ??
+    (nativePermissionSetupError ? t(nativePermissionSetupError) : null) ??
     (captureBlocked
       ? backend === COMPUTER_MAC_BACKEND
-        ? "The agent can act on the desktop but cannot see it, so screenshots fail. Turn Synara on in System Settings › Privacy & Security › Screen Recording, then press Set up to reconnect."
-        : "The agent can act on the desktop but cannot see it, so screenshots fail. Press Set up to reconnect."
+        ? t(
+            "The agent can act on the desktop but cannot see it, so screenshots fail. Turn Synara on in System Settings › Privacy & Security › Screen Recording, then press Set up to reconnect.",
+          )
+        : t(
+            "The agent can act on the desktop but cannot see it, so screenshots fail. Press Set up to reconnect.",
+          )
       : availabilityView.description);
   const attentionTone = cn(
     "size-2 shrink-0 rounded-full",
@@ -374,7 +392,7 @@ export function ComputerSettingsPanel({
   const attentionAction =
     needsSetup && !statusQuery.isError ? (
       <Button size="sm" variant="outline" disabled={setup.isPending} onClick={setup.provision}>
-        {setup.isPending ? "Setting up…" : "Set up"}
+        {setup.isPending ? t("Setting up…") : t("Set up")}
       </Button>
     ) : statusQuery.isError ? (
       <Button
@@ -386,7 +404,7 @@ export function ComputerSettingsPanel({
           refreshPermissionState();
         }}
       >
-        {statusQuery.isFetching ? "Checking…" : "Check again"}
+        {statusQuery.isFetching ? t("Checking…") : t("Check again")}
       </Button>
     ) : null;
   // Stock is the default and stores no override; only an explicit Custom
@@ -407,12 +425,12 @@ export function ComputerSettingsPanel({
           preferences that shape a session. */}
       <SettingsSectionShell
         id={settingRowAnchorId("Computer control")}
-        title="Computer control"
+        title={t("Computer control")}
         action={
           <div className="flex items-center gap-1.5">
             {settings.computerControlEnabled !== defaults.computerControlEnabled ? (
               <SettingResetButton
-                label="computer control"
+                label={t("computer control")}
                 onClick={() =>
                   updateSettings({ computerControlEnabled: defaults.computerControlEnabled })
                 }
@@ -423,14 +441,15 @@ export function ComputerSettingsPanel({
               onCheckedChange={(checked) =>
                 updateSettings({ computerControlEnabled: Boolean(checked) })
               }
-              aria-label="Let the agent use the desktop in any chat"
+              aria-label={t("Let the agent use the desktop in any chat")}
             />
           </div>
         }
       >
         <p className="px-2 text-ui text-muted-foreground">
-          Enable Computer by default in any chat. Leave this off and use /computer-use for one
-          request without adding Computer tools to ordinary turns.
+          {t(
+            "Enable Computer by default in any chat. Leave this off and use /computer-use for one request without adding Computer tools to ordinary turns.",
+          )}
         </p>
         <SettingsCard>
           {showAttentionRow ? (
@@ -442,7 +461,10 @@ export function ComputerSettingsPanel({
                 </span>
               }
               description={attentionDescription}
-              status={[setup.note, ...healthNotes].filter(Boolean).join(" ") || undefined}
+              status={
+                [setup.note ? t(setup.note) : null, ...healthNotes].filter(Boolean).join(" ") ||
+                undefined
+              }
               control={attentionAction}
             />
           ) : null}
@@ -450,12 +472,14 @@ export function ComputerSettingsPanel({
               cursor and stores nothing beyond the default; Custom is the only
               state that carries fill/rim overrides to the desktop cursor host. */}
           <SettingsRow
-            title="Cursor colors"
-            description="The agent pointer is stock monochrome by default — like a normal pointer. Custom colors apply to new computer sessions."
+            title={t("Cursor colors")}
+            description={t(
+              "The agent pointer is stock monochrome by default — like a normal pointer. Custom colors apply to new computer sessions.",
+            )}
             resetAction={
               cursorColorsDirty ? (
                 <SettingResetButton
-                  label="cursor colors"
+                  label={t("cursor colors")}
                   onClick={() =>
                     updateSettings({
                       agentCursorColorMode:
@@ -472,22 +496,22 @@ export function ComputerSettingsPanel({
                 value={cursorColorMode}
                 onValueChange={(value) => updateSettings({ agentCursorColorMode: value })}
                 options={[
-                  { value: "stock", label: "Stock" },
-                  { value: "custom", label: "Custom" },
+                  { value: "stock", label: t("Stock") },
+                  { value: "custom", label: t("Custom") },
                 ]}
-                ariaLabel="Agent cursor colors"
+                ariaLabel={t("Agent cursor colors")}
               />
             }
           >
             {cursorColorMode === "custom" ? (
               <div className="flex flex-col gap-2 pt-3 sm:flex-row sm:gap-4">
                 <CursorColorField
-                  label="Fill"
+                  label={t("Fill")}
                   value={settings.agentCursorFillColor ?? ""}
                   onChange={(value) => updateSettings({ agentCursorFillColor: value })}
                 />
                 <CursorColorField
-                  label="Rim"
+                  label={t("Rim")}
                   value={settings.agentCursorRimColor ?? ""}
                   onChange={(value) => updateSettings({ agentCursorRimColor: value })}
                 />
@@ -501,12 +525,14 @@ export function ComputerSettingsPanel({
               user follows background work in windows they are not looking at.
               One row owns both choices: whether it opens, and how big it is. */}
           <SettingsRow
-            title="Preview"
-            description="Show the live preview the first time an agent acts on the desktop in a chat. Compact keeps it small and glanceable; Large gives it the full wide card."
+            title={t("Preview")}
+            description={t(
+              "Show the live preview the first time an agent acts on the desktop in a chat. Compact keeps it small and glanceable; Large gives it the full wide card.",
+            )}
             resetAction={
               previewDirty ? (
                 <SettingResetButton
-                  label="preview"
+                  label={t("preview")}
                   onClick={() =>
                     updateSettings({
                       autoOpenComputerPane: defaults.autoOpenComputerPane,
@@ -523,16 +549,18 @@ export function ComputerSettingsPanel({
                   onCheckedChange={(checked) =>
                     updateSettings({ autoOpenComputerPane: Boolean(checked) })
                   }
-                  aria-label="Show the computer preview automatically when an agent drives the desktop"
+                  aria-label={t(
+                    "Show the computer preview automatically when an agent drives the desktop",
+                  )}
                 />
                 <SettingsSegmentedControl<ComputerPreviewSize>
                   value={settings.computerPreviewSize}
                   onValueChange={(value) => updateSettings({ computerPreviewSize: value })}
                   options={[
-                    { value: "compact", label: "Compact" },
-                    { value: "large", label: "Large" },
+                    { value: "compact", label: t("Compact") },
+                    { value: "large", label: t("Large") },
                   ]}
-                  ariaLabel="In-chat computer preview size"
+                  ariaLabel={t("In-chat computer preview size")}
                 />
               </div>
             }
@@ -546,7 +574,7 @@ export function ComputerSettingsPanel({
       {/* Details stay out of the way until asked for: the per-grant checklist
           the macOS helper drives and what this backend can actually do. */}
       <SettingsSectionShell
-        title="Advanced"
+        title={t("Advanced")}
         action={
           <Button
             size="xs"
@@ -555,7 +583,7 @@ export function ComputerSettingsPanel({
             onClick={() => setAdvancedOpen((open) => !open)}
           >
             <DisclosureChevron open={advancedOpen} />
-            {advancedOpen ? "Hide" : "Show"}
+            {advancedOpen ? t("Hide") : t("Show")}
           </Button>
         }
       >
@@ -581,9 +609,9 @@ export function ComputerSettingsPanel({
             <SettingsCard>
               {status && availabilityView.kind === "ready" ? (
                 <SettingsRow
-                  title="Desktop abilities"
+                  title={t("Desktop abilities")}
                   description={capabilitiesDescription}
-                  status={`${backend ? (BACKEND_DISPLAY_NAMES[backend] ?? backend) : "No backend"} · ${capabilitySummary(status.capabilities, !captureBlocked)}`}
+                  status={`${backend ? t(BACKEND_DISPLAY_NAMES[backend] ?? backend) : t("No backend")} · ${capabilitySummary(status.capabilities, !captureBlocked, t)}`}
                 />
               ) : null}
             </SettingsCard>

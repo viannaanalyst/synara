@@ -9,6 +9,7 @@ import { type ReactNode } from "react";
 
 import { PlusIcon, StarFilledIcon } from "~/lib/icons";
 import { cn } from "~/lib/utils";
+import { useT } from "~/i18n";
 import { PROVIDER_ICON_COMPONENT_BY_PROVIDER } from "../ProviderIcon";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "../ui/tooltip";
 import { type ComposerModelPickerTab, STARRED_TAB } from "./ComposerModelPicker.logic";
@@ -60,15 +61,17 @@ export type ComposerModelPickerProviderTab = {
 export function resolveComposerModelPickerProviderTabs(
   options: ReadonlyArray<{ value: ProviderKind; label: string }>,
   providers: ReadonlyArray<ServerProviderStatus> | undefined,
+  t: (key: string) => string = (key) => key,
 ): ComposerModelPickerProviderTab[] {
   return options.map((option) => {
     const availability = resolveLiveProviderAvailability(
       providers?.find((entry) => entry.provider === option.value),
+      t,
     );
     return {
       provider: option.value,
       label: option.label,
-      unavailableLabel: availability.disabled ? (availability.label ?? "Unavailable") : null,
+      unavailableLabel: availability.disabled ? (availability.label ?? t("Unavailable")) : null,
     };
   });
 }
@@ -80,14 +83,15 @@ export function ComposerModelPickerTabs(props: {
   /** Omitted while the thread is locked to its provider. */
   onAddProviders?: (() => void) | undefined;
 }) {
+  const t = useT();
   return (
     <div
       role="tablist"
-      aria-label="Model sources"
+      aria-label={t("Model sources")}
       className="flex shrink-0 items-center gap-0.5 overflow-x-auto border-b border-border p-1.5 [scrollbar-width:none]"
     >
       <PickerTabButton
-        label="Starred"
+        label={t("Starred")}
         active={props.tab === STARRED_TAB}
         onSelect={() => props.onTabChange(STARRED_TAB)}
       >
@@ -115,7 +119,7 @@ export function ComposerModelPickerTabs(props: {
         );
       })}
       {props.onAddProviders ? (
-        <PickerTabButton label="Add providers" active={false} onSelect={props.onAddProviders}>
+        <PickerTabButton label={t("Add providers")} active={false} onSelect={props.onAddProviders}>
           <PlusIcon aria-hidden="true" className="size-3.5" />
         </PickerTabButton>
       ) : null}

@@ -7,6 +7,7 @@
 import { cn } from "~/lib/utils";
 import type { ThemeMode, ThemeVariant } from "~/hooks/useTheme";
 import { useRadioGroupKeyboardNav } from "~/hooks/useRadioGroupKeyboardNav";
+import { useT } from "~/i18n";
 
 // The mockups always show a fixed grayscale rendering of each appearance — they must
 // look "light" and "dark" regardless of the app's current theme or chrome overrides,
@@ -64,13 +65,18 @@ const MOCKUP_LAYOUT = {
   rowBarWidth: "36%",
 } as const;
 
-const THEME_MODE_CHOICES = [
-  { value: "system", label: "System" },
-  { value: "light", label: "Light" },
-  { value: "dark", label: "Dark" },
-] as const satisfies ReadonlyArray<{ value: ThemeMode; label: string }>;
+const THEME_MODE_VALUES = ["system", "light", "dark"] as const satisfies ReadonlyArray<ThemeMode>;
 
-const THEME_MODE_VALUES = THEME_MODE_CHOICES.map((choice) => choice.value);
+function themeModeLabel(mode: ThemeMode, t: ReturnType<typeof useT>) {
+  switch (mode) {
+    case "system":
+      return t("System");
+    case "light":
+      return t("Light");
+    case "dark":
+      return t("Dark");
+  }
+}
 
 /** One full miniature app window: backdrop, main panel with centered header bars,
  *  and a content card with skeleton rows running off the bottom edge. */
@@ -174,6 +180,7 @@ export function ThemeModePicker({
   onValueChange: (value: ThemeMode) => void;
   ariaLabel: string;
 }) {
+  const t = useT();
   const radioItemProps = useRadioGroupKeyboardNav({
     values: THEME_MODE_VALUES,
     value,
@@ -181,17 +188,17 @@ export function ThemeModePicker({
   });
   return (
     <div role="radiogroup" aria-label={ariaLabel} className="grid w-full grid-cols-3 gap-3">
-      {THEME_MODE_CHOICES.map((choice) => {
-        const isActive = choice.value === value;
+      {THEME_MODE_VALUES.map((mode) => {
+        const isActive = mode === value;
         return (
           <button
-            key={choice.value}
+            key={mode}
             type="button"
             role="radio"
             aria-checked={isActive}
             className="group flex min-w-0 flex-col items-center gap-1.5 focus-visible:outline-none"
-            onClick={() => onValueChange(choice.value)}
-            {...radioItemProps(choice.value)}
+            onClick={() => onValueChange(mode)}
+            {...radioItemProps(mode)}
           >
             <div
               className={cn(
@@ -203,7 +210,7 @@ export function ThemeModePicker({
               )}
             >
               <div className="relative aspect-[10/7] w-full overflow-hidden rounded-lg">
-                <ThemeModeMockup mode={choice.value} />
+                <ThemeModeMockup mode={mode} />
               </div>
             </div>
             <span
@@ -212,7 +219,7 @@ export function ThemeModePicker({
                 isActive ? "font-medium text-foreground" : "text-muted-foreground",
               )}
             >
-              {choice.label}
+              {themeModeLabel(mode, t)}
             </span>
           </button>
         );

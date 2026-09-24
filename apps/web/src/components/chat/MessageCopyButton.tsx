@@ -1,4 +1,5 @@
 import { useRef, type RefObject } from "react";
+import { useT } from "~/i18n";
 import { CheckIcon, CopyIcon } from "~/lib/icons";
 import { useCopyToClipboard } from "~/hooks/useCopyToClipboard";
 import { anchoredToastManager } from "../ui/toast";
@@ -27,18 +28,19 @@ function showCopyToast(
 }
 
 export function MessageCopyButton({ text, className }: { text: string; className?: string }) {
+  const t = useT();
   const ref = useRef<HTMLButtonElement>(null);
   const { copyToClipboard, isCopied } = useCopyToClipboard<void>({
-    onCopy: () => showCopyToast(ref, "Copied!"),
-    onError: (error: Error) => showCopyToast(ref, "Failed to copy", error.message),
+    onCopy: () => showCopyToast(ref, t("Copied!")),
+    onError: (error: Error) => showCopyToast(ref, t("Failed to copy"), error.message),
     timeout: ANCHORED_TOAST_TIMEOUT_MS,
   });
 
   return (
     <MessageActionButton
       ref={ref}
-      label="Copy message"
-      tooltip="Copy to clipboard"
+      label={t("Copy message")}
+      tooltip={t("Copy to clipboard")}
       disabled={isCopied}
       className={className}
       onClick={() => copyToClipboard(text)}

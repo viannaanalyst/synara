@@ -11,6 +11,7 @@ import type { ThreadId } from "@synara/contracts";
 import { isNormalizedWindowsAbsolutePath } from "@synara/shared/path";
 import { useQueryClient } from "@tanstack/react-query";
 
+import { useT } from "~/i18n";
 import { directoryChain, useExplorerRevealRequestStore } from "~/explorerRevealRequestStore";
 import type { ChatFileReference } from "~/lib/chatReferences";
 import type { FileCommentSelection } from "~/lib/fileComments";
@@ -35,6 +36,7 @@ export const DockExplorerPane = function DockExplorerPane(props: {
   onAskWhyInChat?: ((reference: ChatFileReference) => void) | undefined;
   onCommentInChat?: ((comment: FileCommentSelection) => void) | undefined;
 }) {
+  const t = useT();
   const queryClient = useQueryClient();
   const [selectedFilePath, setSelectedFilePath] = useState<string | null>(null);
   const [expandedDirectories, setExpandedDirectories] = useState<ReadonlySet<string>>(
@@ -132,7 +134,7 @@ export const DockExplorerPane = function DockExplorerPane(props: {
           editable
           emptyState={
             <PanelStateMessage density="compact" fill="flex">
-              <p>Select a file from the tree to view it.</p>
+              <p>{t("Select a file from the tree to view it.")}</p>
             </PanelStateMessage>
           }
           onReferenceInChat={props.onReferenceInChat}

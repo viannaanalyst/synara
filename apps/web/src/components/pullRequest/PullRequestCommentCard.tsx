@@ -21,6 +21,7 @@ import {
   PR_META_TEXT_CLASS_NAME,
 } from "./pullRequestText";
 import { ensureNativeApi } from "~/nativeApi";
+import { useT } from "~/i18n";
 import { PullRequestActorLabel } from "./PullRequestActorLabel";
 import { PullRequestMarkdown } from "./PullRequestMarkdown";
 import { parseFindingComment, type PullRequestCommentSeverity } from "./pullRequestComment.logic";
@@ -44,6 +45,7 @@ export function PullRequestCommentCard({
    *  dozens of markdown trees. */
   defaultOpen?: boolean;
 }) {
+  const t = useT();
   const defaultOpen = defaultOpenProp ?? true;
   const [open, setOpen] = useState(defaultOpen);
   const finding = parseFindingComment(comment.body);
@@ -91,13 +93,13 @@ export function PullRequestCommentCard({
                   severityToneClassName(finding.severity),
                 )}
               >
-                {finding.severity} Severity
+                {t("{severity} Severity", { severity: t(finding.severity) })}
               </p>
             </div>
           ) : null}
           <PullRequestMarkdown
             text={finding ? finding.body : comment.body}
-            fallback="_No review body._"
+            fallback={`_${t("No review body.")}_`}
             cwd={workspaceRoot}
           />
           <div className="mt-2 flex justify-end">
@@ -109,7 +111,7 @@ export function PullRequestCommentCard({
                 "rounded px-1.5 py-0.5 font-medium text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground",
               )}
             >
-              Reply
+              {t("Reply")}
             </button>
           </div>
         </div>

@@ -7,12 +7,23 @@
 import { type ButtonHTMLAttributes, type ReactNode, useState } from "react";
 
 import { ChevronRightIcon, FileIcon } from "~/lib/icons";
-import { formatPastedTextCountLabel, pastedTextTitle } from "~/lib/composerPastedText";
+import { useAppLocale, useT } from "~/i18n";
+import { hasPastedText, pastedTextTitle } from "~/lib/composerPastedText";
 import { AttachmentCard } from "./AttachmentCard";
 
 interface PastedTextCardMetrics {
   lineCount: number;
   charCount: number;
+}
+
+function localizedPastedTextCountLabel(
+  metrics: PastedTextCardMetrics,
+  t: ReturnType<typeof useT>,
+  locale: string,
+): string {
+  return metrics.lineCount > 1
+    ? t("{count} lines", { count: metrics.lineCount.toLocaleString(locale) })
+    : t("{count} chars", { count: metrics.charCount.toLocaleString(locale) });
 }
 
 // Shared underlined affordance under the card title ("Show in text field" /
@@ -42,15 +53,21 @@ function PastedTextCardShell({
   onRemove?: () => void;
   className?: string;
 }) {
+  const t = useT();
+  const locale = useAppLocale();
+  const title = pastedTextTitle(text);
+  const countLabel = localizedPastedTextCountLabel(metrics, t, locale);
   return (
     <AttachmentCard
       size="sm"
       className={className}
       icon={<FileIcon className="size-3" />}
-      title={pastedTextTitle(text)}
+      title={hasPastedText({ text }) ? title : t("Pasted text")}
       subtitle={action}
       onRemove={onRemove}
-      removeLabel={`Remove pasted text (${formatPastedTextCountLabel(metrics)})`}
+      removeLabel={t("Remove pasted text ({count})", {
+        count: countLabel,
+      })}
     />
   );
 }
@@ -70,6 +87,7 @@ export function ComposerPastedTextCard({
   onShowInTextField,
   onRemove,
 }: ComposerPastedTextCardProps) {
+  const t = useT();
   return (
     <PastedTextCardShell
       text={text}
@@ -80,7 +98,7 @@ export function ComposerPastedTextCard({
           onMouseDown={(event) => event.preventDefault()}
           onClick={onShowInTextField}
         >
-          Show in text field
+          {t("Show in text field")}
           <ChevronRightIcon className="size-2.5" />
         </PastedTextCardAction>
       }
@@ -97,6 +115,8 @@ interface UserMessagePastedTextCardProps {
 // in place (read-only) instead of editing.
 export function UserMessagePastedTextCard({ text, metrics }: UserMessagePastedTextCardProps) {
   const [expanded, setExpanded] = useState(false);
+  const t = useT();
+  const locale = useAppLocale();
 
   return (
     <div className="flex flex-col items-start gap-1">
@@ -108,8 +128,10 @@ export function UserMessagePastedTextCard({ text, metrics }: UserMessagePastedTe
             aria-expanded={expanded}
             onClick={() => setExpanded((value) => !value)}
           >
-            {expanded ? "Hide text" : "Show text"}
-            <span className="opacity-65">· {formatPastedTextCountLabel(metrics)}</span>
+            {expanded ? t("Hide text") : t("Show text")}
+            <span className="opacity-65">
+              · {localizedPastedTextCountLabel(metrics, t, locale)}
+            </span>
           </PastedTextCardAction>
         }
       />

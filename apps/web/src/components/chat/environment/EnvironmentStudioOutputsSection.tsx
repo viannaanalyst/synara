@@ -13,6 +13,7 @@ import { isSupportedLocalImagePath } from "@synara/shared/localPreviewFiles";
 import { useQuery } from "@tanstack/react-query";
 
 import { formatRelativeTime } from "~/lib/relativeTime";
+import { useT } from "~/i18n";
 import { studioThreadOutputsQueryOptions } from "~/lib/serverReactQuery";
 import { humanizeStudioOutputName } from "~/lib/studioOutputDisplay";
 import { useWorkspaceFileOpener } from "~/lib/workspaceFileOpener";
@@ -33,6 +34,7 @@ export function EnvironmentStudioOutputsSection({
   threadId: ThreadId;
   enabled: boolean;
 }) {
+  const t = useT();
   const outputsQuery = useQuery(studioThreadOutputsQueryOptions({ threadId, enabled }));
   const fileOpener = useWorkspaceFileOpener();
 
@@ -50,7 +52,7 @@ export function EnvironmentStudioOutputsSection({
   }
 
   return (
-    <EnvironmentLabeledSection label="Output">
+    <EnvironmentLabeledSection label={t("Output")}>
       {entries.map((entry) => (
         <EnvironmentRow
           key={entry.fullPath}

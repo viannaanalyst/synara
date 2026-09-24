@@ -6,6 +6,7 @@
 import { ThreadId } from "@synara/contracts";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import { useMemo, useEffect, useRef, useState } from "react";
+import { t } from "~/i18n";
 import { toastManager } from "../components/ui/toast";
 import { resolveVisibleToastThreadIds } from "../components/ui/toastRouteVisibility";
 import { useAppSettings } from "../appSettings";
@@ -341,18 +342,22 @@ export function buildNotificationSettingsSupportText(
   permissionState: BrowserNotificationPermissionState,
 ): string {
   if (isElectron) {
-    return "Desktop app notifications use your operating system notification center.";
+    return t("Desktop app notifications use your operating system notification center.");
   }
   switch (permissionState) {
     case "granted":
-      return "Browser notifications are enabled for this app.";
+      return t("Browser notifications are enabled for this app.");
     case "denied":
-      return "Browser notifications are blocked. Re-enable them in your browser site settings.";
+      return t("Browser notifications are blocked. Re-enable them in your browser site settings.");
     case "insecure":
-      return "Browser notifications need a secure context. Localhost works; plain HTTP does not.";
+      return t(
+        "Browser notifications need a secure context. Localhost works; plain HTTP does not.",
+      );
     case "unsupported":
-      return "This browser does not support desktop notifications.";
+      return t("This browser does not support desktop notifications.");
     case "default":
-      return "Allow browser notifications to get alerts when chats or terminal agents finish or need input in the background.";
+      return t(
+        "Allow browser notifications to get alerts when chats or terminal agents finish or need input in the background.",
+      );
   }
 }

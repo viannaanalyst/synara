@@ -8,6 +8,7 @@ import type { ProviderKind } from "@synara/contracts";
 import { useState } from "react";
 
 import { ChevronDownIcon, FastModeIcon, SettingsIcon } from "~/lib/icons";
+import { useT } from "~/i18n";
 import { cn } from "~/lib/utils";
 import { PROVIDER_ICON_COMPONENT_BY_PROVIDER } from "../ProviderIcon";
 import { Button } from "../ui/button";
@@ -38,6 +39,7 @@ export function ComposerModelMenuTrigger(props: {
   openPlaceholderLabel?: string | null | undefined;
   shortcutLabel?: string | null | undefined;
 }) {
+  const t = useT();
   const freezesLabel = props.isMenuOpen && Boolean(props.openPlaceholderLabel);
   // A compact (icon-only) trigger has no room for the placeholder; it only freezes.
   const showsPlaceholder = freezesLabel && !props.hideModelLabel;
@@ -75,7 +77,7 @@ export function ComposerModelMenuTrigger(props: {
         "min-w-0 shrink-0 justify-start gap-1.5 whitespace-nowrap px-2 sm:px-2.5 [&_svg]:mx-0",
         COMPOSER_PICKER_TRIGGER_TEXT_CLASS_NAME,
       )}
-      aria-label="Change model and reasoning"
+      aria-label={t("Change model and reasoning")}
       {...(hiddenTriggerTitle.length > 0 ? { title: hiddenTriggerTitle } : {})}
     />
   );
@@ -163,7 +165,7 @@ export function ComposerModelMenuTrigger(props: {
       {!props.isMenuOpen ? (
         <TooltipPopup side="top" sideOffset={6} variant="picker">
           <span className="inline-flex items-center gap-2 px-1 py-0.5">
-            <span>Change model</span>
+            <span>{t("Change model")}</span>
             <ShortcutKbd
               shortcutLabel={props.shortcutLabel}
               className="h-4 min-w-4 px-1 text-ui-2xs text-muted-foreground"

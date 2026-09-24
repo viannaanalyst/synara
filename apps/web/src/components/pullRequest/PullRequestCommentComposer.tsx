@@ -17,8 +17,10 @@ import { ArrowUpIcon, GitHubIcon } from "~/lib/icons";
 import { pullRequestCommentMutationOptions } from "~/lib/pullRequestReactQuery";
 import { PR_BODY_TEXT_CLASS_NAME } from "./pullRequestText";
 import { cn } from "~/lib/utils";
+import { useT } from "~/i18n";
 
 export function PullRequestCommentComposer({ detail }: { detail: PullRequestDetail }) {
+  const t = useT();
   const queryClient = useQueryClient();
   const mutation = useMutation(pullRequestCommentMutationOptions(queryClient));
   const [body, setBody] = useState("");
@@ -47,8 +49,8 @@ export function PullRequestCommentComposer({ detail }: { detail: PullRequestDeta
         // The draft stays in the field on failure — nothing to re-type.
         toastManager.add({
           type: "error",
-          title: "Could not post comment",
-          description: error instanceof Error ? error.message : "GitHub CLI comment failed.",
+          title: t("Could not post comment"),
+          description: error instanceof Error ? error.message : t("GitHub CLI comment failed."),
         });
       })
       .finally(() => {
@@ -60,7 +62,7 @@ export function PullRequestCommentComposer({ detail }: { detail: PullRequestDeta
     <div className="flex items-center gap-2 rounded-3xl border border-border/60 bg-background py-1 pl-3 pr-1.5 shadow-sm">
       <span
         className="flex size-5 shrink-0 items-center justify-center rounded-full bg-[var(--color-background-elevated-secondary)] text-muted-foreground"
-        title="Commenting as your GitHub account"
+        title={t("Commenting as your GitHub account")}
       >
         <GitHubIcon className="size-3" />
       </span>
@@ -68,8 +70,8 @@ export function PullRequestCommentComposer({ detail }: { detail: PullRequestDeta
         rows={Math.min(6, body.split("\n").length)}
         value={body}
         disabled={mutation.isPending}
-        placeholder="Leave a comment"
-        aria-label="Leave a comment"
+        placeholder={t("Leave a comment")}
+        aria-label={t("Leave a comment")}
         onChange={(event) => setBody(event.target.value)}
         onKeyDown={(event) => {
           // Enter during IME composition confirms the composition, not the comment.
@@ -88,8 +90,8 @@ export function PullRequestCommentComposer({ detail }: { detail: PullRequestDeta
       <button
         type="button"
         disabled={!canSubmit}
-        aria-label="Post comment"
-        title="Post comment"
+        aria-label={t("Post comment")}
+        title={t("Post comment")}
         onClick={() => void submit()}
         className="flex size-7 shrink-0 items-center justify-center self-end rounded-full bg-primary text-primary-foreground transition-opacity disabled:opacity-35"
       >

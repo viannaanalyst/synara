@@ -36,7 +36,7 @@ import {
 } from "~/lib/icons";
 import { createCentralIconComponent } from "~/lib/central-icons";
 import { ThreadPrStatusBadge } from "~/components/pullRequest/ThreadPrStatusBadge";
-import { PinStatusIcon, pinActionLabel } from "~/lib/pin";
+import { PinStatusIcon } from "~/lib/pin";
 import { THREAD_CONTEXT_MENU_ICONS } from "~/lib/contextMenuIcons";
 import { ensureNativeApi } from "~/nativeApi";
 import { autoAnimate } from "@formkit/auto-animate";
@@ -98,7 +98,6 @@ import {
 import { isGenericChatThreadTitle } from "@synara/shared/chatThreads";
 import { parseGitHubRepositoryNameWithOwnerFromPullRequestUrl } from "@synara/shared/githubRepository";
 import { getDefaultModel } from "@synara/shared/model";
-import { pluralize } from "@synara/shared/text";
 import { resolveThreadWorkspaceCwd } from "@synara/shared/threadEnvironment";
 import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation, useNavigate, useParams, useSearch } from "@tanstack/react-router";
@@ -356,6 +355,7 @@ import {
 import type { LastThreadRoute } from "../chatRouteRestore";
 import { useCopyPathToClipboard, useCopyThreadIdToClipboard } from "~/hooks/useCopyToClipboard";
 import { DESKTOP_TOP_BAR_TRAFFIC_LIGHT_GUTTER_CLASS } from "~/hooks/useDesktopTopBarGutter";
+import { getLocale, t } from "~/i18n";
 import { cn } from "~/lib/utils";
 import {
   disclosureContentClassName,
@@ -414,10 +414,7 @@ import {
 } from "./SidebarSearchPalette.logic";
 import { useFocusedChatContext } from "../focusedChatContext";
 import { waitForRecoverableProjectInReadModel } from "../lib/projectCreateRecovery";
-import {
-  createOrRecoverProjectFromPath,
-  PROJECT_CREATE_EXISTING_SYNC_ERROR,
-} from "../lib/projectCreation";
+import { createOrRecoverProjectFromPath } from "../lib/projectCreation";
 import { useSpacesUiStore } from "../spacesUiStore";
 import {
   CreateProjectDialog,
@@ -599,7 +596,7 @@ function ProjectRunIndicatorDot({ className }: { className?: string }) {
   return (
     <span
       aria-hidden="true"
-      title="Dev server running"
+      title={t("Dev server running")}
       className={cn(
         "size-1.5 shrink-0 rounded-full bg-emerald-400 motion-safe:animate-pulse",
         className,
@@ -666,9 +663,11 @@ function resolveThreadRowMetaChips(input: {
     const tooltip =
       threadAutomations.length === 1
         ? `${firstAutomation.name} · ${
-            firstAutomation.enabled ? formatCadence(firstAutomation.schedule) : "Paused"
+            firstAutomation.enabled
+              ? formatCadence(firstAutomation.schedule, t)
+              : t("Paused automation")
           }`
-        : `${threadAutomations.length} automations`;
+        : t("{count} automations", { count: threadAutomations.length });
     chips.push({
       id: "automation",
       tooltip,
@@ -694,7 +693,7 @@ function resolveThreadRowMetaChips(input: {
   if (input.thread.forkSourceThreadId) {
     chips.push({
       id: "fork",
-      tooltip: "Forked thread",
+      tooltip: t("Forked thread"),
       icon: (
         <SidebarGlyph
           icon={GoRepoForked}
@@ -709,7 +708,7 @@ function resolveThreadRowMetaChips(input: {
   if (worktreeBadgeLabel) {
     chips.push({
       id: "worktree",
-      tooltip: worktreeBadgeLabel,
+      tooltip: t(worktreeBadgeLabel),
       icon: <WorktreeBadgeGlyph className="text-muted-foreground/55" />,
     });
   }
@@ -767,14 +766,14 @@ function ProjectSortMenu({
       <SidebarIconButton
         render={<MenuTrigger />}
         icon={SortFilterIcon}
-        label="Sort projects"
-        tooltip="Sort projects"
+        label={t("Sort projects")}
+        tooltip={t("Sort projects")}
         tooltipSide="right"
       />
       <ComposerPickerMenuPopup align="end" side="bottom" className="min-w-44">
         <MenuGroup>
           <div className="px-2 py-1 sm:text-ui leading-snug font-medium text-muted-foreground">
-            Sort projects
+            {t("Sort projects")}
           </div>
           <MenuRadioGroup
             value={projectSortOrder}
@@ -789,7 +788,7 @@ function ProjectSortMenu({
                   value={value}
                   className="min-h-7 py-1 sm:text-ui leading-snug"
                 >
-                  {label}
+                  {t(label)}
                 </MenuRadioItem>
               ),
             )}
@@ -797,7 +796,7 @@ function ProjectSortMenu({
         </MenuGroup>
         <MenuGroup>
           <div className="px-2 pt-2 pb-1 sm:text-ui leading-snug font-medium text-muted-foreground">
-            Sort threads
+            {t("Sort threads")}
           </div>
           <ThreadSortMenuItems
             threadSortOrder={threadSortOrder}
@@ -846,13 +845,13 @@ function SidebarHelpMenu({
         <SidebarIconButton
           render={<MenuTrigger />}
           icon={CircleQuestionIcon}
-          label="Help"
-          tooltip="Help"
+          label={t("Help")}
+          tooltip={t("Help")}
         />
         <ComposerPickerMenuPopup align="end" side="top" className="w-64 min-w-64">
           <MenuGroup>
             <div className="px-2 py-1 sm:text-ui leading-snug font-medium text-muted-foreground">
-              What’s new
+              {t("What’s new")}
             </div>
             {HELP_MENU_RELEASE_ENTRIES.map((entry) => (
               <MenuItem
@@ -873,7 +872,7 @@ function SidebarHelpMenu({
               onClick={() => openReleaseHistory(null)}
             >
               <SidebarContextMenuIcon icon={GiftIcon} />
-              <span>Full changelog</span>
+              <span>{t("Full changelog")}</span>
             </MenuItem>
           </MenuGroup>
           <MenuSeparator />
@@ -884,23 +883,23 @@ function SidebarHelpMenu({
                 onClick={onCustomizeSidebar}
               >
                 <SidebarContextMenuIcon icon={CustomizeIcon} />
-                <span>Customize sidebar</span>
+                <span>{t("Customize sidebar")}</span>
               </MenuItem>
             ) : null}
             <MenuItem className={SIDEBAR_CONTEXT_MENU_ITEM_CLASS_NAME} onClick={onOpenShortcuts}>
               <SidebarContextMenuIcon icon={KeyboardIcon} />
-              <span>Keybindings</span>
+              <span>{t("Keybindings")}</span>
             </MenuItem>
             <MenuItem className={SIDEBAR_CONTEXT_MENU_ITEM_CLASS_NAME} onClick={onOpenFeedback}>
               <SidebarContextMenuIcon icon={ChatBubbleIcon} />
-              <span>Send feedback</span>
+              <span>{t("Send feedback")}</span>
             </MenuItem>
             <MenuItem
               className={SIDEBAR_CONTEXT_MENU_ITEM_CLASS_NAME}
               onClick={() => openExternalLink(SYNARA_DOCS_URL)}
             >
               <SidebarContextMenuIcon icon={BookIcon} />
-              <span>Docs</span>
+              <span>{t("Docs")}</span>
             </MenuItem>
           </MenuGroup>
         </ComposerPickerMenuPopup>
@@ -934,7 +933,7 @@ function ThreadSortMenuItems({
       {(Object.entries(SIDEBAR_THREAD_SORT_LABELS) as Array<[SidebarThreadSortOrder, string]>).map(
         ([value, label]) => (
           <MenuRadioItem key={value} value={value} className="min-h-7 py-1 sm:text-ui leading-snug">
-            {label}
+            {t(label)}
           </MenuRadioItem>
         ),
       )}
@@ -954,14 +953,14 @@ function ChatSortMenu({
       <SidebarIconButton
         render={<MenuTrigger />}
         icon={SortFilterIcon}
-        label="Sort chats"
-        tooltip="Sort chats"
+        label={t("Sort chats")}
+        tooltip={t("Sort chats")}
         tooltipSide="top"
       />
       <ComposerPickerMenuPopup align="end" side="bottom" className="min-w-44">
         <MenuGroup>
           <div className="px-2 py-1 sm:text-ui leading-snug font-medium text-muted-foreground">
-            Sort chats
+            {t("Sort chats")}
           </div>
           <ThreadSortMenuItems
             threadSortOrder={threadSortOrder}
@@ -1107,7 +1106,11 @@ function SidebarNavCustomizeRow({
         <Checkbox
           checked={visible}
           onCheckedChange={(checked) => onVisibleChange(Boolean(checked))}
-          aria-label={visible ? `Hide ${label} from the sidebar` : `Show ${label} in the sidebar`}
+          aria-label={
+            visible
+              ? t("Hide {label} from the sidebar", { label })
+              : t("Show {label} in the sidebar", { label })
+          }
         />
         <SidebarLeadingIcon size="sm" tone="text-inherit">
           <SidebarGlyph
@@ -1121,7 +1124,7 @@ function SidebarNavCustomizeRow({
           type="button"
           ref={setActivatorNodeRef}
           className="ml-auto inline-flex size-6 shrink-0 cursor-grab touch-none items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground active:cursor-grabbing"
-          aria-label={`Reorder ${label}`}
+          aria-label={t("Reorder {label}", { label })}
           {...attributes}
           {...listeners}
         >
@@ -1232,7 +1235,7 @@ function SidebarActivityBellButton({
         render={
           <button
             type="button"
-            aria-label={active ? "Switch to classic view" : "Switch to activity view"}
+            aria-label={active ? t("Switch to classic view") : t("Switch to activity view")}
             aria-pressed={active}
             onClick={() => {
               dismissOnboarding();
@@ -1269,13 +1272,15 @@ function SidebarActivityBellButton({
       >
         {onboardingVisible ? (
           <div className="text-left">
-            <div className="text-ui leading-snug font-semibold">Activity</div>
+            <div className="text-ui leading-snug font-semibold">{t("Activity")}</div>
             <div className="mt-0.5 text-ui-sm leading-4 text-white/85">
-              See running tasks, completed work, and anything that needs your attention.
+              {t("See running tasks, completed work, and anything that needs your attention.")}
             </div>
           </div>
+        ) : shortcutLabel ? (
+          t("Activity view ({shortcut})", { shortcut: shortcutLabel })
         ) : (
-          `Activity view${shortcutLabel ? ` (${shortcutLabel})` : ""}`
+          t("Activity view")
         )}
       </TooltipPopup>
     </Tooltip>
@@ -1311,7 +1316,7 @@ export function SidebarSurfacePicker({
         render={
           <button
             type="button"
-            aria-label="Switch sidebar surface"
+            aria-label={t("Switch sidebar surface")}
             className={cn(
               "flex h-8 min-w-0 cursor-pointer items-center gap-1.5 rounded-lg px-2.5",
               SIDEBAR_ROW_FOCUS_CLASS_NAME,
@@ -1321,7 +1326,7 @@ export function SidebarSurfacePicker({
         }
       >
         <span className="font-display min-w-0 truncate text-[17px] text-foreground">
-          {activeCopy.title}
+          {t(activeCopy.title)}
         </span>
         <DisclosureChevron open className="text-muted-foreground/70" />
       </MenuTrigger>
@@ -1352,10 +1357,10 @@ export function SidebarSurfacePicker({
               >
                 <span className="flex min-w-0 flex-1 flex-col gap-0.5">
                   <span className="text-ui-lg font-medium leading-none text-foreground">
-                    {copy.title}
+                    {t(copy.title)}
                   </span>
                   <span className="text-ui-sm leading-snug text-muted-foreground">
-                    {copy.description}
+                    {t(copy.description)}
                   </span>
                 </span>
               </MenuRadioItem>
@@ -1368,6 +1373,7 @@ export function SidebarSurfacePicker({
 }
 
 export default function Sidebar() {
+  const locale = getLocale();
   const githubProvisioningAvailable = useSyncExternalStore(
     subscribeGitHubProvisioningCapability,
     readGitHubProvisioningCapability,
@@ -1443,10 +1449,13 @@ export default function Sidebar() {
     return count > 0
       ? {
           text: String(count),
-          accessibleLabel: `${count} ${pluralize(count, "automation needs", "automations need")} attention`,
+          accessibleLabel:
+            count === 1
+              ? t("1 automation needs attention")
+              : t("{count} automations need attention", { count }),
         }
       : null;
-  }, [automationListQuery.data]);
+  }, [automationListQuery.data, locale]);
   const pullRequestRepositoryConfig = useMemo(
     () => pullRequestRepositoryConfigFingerprint(projects),
     [projects],
@@ -1951,7 +1960,7 @@ export default function Sidebar() {
     if (!api) {
       toastManager.add({
         type: "error",
-        title: "Link opening is unavailable.",
+        title: t("Link opening is unavailable."),
       });
       return;
     }
@@ -1959,8 +1968,8 @@ export default function Sidebar() {
     void api.shell.openExternal(prUrl).catch((error) => {
       toastManager.add({
         type: "error",
-        title: "Unable to open PR link",
-        description: error instanceof Error ? error.message : "An error occurred.",
+        title: t("Unable to open PR link"),
+        description: error instanceof Error ? error.message : t("An error occurred."),
       });
     });
   }, []);
@@ -2026,8 +2035,8 @@ export default function Sidebar() {
           clearOptimisticProjectPinned(projectId);
           toastManager.add({
             type: "warning",
-            title: "Project pin limit reached",
-            description: `You can pin up to ${MAX_PINNED_PROJECTS} projects.`,
+            title: t("Project pin limit reached"),
+            description: t("You can pin up to {count} projects.", { count: MAX_PINNED_PROJECTS }),
           });
           return;
         }
@@ -2079,12 +2088,12 @@ export default function Sidebar() {
         });
         toastManager.add({
           type: "error",
-          title: isPinned ? "Unable to unpin project" : "Unable to pin project",
+          title: t(isPinned ? "Unable to unpin project" : "Unable to pin project"),
           description: error instanceof Error ? error.message : undefined,
         });
       });
     },
-    [setProjectPinned],
+    [setProjectPinned, t],
   );
   useEffect(() => {
     if (optimisticPinnedStateByProjectId.size === 0) {
@@ -2541,11 +2550,11 @@ export default function Sidebar() {
     ) => {
       const cwd = rawCwd.trim();
       if (!cwd) {
-        throw new Error("Project folder path is empty.");
+        throw new Error(t("Project folder path is empty."));
       }
       const api = readNativeApi();
       if (!api) {
-        throw new Error("The app server is unavailable.");
+        throw new Error(t("The app server is unavailable."));
       }
 
       // The flow lives in a nested function that the exclusive lock helper merely awaits: React
@@ -2602,7 +2611,7 @@ export default function Sidebar() {
           if (creationResult.created) {
             // The opener's draft navigation was superseded; retrying here
             // would override the user's newer route.
-            throw new Error("Project creation was superseded before its chat opened.");
+            throw new Error(t("Project creation was superseded before its chat opened."));
           }
         }
 
@@ -2611,7 +2620,11 @@ export default function Sidebar() {
           if (recovered) {
             return;
           }
-          throw new Error(PROJECT_CREATE_EXISTING_SYNC_ERROR);
+          throw new Error(
+            t(
+              "This folder is already linked, but the existing project has not synced into the sidebar yet. Try again in a moment.",
+            ),
+          );
         }
 
         // The command already committed successfully at this point. If the projection
@@ -2620,7 +2633,7 @@ export default function Sidebar() {
         setProjectExpanded(creationResult.projectId, true);
         const threadId = await handleNewThread(creationResult.projectId).catch(() => null);
         if (!threadId) {
-          throw new Error("Project creation was superseded before its chat opened.");
+          throw new Error(t("Project creation was superseded before its chat opened."));
         }
       };
 
@@ -2749,18 +2762,18 @@ export default function Sidebar() {
     async (provider: ImportProviderKind, externalId: string) => {
       const api = readNativeApi();
       if (!api) {
-        throw new Error("The app server is unavailable.");
+        throw new Error(t("The app server is unavailable."));
       }
 
       if (!currentProjectShortcutTargetId) {
-        throw new Error("Add a project before importing a thread.");
+        throw new Error(t("Add a project before importing a thread."));
       }
 
       const activeProject = projects.find(
         (project) => project.id === currentProjectShortcutTargetId,
       );
       if (!activeProject) {
-        throw new Error("The target project could not be resolved.");
+        throw new Error(t("The target project could not be resolved."));
       }
 
       const providerDefaultModel = getDefaultModel(provider);
@@ -2774,20 +2787,21 @@ export default function Sidebar() {
               }
             : null;
       if (!modelSelection) {
-        throw new Error("Select a Pi model before importing a Pi thread.");
+        throw new Error(t("Select a Pi model before importing a Pi thread."));
       }
       const threadId = newThreadId();
       const createdAt = new Date().toISOString();
       const trimmedExternalId = externalId.trim();
       const suffix = trimmedExternalId.slice(-8);
+      const importedSuffix = suffix ? ` ${suffix}` : "";
       const title =
         provider === "claudeAgent"
-          ? `Imported Claude session${suffix ? ` ${suffix}` : ""}`
+          ? t("Imported Claude session{suffix}", { suffix: importedSuffix })
           : provider === "cursor"
-            ? `Imported Cursor session${suffix ? ` ${suffix}` : ""}`
+            ? t("Imported Cursor session{suffix}", { suffix: importedSuffix })
             : provider === "opencode"
-              ? `Imported OpenCode session${suffix ? ` ${suffix}` : ""}`
-              : `Imported Codex thread${suffix ? ` ${suffix}` : ""}`;
+              ? t("Imported OpenCode session{suffix}", { suffix: importedSuffix })
+              : t("Imported Codex thread{suffix}", { suffix: importedSuffix });
       let createdThread = false;
 
       try {
@@ -2831,7 +2845,7 @@ export default function Sidebar() {
         throw error;
       }
     },
-    [appSettings.defaultThreadEnvMode, currentProjectShortcutTargetId, navigate, projects],
+    [appSettings.defaultThreadEnvMode, currentProjectShortcutTargetId, navigate, projects, t],
   );
 
   const commitRename = useCallback(
@@ -2843,8 +2857,8 @@ export default function Sidebar() {
       }).catch((error) => {
         toastManager.add({
           type: "error",
-          title: "Failed to rename thread",
-          description: error instanceof Error ? error.message : "An error occurred.",
+          title: t("Failed to rename thread"),
+          description: error instanceof Error ? error.message : t("An error occurred."),
         });
         return null;
       });
@@ -2852,16 +2866,19 @@ export default function Sidebar() {
       if (outcome === "empty") {
         toastManager.add({
           type: "warning",
-          title: "Thread title cannot be empty",
+          title: t("Thread title cannot be empty"),
         });
       }
     },
-    [],
+    [t],
   );
 
-  const openRenameThreadDialog = useCallback((threadId: ThreadId) => {
-    setRenameDialogThreadId(threadId);
-  }, []);
+  const openRenameThreadDialog = useCallback(
+    (threadId: ThreadId) => {
+      setRenameDialogThreadId(threadId);
+    },
+    [setRenameDialogThreadId],
+  );
 
   const handleThreadRenamePointerUp = useCallback(
     (event: ReactPointerEvent<HTMLElement>, threadId: ThreadId) => {
@@ -2930,15 +2947,15 @@ export default function Sidebar() {
       } catch (error) {
         toastManager.add({
           type: "error",
-          title: "Could not create handoff thread",
+          title: t("Could not create handoff thread"),
           description:
             error instanceof Error
               ? error.message
-              : "An error occurred while creating the handoff thread.",
+              : t("An error occurred while creating the handoff thread."),
         });
       }
     },
-    [createThreadHandoff],
+    [createThreadHandoff, t],
   );
 
   const handleThreadContextMenu = useCallback(
@@ -2986,7 +3003,7 @@ export default function Sidebar() {
         : [];
       const handoffItems = handoffTargets.map((provider, index) => ({
         id: `handoff:${provider}`,
-        label: `Handoff to ${PROVIDER_DISPLAY_NAMES[provider]}`,
+        label: t("Handoff to {provider}", { provider: PROVIDER_DISPLAY_NAMES[provider] }),
         icon: THREAD_CONTEXT_MENU_ICONS.handoff,
         separatorBefore: index === 0,
       }));
@@ -2997,26 +3014,30 @@ export default function Sidebar() {
       });
       const clicked = await api.contextMenu.show(
         [
-          { id: "rename", label: "Rename thread", icon: THREAD_CONTEXT_MENU_ICONS.rename },
+          { id: "rename", label: t("Rename thread"), icon: THREAD_CONTEXT_MENU_ICONS.rename },
           {
             id: "toggle-pin",
-            label: pinActionLabel("thread", isPinned),
+            label: t(isPinned ? "Unpin thread" : "Pin thread"),
             icon: THREAD_CONTEXT_MENU_ICONS.pin,
           },
           ...(threadStatus?.dismissible
             ? [
                 {
                   id: "clear-notification",
-                  label: "Clear notification",
+                  label: t("Clear notification"),
                   icon: THREAD_CONTEXT_MENU_ICONS.clearNotification,
                 },
               ]
             : []),
-          { id: "mark-unread", label: "Mark unread", icon: THREAD_CONTEXT_MENU_ICONS.markUnread },
+          {
+            id: "mark-unread",
+            label: t("Mark unread"),
+            icon: THREAD_CONTEXT_MENU_ICONS.markUnread,
+          },
           ...handoffItems,
           {
             id: "copy-path",
-            label: "Copy Path",
+            label: t("Copy Path"),
             icon: THREAD_CONTEXT_MENU_ICONS.copy,
             separatorBefore: true,
           },
@@ -3024,12 +3045,16 @@ export default function Sidebar() {
             ? [
                 {
                   id: "open-path-in-terminal",
-                  label: "Open Path in Terminal",
+                  label: t("Open Path in Terminal"),
                   icon: THREAD_CONTEXT_MENU_ICONS.openInTerminal,
                 },
               ]
             : []),
-          { id: "copy-thread-id", label: "Copy Thread ID", icon: THREAD_CONTEXT_MENU_ICONS.copy },
+          {
+            id: "copy-thread-id",
+            label: t("Copy Thread ID"),
+            icon: THREAD_CONTEXT_MENU_ICONS.copy,
+          },
           ...(options?.extraItems ?? []),
           // Subagent threads are archived and restored through their parent
           // (thread.archive cascades); archiving one alone would strand it with
@@ -3039,14 +3064,14 @@ export default function Sidebar() {
             : [
                 {
                   id: "archive",
-                  label: "Archive",
+                  label: t("Archive"),
                   icon: THREAD_CONTEXT_MENU_ICONS.archive,
                   separatorBefore: true,
                 },
               ]),
           {
             id: "delete",
-            label: "Delete",
+            label: t("Delete"),
             icon: THREAD_CONTEXT_MENU_ICONS.delete,
             destructive: true,
             ...(thread.parentThreadId ? { separatorBefore: true } : {}),
@@ -3084,8 +3109,8 @@ export default function Sidebar() {
         if (!threadWorkspacePath) {
           toastManager.add({
             type: "error",
-            title: "Path unavailable",
-            description: "This thread does not have a workspace path to copy.",
+            title: t("Path unavailable"),
+            description: t("This thread does not have a workspace path to copy."),
           });
           return;
         }
@@ -3096,8 +3121,8 @@ export default function Sidebar() {
         if (!threadWorkspacePath) {
           toastManager.add({
             type: "error",
-            title: "Path unavailable",
-            description: "This thread does not have a workspace path to open.",
+            title: t("Path unavailable"),
+            description: t("This thread does not have a workspace path to open."),
           });
           return;
         }
@@ -3170,9 +3195,9 @@ export default function Sidebar() {
           }
           toastManager.add({
             type: "error",
-            title: "Unable to open terminal",
+            title: t("Unable to open terminal"),
             description:
-              error instanceof Error ? error.message : "The terminal could not be opened.",
+              error instanceof Error ? error.message : t("The terminal could not be opened."),
           });
         }
         return;
@@ -3224,13 +3249,17 @@ export default function Sidebar() {
         [
           {
             id: "mark-unread",
-            label: `Mark unread (${count})`,
+            label: t("Mark unread ({count})", { count }),
             icon: THREAD_CONTEXT_MENU_ICONS.markUnread,
           },
-          { id: "archive", label: `Archive (${count})`, icon: THREAD_CONTEXT_MENU_ICONS.archive },
+          {
+            id: "archive",
+            label: t("Archive ({count})", { count }),
+            icon: THREAD_CONTEXT_MENU_ICONS.archive,
+          },
           {
             id: "delete",
-            label: `Delete (${count})`,
+            label: t("Delete ({count})", { count }),
             icon: THREAD_CONTEXT_MENU_ICONS.delete,
             destructive: true,
           },
@@ -3261,8 +3290,10 @@ export default function Sidebar() {
         if (appSettings.confirmThreadArchive) {
           const confirmed = await api.dialogs.confirm(
             [
-              `Archive ${archiveIds.length} ${pluralize(archiveIds.length, "thread")}?`,
-              "Archived threads are hidden from the sidebar but can be restored later.",
+              archiveIds.length === 1
+                ? t("Archive 1 thread?")
+                : t("Archive {count} threads?", { count: archiveIds.length }),
+              t("Archived threads are hidden from the sidebar but can be restored later."),
             ].join("\n"),
           );
           if (!confirmed) return;
@@ -3280,8 +3311,8 @@ export default function Sidebar() {
       if (appSettings.confirmThreadDelete) {
         const confirmed = await api.dialogs.confirm(
           [
-            `Delete ${count} ${pluralize(count, "thread")}?`,
-            "This permanently clears conversation history for these threads.",
+            count === 1 ? t("Delete 1 thread?") : t("Delete {count} threads?", { count }),
+            t("This permanently clears conversation history for these threads."),
           ].join("\n"),
         );
         if (!confirmed) return;
@@ -3443,7 +3474,7 @@ export default function Sidebar() {
       const runCreateProject = async () => {
         if (value.source === "github") {
           const api = readNativeApi();
-          if (!api) throw new Error("The app server is unavailable.");
+          if (!api) throw new Error(t("The app server is unavailable."));
           await runExclusiveProjectAddition(projectAdditionLockRef, async () => {
             const openProvisionedProject = async (
               projectId: ProjectId,
@@ -3503,7 +3534,9 @@ export default function Sidebar() {
               ))
             ) {
               throw new Error(
-                "The GitHub project was added, but it has not synced into the sidebar yet. Try again in a moment.",
+                t(
+                  "The GitHub project was added, but it has not synced into the sidebar yet. Try again in a moment.",
+                ),
               );
             }
           });
@@ -3565,11 +3598,11 @@ export default function Sidebar() {
         } catch (error) {
           toastManager.add({
             type: "error",
-            title: "Unable to open in Finder",
+            title: t("Unable to open in Finder"),
             description:
               error instanceof Error
                 ? error.message
-                : "An unknown error occurred opening the folder.",
+                : t("An unknown error occurred opening the folder."),
           });
         }
         return;
@@ -3620,10 +3653,14 @@ export default function Sidebar() {
       const confirmed = await api.dialogs.confirm(
         projectThreads.length > 0
           ? [
-              `Remove project "${project.name}"?`,
-              `This will delete ${projectThreads.length} ${pluralize(projectThreads.length, "thread")} in this folder and remove the project.`,
+              t('Remove project "{name}"?', { name: project.name }),
+              projectThreads.length === 1
+                ? t("This will delete 1 thread in this folder and remove the project.")
+                : t("This will delete {count} threads in this folder and remove the project.", {
+                    count: projectThreads.length,
+                  }),
             ].join("\n")
-          : `Remove project "${project.name}"?`,
+          : t('Remove project "{name}"?', { name: project.name }),
       );
       if (!confirmed) return;
 
@@ -3643,8 +3680,11 @@ export default function Sidebar() {
         if (deletionResult.failureCount > 0) {
           toastManager.add({
             type: "error",
-            title: `Failed to remove "${project.name}"`,
-            description: `Could not delete ${deletionResult.failureCount} ${pluralize(deletionResult.failureCount, "thread")} in "${project.name}".`,
+            title: t('Failed to remove "{name}"', { name: project.name }),
+            description: t('Could not delete {count} threads in "{name}".', {
+              count: deletionResult.failureCount,
+              name: project.name,
+            }),
           });
           return;
         }
@@ -3657,22 +3697,27 @@ export default function Sidebar() {
         clearProjectDraftThreads(projectId);
         toastManager.add({
           type: "success",
-          title: `Removed "${project.name}"`,
+          title: t('Removed "{name}"', { name: project.name }),
           description:
             deletionResult.deletedCount > 0
-              ? `Deleted ${deletionResult.deletedCount} ${pluralize(deletionResult.deletedCount, "thread")} and removed the project.`
-              : "Project removed.",
+              ? deletionResult.deletedCount === 1
+                ? t("Deleted 1 thread and removed the project.")
+                : t("Deleted {count} threads and removed the project.", {
+                    count: deletionResult.deletedCount,
+                  })
+              : t("Project removed."),
         });
       };
 
       try {
         await runRemoveProject();
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Unknown error removing project.";
+        const message =
+          error instanceof Error ? error.message : t("Unknown error removing project.");
         console.error("Failed to remove project", { projectId, error });
         toastManager.add({
           type: "error",
-          title: `Failed to remove "${project.name}"`,
+          title: t('Failed to remove "{name}"', { name: project.name }),
           description: message,
         });
       }
@@ -3689,6 +3734,8 @@ export default function Sidebar() {
       projectById,
       removeDeletedProjectFromClientState,
       sidebarThreads,
+      setRelocateProjectDialogId,
+      setRenameProjectDialogId,
       toggleProjectPinned,
     ],
   );
@@ -3780,7 +3827,7 @@ export default function Sidebar() {
       newThread: {
         icon: NewThreadIcon,
         iconClassName: "size-3.5",
-        label: "New thread",
+        label: t("New thread"),
         active: false,
         badge: null,
         onClick: handlePrimaryNewThread,
@@ -3789,7 +3836,7 @@ export default function Sidebar() {
       },
       kanban: {
         icon: KanbanIcon,
-        label: "Kanban",
+        label: t("Kanban"),
         active: isOnKanban,
         badge: null,
         onClick: () => {
@@ -3798,7 +3845,7 @@ export default function Sidebar() {
       },
       pullRequests: {
         icon: IoIosGitCompare,
-        label: "Pull requests",
+        label: t("Pull requests"),
         active: isOnPullRequests,
         badge: pullRequestsReviewBadge,
         onClick: () => {
@@ -3810,7 +3857,7 @@ export default function Sidebar() {
       },
       automations: {
         icon: ClockIcon,
-        label: "Automations",
+        label: t("Automations"),
         active: isOnAutomations,
         badge: automationAttentionBadge,
         onClick: () => {
@@ -3827,6 +3874,7 @@ export default function Sidebar() {
       navigate,
       prefetchModelsForPrimaryNewThread,
       pullRequestsReviewBadge,
+      locale,
     ],
   );
   // A hidden item whose route is currently active stays visible so the current
@@ -3859,11 +3907,14 @@ export default function Sidebar() {
     },
     [appSettings.hiddenSidebarNavItems, updateSettings],
   );
-  const handleNavContextMenu = useCallback((event: MouseEvent) => {
-    if (!readNativeApi()) return;
-    event.preventDefault();
-    setNavCustomizeMenuPosition({ x: event.clientX, y: event.clientY });
-  }, []);
+  const handleNavContextMenu = useCallback(
+    (event: MouseEvent) => {
+      if (!readNativeApi()) return;
+      event.preventDefault();
+      setNavCustomizeMenuPosition({ x: event.clientX, y: event.clientY });
+    },
+    [setNavCustomizeMenuPosition],
+  );
   useEffect(() => {
     if (!isCustomizingNav) return;
     const onKeyDown = (event: KeyboardEvent) => {
@@ -4482,7 +4533,7 @@ export default function Sidebar() {
             SIDEBAR_SECTION_LABEL_CLASS_NAME,
           )}
         >
-          <span className="truncate">{label}</span>
+          <span className="truncate">{t(label)}</span>
         </div>
         <SidebarSectionToolbar placement="overlay" revealOnHover>
           {toolbar}
@@ -4499,7 +4550,7 @@ export default function Sidebar() {
     return (
       <div className="mb-3">
         <div className="my-1 flex items-center justify-between px-2 py-1">
-          <span className={SIDEBAR_SECTION_LABEL_CLASS_NAME}>Pinned</span>
+          <span className={SIDEBAR_SECTION_LABEL_CLASS_NAME}>{t("Pinned")}</span>
         </div>
         <div className="flex flex-col gap-0.5">
           {pinnedThreads.map((thread) => renderPinnedThreadRow(thread))}
@@ -4872,7 +4923,7 @@ export default function Sidebar() {
                           </span>
                         }
                       />
-                      <TooltipPopup side="top">Temporary chat</TooltipPopup>
+                      <TooltipPopup side="top">{t("Temporary chat")}</TooltipPopup>
                     </Tooltip>
                   </div>
                 ) : undefined
@@ -5019,10 +5070,10 @@ export default function Sidebar() {
                 <span
                   aria-label={
                     collapsedProjectStatus
-                      ? `Project status: ${collapsedProjectStatus.label}`
+                      ? t("Project status: {status}", { status: t(collapsedProjectStatus.label) })
                       : undefined
                   }
-                  title={collapsedProjectStatus?.label}
+                  title={collapsedProjectStatus ? t(collapsedProjectStatus.label) : undefined}
                   className={cn(
                     "ml-auto flex min-w-[1.625rem] shrink-0 items-center justify-end gap-2 self-center",
                     sidebarHoverRevealHideClassName("project-header"),
@@ -5037,9 +5088,13 @@ export default function Sidebar() {
             </SidebarMenuButton>
             <button
               type="button"
-              aria-label={pinActionLabel(project.name, isProjectPinned)}
+              aria-label={t(isProjectPinned ? "Unpin {target}" : "Pin {target}", {
+                target: project.name,
+              })}
               aria-pressed={isProjectPinned}
-              title={pinActionLabel(project.name, isProjectPinned)}
+              title={t(isProjectPinned ? "Unpin {target}" : "Pin {target}", {
+                target: project.name,
+              })}
               className={cn(
                 "sidebar-icon-button absolute left-2 top-1/2 z-20 inline-flex size-4 -translate-y-1/2 cursor-pointer items-center justify-center rounded-sm transition-opacity hover:text-foreground focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring",
                 SIDEBAR_ROW_LABEL_TEXT_CLASS_NAME,
@@ -5062,8 +5117,8 @@ export default function Sidebar() {
             <SidebarSectionToolbar placement="overlay" revealOnHover>
               <SidebarIconButton
                 icon={IoIosGitCompare}
-                label={`View pull requests for ${project.name}`}
-                tooltip="Pull requests"
+                label={t("View pull requests for {project}", { project: project.name })}
+                tooltip={t("Pull requests")}
                 tooltipSide="top"
                 onClick={(event) => {
                   event.preventDefault();
@@ -5078,11 +5133,13 @@ export default function Sidebar() {
               />
               <SidebarIconButton
                 icon={TerminalIcon}
-                label={`Create new terminal thread in ${project.name}`}
+                label={t("Create new terminal thread in {project}", { project: project.name })}
                 tooltip={
                   newTerminalThreadShortcutLabel
-                    ? `New terminal thread (${newTerminalThreadShortcutLabel})`
-                    : "New terminal thread"
+                    ? t("New terminal thread ({shortcut})", {
+                        shortcut: newTerminalThreadShortcutLabel,
+                      })
+                    : t("New terminal thread")
                 }
                 tooltipSide="top"
                 onClick={(event) => {
@@ -5093,9 +5150,11 @@ export default function Sidebar() {
               />
               <SidebarIconButton
                 icon={NewThreadIcon}
-                label={`Create new thread in ${project.name}`}
+                label={t("Create new thread in {project}", { project: project.name })}
                 tooltip={
-                  newThreadShortcutLabel ? `New thread (${newThreadShortcutLabel})` : "New thread"
+                  newThreadShortcutLabel
+                    ? t("New thread ({shortcut})", { shortcut: newThreadShortcutLabel })
+                    : t("New thread")
                 }
                 tooltipSide="top"
                 data-testid="new-thread-button"
@@ -5149,7 +5208,7 @@ export default function Sidebar() {
                           showMoreThreadsForProject(project.cwd, threadListExtraPages);
                         }}
                       >
-                        <span>Show more</span>
+                        <span>{t("Show more")}</span>
                       </SidebarMenuSubButton>
                     )}
                     {canShowLessThreads && (
@@ -5167,7 +5226,7 @@ export default function Sidebar() {
                           showLessThreadsForProject(project.cwd, threadListExtraPages);
                         }}
                       >
-                        <span>Show less</span>
+                        <span>{t("Show less")}</span>
                       </SidebarMenuSubButton>
                     )}
                   </div>
@@ -5483,7 +5542,7 @@ export default function Sidebar() {
         ? {
             data: { copyText: releaseUrl },
             actionProps: {
-              children: "Download manually",
+              children: t("Download manually"),
               onClick: () => {
                 void window.desktopBridge?.openExternal(releaseUrl);
               },
@@ -5492,14 +5551,20 @@ export default function Sidebar() {
         : {};
       toastManager.add({
         type: "error",
-        title: recommendManualDownload ? "Download the update manually" : input.title,
+        title: recommendManualDownload ? t("Download the update manually") : input.title,
         description: recommendManualDownload
-          ? `Automatic installation has failed ${input.state?.installFailureCount ?? 0} times. Download ${input.state?.availableVersion ?? "the update"} manually to finish updating.`
+          ? t(
+              "Automatic installation has failed {count} times. Download {version} manually to finish updating.",
+              {
+                count: input.state?.installFailureCount ?? 0,
+                version: input.state?.availableVersion ?? t("the update"),
+              },
+            )
           : input.description,
         ...fallbackProps,
       });
     },
-    [],
+    [t],
   );
 
   // The install watchdog (and any background-pushed failure) flips the update
@@ -5519,22 +5584,23 @@ export default function Sidebar() {
     surfaceDesktopUpdateError({
       title:
         desktopUpdateState.errorContext === "install"
-          ? "Couldn’t finish updating"
-          : "Couldn’t download the update",
+          ? t("Couldn’t finish updating")
+          : t("Couldn’t download the update"),
       description:
         desktopUpdateState.message ??
-        "The in-app update could not complete. You can download it manually.",
+        t("The in-app update could not complete. You can download it manually."),
       state: desktopUpdateState,
     });
-  }, [desktopUpdateState, surfaceDesktopUpdateError]);
+  }, [desktopUpdateState, surfaceDesktopUpdateError, t]);
 
   const showDesktopUpdateButton = isElectron && shouldShowDesktopUpdateButton(desktopUpdateState);
 
   const desktopUpdateTooltip = desktopUpdateState
     ? getDesktopUpdateButtonTooltip(desktopUpdateState, {
         installing: installingDesktopUpdate,
+        translate: t,
       })
-    : "Update available";
+    : t("Update available");
 
   const desktopUpdateButtonDisabled =
     isDesktopUpdateButtonDisabled(desktopUpdateState) || installingDesktopUpdate;
@@ -5543,12 +5609,13 @@ export default function Sidebar() {
     : "none";
   const desktopUpdateButtonPresentation = getDesktopUpdateButtonPresentation(desktopUpdateState, {
     installing: installingDesktopUpdate,
+    translate: t,
   });
   const showArm64IntelBuildWarning =
     isElectron && shouldShowArm64IntelBuildWarning(desktopUpdateState);
   const arm64IntelBuildWarningDescription =
     desktopUpdateState && showArm64IntelBuildWarning
-      ? getArm64IntelBuildWarningDescription(desktopUpdateState)
+      ? getArm64IntelBuildWarningDescription(desktopUpdateState, t)
       : null;
   const desktopUpdateButtonInteractivityClasses = desktopUpdateButtonDisabled
     ? "cursor-not-allowed opacity-60"
@@ -5577,46 +5644,48 @@ export default function Sidebar() {
           studioWorkspaceRoot,
         })
           ? spaceDisplayName(project.spaceId, spaces, voidSpace)
-          : "Global",
+          : t("Global"),
         createdAt: project.createdAt,
         updatedAt: project.updatedAt,
       })),
-    [chatWorkspaceRoot, homeDir, projects, spaces, studioWorkspaceRoot, voidSpace],
+    [chatWorkspaceRoot, homeDir, locale, projects, spaces, studioWorkspaceRoot, voidSpace],
   );
   const searchPaletteActions = useMemo<SidebarSearchAction[]>(
     () => [
       {
         id: "new-chat",
-        label: "New chat",
-        description: "Open the new chat landing screen.",
+        label: t("New chat"),
+        description: t("Open the new chat landing screen."),
         keywords: ["chat", "new", "home"],
         shortcutLabel: newChatShortcutLabel,
       },
       {
         id: "new-thread",
-        label: "New thread",
-        description: "Start a fresh thread in the current or most recently used project.",
+        label: t("New thread"),
+        description: t("Start a fresh thread in the current or most recently used project."),
         keywords: ["thread", "new", "project"],
-        shortcutLabel: newThreadShortcutLabel,
+        shortcutLabel:
+          shortcutLabelForCommand(keybindings, "chat.new") ??
+          shortcutLabelForCommand(keybindings, "chat.newLatestProject"),
       },
       {
         id: "add-project",
-        label: "Add project",
-        description: "Open a repository or folder in the sidebar.",
+        label: t("Add project"),
+        description: t("Open a repository or folder in the sidebar."),
         keywords: ["folder", "repo", "repository", "open"],
         shortcutLabel: addProjectShortcutLabel,
         run: handleStartAddProject,
       },
       {
         id: "import-projects",
-        label: "Import projects from…",
-        description: "Bring Codex and Claude Code projects and conversations into Synara.",
+        label: t("Import projects from…"),
+        description: t("Bring Codex and Claude Code projects and conversations into Synara."),
         keywords: ["import", "projects", "codex", "claude", "conversations", "folders"],
       },
       {
         id: "import-thread",
-        label: "Import thread from...",
-        description: "Attach a local thread to an existing provider session.",
+        label: t("Import thread from..."),
+        description: t("Attach a local thread to an existing provider session."),
         keywords: [
           "import",
           "resume",
@@ -5631,20 +5700,20 @@ export default function Sidebar() {
       },
       {
         id: "feedback",
-        label: "Feedback Synara",
-        description: "Send feedback or report an issue to the Synara team.",
+        label: t("Feedback Synara"),
+        description: t("Send feedback or report an issue to the Synara team."),
         keywords: ["feedback", "bug", "issue", "problem", "report", "support", "synara"],
       },
       {
         id: "settings",
-        label: "Settings",
-        description: "Open app settings.",
+        label: t("Settings"),
+        description: t("Open app settings."),
         keywords: ["preferences", "config"],
       },
       {
         id: "usage-settings",
-        label: "Usage settings",
-        description: "Open provider usage and remaining credits.",
+        label: t("Usage settings"),
+        description: t("Open provider usage and remaining credits."),
         keywords: ["usage", "limits", "credits", "quota", "providers"],
         shortcutLabel: usageSettingsShortcutLabel,
       },
@@ -5654,8 +5723,8 @@ export default function Sidebar() {
         ? [
             {
               id: "switch-space-void",
-              label: `Switch to ${voidSpace.name}`,
-              description: "Jump to unassigned projects.",
+              label: t("Switch to {space}", { space: voidSpace.name }),
+              description: t("Jump to unassigned projects."),
               // "void" stays a keyword after a rename: it is what the palette answered to
               // before, and it is still the only word for this group in the docs.
               keywords: ["space", "switch", "void", "unassigned", voidSpace.name],
@@ -5671,8 +5740,8 @@ export default function Sidebar() {
         (space) =>
           ({
             id: `switch-space-${space.id}`,
-            label: `Switch to ${space.name}`,
-            description: "Jump to this space and restore its last context.",
+            label: t("Switch to {space}", { space: space.name }),
+            description: t("Jump to this space and restore its last context."),
             keywords: ["space", "switch", space.name],
             requiresQuery: true,
             run: () => handleSelectSpace(space.id),
@@ -5683,8 +5752,8 @@ export default function Sidebar() {
       ),
       {
         id: "new-space",
-        label: "New space",
-        description: "Group projects into a focused work context.",
+        label: t("New space"),
+        description: t("Group projects into a focused work context."),
         keywords: ["space", "create", "new", "group", "workspace"],
         run: () => openSpaceCreator(),
         icon: AddPlusIcon,
@@ -5695,8 +5764,9 @@ export default function Sidebar() {
       handleSelectSpace,
       handleStartAddProject,
       importThreadShortcutLabel,
+      keybindings,
+      locale,
       newChatShortcutLabel,
-      newThreadShortcutLabel,
       openSpaceCreator,
       spaces,
       usageSettingsShortcutLabel,
@@ -5719,8 +5789,10 @@ export default function Sidebar() {
           if (nextState.status === "available") {
             toastManager.add({
               type: "info",
-              title: "Preparing update",
-              description: `Synara is preparing version ${nextState.availableVersion ?? "available"} in the background.`,
+              title: t("Preparing update"),
+              description: t("Synara is preparing version {version} in the background.", {
+                version: nextState.availableVersion ?? t("available"),
+              }),
             });
             return;
           }
@@ -5728,8 +5800,8 @@ export default function Sidebar() {
           if (nextState.status === "downloading") {
             toastManager.add({
               type: "info",
-              title: "Preparing update",
-              description: "Synara is downloading the update in the background.",
+              title: t("Preparing update"),
+              description: t("Synara is downloading the update in the background."),
             });
             return;
           }
@@ -5737,8 +5809,8 @@ export default function Sidebar() {
           if (nextState.status === "downloaded") {
             toastManager.add({
               type: "success",
-              title: "Update ready",
-              description: "Click Update when you’re ready to restart and install it.",
+              title: t("Update ready"),
+              description: t("Click Update when you’re ready to restart and install it."),
             });
             return;
           }
@@ -5746,24 +5818,27 @@ export default function Sidebar() {
           if (nextState.status === "up-to-date") {
             toastManager.add({
               type: "info",
-              title: "You're up to date",
-              description: `Synara ${nextState.currentVersion} is already the newest version.`,
+              title: t("You're up to date"),
+              description: t("Synara {version} is already the newest version.", {
+                version: nextState.currentVersion,
+              }),
             });
             return;
           }
 
           if (nextState.status === "error") {
             surfaceDesktopUpdateError({
-              title: "Could not check for updates",
-              description: nextState.message ?? "An unexpected error occurred.",
+              title: t("Could not check for updates"),
+              description: nextState.message ?? t("An unexpected error occurred."),
               state: nextState,
             });
           }
         })
         .catch((error) => {
           surfaceDesktopUpdateError({
-            title: "Could not check for updates",
-            description: error instanceof Error ? error.message : "An unexpected error occurred.",
+            title: t("Could not check for updates"),
+            description:
+              error instanceof Error ? error.message : t("An unexpected error occurred."),
             state: desktopUpdateState,
           });
         });
@@ -5779,15 +5854,15 @@ export default function Sidebar() {
           if (result.completed) {
             toastManager.add({
               type: "success",
-              title: "Update ready",
-              description: "Click Update when you’re ready to restart and install it.",
+              title: t("Update ready"),
+              description: t("Click Update when you’re ready to restart and install it."),
             });
           }
-          const alreadyCurrentNotice = getDesktopUpdateAlreadyCurrentNotice(result);
+          const alreadyCurrentNotice = getDesktopUpdateAlreadyCurrentNotice(result, t);
           if (alreadyCurrentNotice) {
             toastManager.add({
               type: "info",
-              title: "Already up to date",
+              title: t("Already up to date"),
               description: alreadyCurrentNotice,
             });
             return;
@@ -5796,15 +5871,16 @@ export default function Sidebar() {
           const actionError = getDesktopUpdateActionError(result);
           if (!actionError) return;
           surfaceDesktopUpdateError({
-            title: "Could not download update",
+            title: t("Could not download update"),
             description: actionError,
             state: result.state,
           });
         })
         .catch((error) => {
           surfaceDesktopUpdateError({
-            title: "Could not start update download",
-            description: error instanceof Error ? error.message : "An unexpected error occurred.",
+            title: t("Could not start update download"),
+            description:
+              error instanceof Error ? error.message : t("An unexpected error occurred."),
             state: desktopUpdateState,
           });
         });
@@ -5819,11 +5895,11 @@ export default function Sidebar() {
         .then((result) => {
           setDesktopUpdateState(result.state);
           setInstallingDesktopUpdate(false);
-          const alreadyCurrentNotice = getDesktopUpdateAlreadyCurrentNotice(result);
+          const alreadyCurrentNotice = getDesktopUpdateAlreadyCurrentNotice(result, t);
           if (alreadyCurrentNotice) {
             toastManager.add({
               type: "info",
-              title: "Already up to date",
+              title: t("Already up to date"),
               description: alreadyCurrentNotice,
             });
             return;
@@ -5832,7 +5908,7 @@ export default function Sidebar() {
           const actionError = getDesktopUpdateActionError(result);
           if (!actionError) return;
           surfaceDesktopUpdateError({
-            title: "Could not install update",
+            title: t("Could not install update"),
             description: actionError,
             state: result.state,
           });
@@ -5840,8 +5916,9 @@ export default function Sidebar() {
         .catch((error) => {
           setInstallingDesktopUpdate(false);
           surfaceDesktopUpdateError({
-            title: "Could not install update",
-            description: error instanceof Error ? error.message : "An unexpected error occurred.",
+            title: t("Could not install update"),
+            description:
+              error instanceof Error ? error.message : t("An unexpected error occurred."),
             state: desktopUpdateState,
           });
         });
@@ -5979,7 +6056,7 @@ export default function Sidebar() {
           <SidebarGroup className="px-2 pt-2 pb-0">
             <Alert variant="warning" className="rounded-2xl border-warning/40 bg-warning/8">
               <TriangleAlertIcon />
-              <AlertTitle>Intel build on Apple Silicon</AlertTitle>
+              <AlertTitle>{t("Intel build on Apple Silicon")}</AlertTitle>
               <AlertDescription>{arm64IntelBuildWarningDescription}</AlertDescription>
               {desktopUpdateButtonAction !== "none" ? (
                 <AlertAction>
@@ -5990,10 +6067,10 @@ export default function Sidebar() {
                     onClick={handleDesktopUpdateButtonClick}
                   >
                     {desktopUpdateButtonAction === "download"
-                      ? "Preparing ARM build"
+                      ? t("Preparing ARM build")
                       : desktopUpdateButtonAction === "install"
-                        ? "Update ARM build"
-                        : "Check for ARM build update"}
+                        ? t("Update ARM build")
+                        : t("Check for ARM build update")}
                   </Button>
                 </AlertAction>
               ) : null}
@@ -6029,10 +6106,14 @@ export default function Sidebar() {
               <div className="ml-auto flex items-center gap-1.5">
                 <SidebarIconButton
                   icon={SearchIcon}
-                  label="Search"
+                  label={t("Search")}
                   glyph="leading"
                   size="header"
-                  tooltip={searchShortcutLabel ? `Search (${searchShortcutLabel})` : "Search"}
+                  tooltip={
+                    searchShortcutLabel
+                      ? t("Search ({shortcut})", { shortcut: searchShortcutLabel })
+                      : t("Search")
+                  }
                   tooltipSide="bottom"
                   onClick={() => {
                     setSearchPaletteOpen(true);
@@ -6061,14 +6142,14 @@ export default function Sidebar() {
                       the Environment panel/composer) with per-item visibility + reorder. */}
                   <div className={cn(ENVIRONMENT_PANEL_SURFACE_CLASS_NAME, "p-1.5")}>
                     <div className="flex items-center justify-between ps-2 pe-1 pt-0.5 pb-1">
-                      <span className={SIDEBAR_SECTION_LABEL_CLASS_NAME}>Customize</span>
+                      <span className={SIDEBAR_SECTION_LABEL_CLASS_NAME}>{t("Customize")}</span>
                       <Button
                         variant="ghost"
                         size="sm"
                         className="h-6 px-2 text-ui text-primary hover:text-primary"
                         onClick={() => setIsCustomizingNav(false)}
                       >
-                        Done
+                        {t("Done")}
                       </Button>
                     </div>
                     <DndContext
@@ -6115,7 +6196,7 @@ export default function Sidebar() {
                       <SidebarPrimaryAction
                         icon={NewThreadIcon}
                         iconClassName="size-3.5"
-                        label="New studio chat"
+                        label={t("New studio chat")}
                         onClick={handleCreateStudioChat}
                       />
                     ) : (
@@ -6150,8 +6231,8 @@ export default function Sidebar() {
                     <>
                       <SidebarIconButton
                         icon={NewThreadIcon}
-                        label="New studio chat"
-                        tooltip="New studio chat"
+                        label={t("New studio chat")}
+                        tooltip={t("New studio chat")}
                         tooltipSide="top"
                         onClick={handleCreateStudioChat}
                       />
@@ -6170,7 +6251,7 @@ export default function Sidebar() {
                       )
                     ) : (
                       <div className="px-2 pt-4 text-center text-ui text-muted-foreground/58">
-                        {threadsHydrated ? "No studio chats yet" : "Loading Studio..."}
+                        {threadsHydrated ? t("No studio chats yet") : t("Loading Studio...")}
                       </div>
                     )}
                   </SidebarMenu>
@@ -6241,18 +6322,18 @@ export default function Sidebar() {
                           label={
                             allProjectsExpanded
                               ? focusedProjectId
-                                ? "Collapse all projects except the active project"
-                                : "Collapse all projects"
-                              : "Expand all projects"
+                                ? t("Collapse all projects except the active project")
+                                : t("Collapse all projects")
+                              : t("Expand all projects")
                           }
                           className="disabled:cursor-default disabled:opacity-45"
                           onClick={handleToggleProjects}
                           tooltip={
                             allProjectsExpanded
                               ? focusedProjectId
-                                ? "Collapse all projects except the active chat's project"
-                                : "Collapse all projects"
-                              : "Expand all projects"
+                                ? t("Collapse all projects except the active chat's project")
+                                : t("Collapse all projects")
+                              : t("Expand all projects")
                           }
                           tooltipSide="bottom"
                         />
@@ -6269,9 +6350,9 @@ export default function Sidebar() {
                       />
                       <SidebarIconButton
                         icon={AddPlusIcon}
-                        label="Add project"
+                        label={t("Add project")}
                         onClick={handleStartAddProject}
-                        tooltip="Add project"
+                        tooltip={t("Add project")}
                         tooltipSide="right"
                       />
                     </>,
@@ -6313,10 +6394,10 @@ export default function Sidebar() {
                     <div
                       className="space-y-2 px-2 pt-4"
                       aria-live="polite"
-                      aria-label="Loading projects"
+                      aria-label={t("Loading projects")}
                     >
                       <div className="text-center text-ui text-muted-foreground/58">
-                        Loading projects...
+                        {t("Loading projects...")}
                       </div>
                       <div className="mx-auto grid w-full max-w-42 gap-1.5 opacity-70">
                         <div className="h-2 rounded-full bg-muted/55 animate-pulse" />
@@ -6364,7 +6445,7 @@ export default function Sidebar() {
                 >
                   <div className="flex min-w-0 flex-1 items-center gap-1 overflow-hidden">
                     <span className="truncate font-system-ui text-ui font-normal text-muted-foreground/79">
-                      Chats
+                      {t("Chats")}
                     </span>
                     <DisclosureChevron
                       open={chatSectionExpanded}
@@ -6381,14 +6462,16 @@ export default function Sidebar() {
                   />
                   <SidebarIconButton
                     icon={NewThreadIcon}
-                    label="Open new chat home"
+                    label={t("Open new chat home")}
                     onClick={(event) => {
                       event.preventDefault();
                       event.stopPropagation();
                       void handleCreateHomeChat();
                     }}
                     tooltip={
-                      newChatShortcutLabel ? `New chat (${newChatShortcutLabel})` : "New chat"
+                      newChatShortcutLabel
+                        ? t("New chat ({shortcut})", { shortcut: newChatShortcutLabel })
+                        : t("New chat")
                     }
                     tooltipSide="top"
                   />
@@ -6410,7 +6493,9 @@ export default function Sidebar() {
                         ),
                       )
                     ) : (
-                      <div className="px-2 py-2 text-ui text-muted-foreground/48">No chats yet</div>
+                      <div className="px-2 py-2 text-ui text-muted-foreground/48">
+                        {t("No chats yet")}
+                      </div>
                     )}
                     {canShowMoreChatThreads || canShowLessChatThreads ? (
                       <SidebarMenuItem className="w-full">
@@ -6424,7 +6509,7 @@ export default function Sidebar() {
                                 setChatThreadListExtraPages(chatThreadListEffectiveExtraPages + 1)
                               }
                             >
-                              <span>Show more</span>
+                              <span>{t("Show more")}</span>
                             </SidebarMenuButton>
                           ) : null}
                           {canShowLessChatThreads ? (
@@ -6444,7 +6529,7 @@ export default function Sidebar() {
                                 )
                               }
                             >
-                              <span>Show less</span>
+                              <span>{t("Show less")}</span>
                             </SidebarMenuButton>
                           ) : null}
                         </div>
@@ -6482,7 +6567,7 @@ export default function Sidebar() {
                     <SidebarLeadingIcon size="sm" tone={SIDEBAR_ROW_LABEL_TEXT_CLASS_NAME}>
                       <SidebarGlyph icon={SettingsIcon} variant="leading" />
                     </SidebarLeadingIcon>
-                    <span>Settings</span>
+                    <span>{t("Settings")}</span>
                   </SidebarMenuButton>
                 )}
                 {showDesktopUpdateButton ? (
@@ -6601,7 +6686,7 @@ export default function Sidebar() {
                 }
               >
                 <ProjectContextMenuIcon icon={FolderOpenIcon} />
-                <span>Open in Finder</span>
+                <span>{t("Open in Finder")}</span>
               </MenuItem>
               <MenuItem
                 className={PROJECT_CONTEXT_MENU_ITEM_CLASS_NAME}
@@ -6613,7 +6698,7 @@ export default function Sidebar() {
                 }
               >
                 <ProjectContextMenuIcon icon={KanbanIcon} />
-                <span>Open in Kanban</span>
+                <span>{t("Open in Kanban")}</span>
               </MenuItem>
               <MenuItem
                 className={PROJECT_CONTEXT_MENU_ITEM_CLASS_NAME}
@@ -6625,7 +6710,7 @@ export default function Sidebar() {
                 }
               >
                 <ProjectContextMenuIcon icon={CopyIcon} />
-                <span>Copy Path</span>
+                <span>{t("Copy Path")}</span>
               </MenuItem>
               <MenuSeparator />
               {projectContextMenuIsRunning ? (
@@ -6639,7 +6724,7 @@ export default function Sidebar() {
                   }
                 >
                   <ProjectContextMenuIcon icon={StopFilledIcon} />
-                  <span>Stop dev</span>
+                  <span>{t("Stop dev")}</span>
                 </MenuItem>
               ) : (
                 <MenuItem
@@ -6652,7 +6737,7 @@ export default function Sidebar() {
                   }
                 >
                   <ProjectContextMenuIcon icon={PlayIcon} />
-                  <span>Start dev</span>
+                  <span>{t("Start dev")}</span>
                 </MenuItem>
               )}
               {projectContextMenuHasOpenServer ? (
@@ -6666,7 +6751,7 @@ export default function Sidebar() {
                   }
                 >
                   <ProjectContextMenuIcon icon={ExternalLinkIcon} />
-                  <span>Open dev server</span>
+                  <span>{t("Open dev server")}</span>
                 </MenuItem>
               ) : null}
               <MenuSub keepOpenOnFocusOut>
@@ -6679,7 +6764,7 @@ export default function Sidebar() {
                       icon={spaceDisplayIcon(projectContextMenuProject.spaceId, spaces, voidSpace)}
                     />
                   </span>
-                  <span>Move to space</span>
+                  <span>{t("Move to space")}</span>
                 </MenuSubTrigger>
                 <ComposerPickerMenuSubPopup className="min-w-48">
                   <MenuRadioGroup
@@ -6714,7 +6799,7 @@ export default function Sidebar() {
                     <span className={PROJECT_CONTEXT_MENU_ICON_CLASS_NAME}>
                       <AddPlusIcon />
                     </span>
-                    <span>New space…</span>
+                    <span>{t("New space…")}</span>
                   </MenuItem>
                 </ComposerPickerMenuSubPopup>
               </MenuSub>
@@ -6726,7 +6811,7 @@ export default function Sidebar() {
                 }
               >
                 <ProjectContextMenuIcon icon={PencilIcon} />
-                <span>Edit name</span>
+                <span>{t("Edit name")}</span>
               </MenuItem>
               <MenuItem
                 className={PROJECT_CONTEXT_MENU_ITEM_CLASS_NAME}
@@ -6735,7 +6820,7 @@ export default function Sidebar() {
                 }
               >
                 <ProjectContextMenuIcon icon={FolderOpenIcon} />
-                <span>Change project path…</span>
+                <span>{t("Change project path…")}</span>
               </MenuItem>
               <MenuItem
                 className={PROJECT_CONTEXT_MENU_ITEM_CLASS_NAME}
@@ -6747,7 +6832,11 @@ export default function Sidebar() {
                 }
               >
                 <ProjectContextMenuIcon icon={PinIcon} />
-                <span>{pinActionLabel("project", projectContextMenuIsPinned)}</span>
+                <span>
+                  {t(projectContextMenuIsPinned ? "Unpin {target}" : "Pin {target}", {
+                    target: t("project"),
+                  })}
+                </span>
               </MenuItem>
               {projectContextMenuHasArchivableThreads || projectContextMenuHasAnyThreads ? (
                 <MenuSeparator />
@@ -6763,7 +6852,7 @@ export default function Sidebar() {
                   }
                 >
                   <ProjectContextMenuIcon icon={ArchiveIcon} />
-                  <span>Archive threads</span>
+                  <span>{t("Archive threads")}</span>
                 </MenuItem>
               ) : null}
               {projectContextMenuHasAnyThreads ? (
@@ -6777,7 +6866,7 @@ export default function Sidebar() {
                   }
                 >
                   <ProjectContextMenuIcon icon={Trash2} />
-                  <span>Delete threads</span>
+                  <span>{t("Delete threads")}</span>
                 </MenuItem>
               ) : null}
               <MenuSeparator />
@@ -6788,7 +6877,7 @@ export default function Sidebar() {
                 }
               >
                 <ProjectContextMenuIcon icon={XIcon} />
-                <span>Remove</span>
+                <span>{t("Remove")}</span>
               </MenuItem>
             </MenuGroup>
           </ComposerPickerMenuPopup>
@@ -6820,7 +6909,7 @@ export default function Sidebar() {
                 }}
               >
                 <SidebarContextMenuIcon icon={CustomizeIcon} />
-                <span>Customize</span>
+                <span>{t("Customize")}</span>
               </MenuItem>
             </MenuGroup>
           </ComposerPickerMenuPopup>
@@ -6839,10 +6928,10 @@ export default function Sidebar() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base">
               <PlayIcon className="size-4 text-emerald-500" />
-              Start dev
+              {t("Start dev")}
             </DialogTitle>
             <DialogDescription>
-              {projectRunDialogProject ? projectRunDialogProject.name : "Project"}
+              {projectRunDialogProject ? projectRunDialogProject.name : t("Project")}
             </DialogDescription>
           </DialogHeader>
           <DialogPanel className="space-y-2">
@@ -6850,7 +6939,7 @@ export default function Sidebar() {
               htmlFor="project-run-command-input"
               className="block text-ui-xs font-medium text-[var(--color-text-foreground-secondary)]"
             >
-              Command
+              {t("Command")}
             </label>
             <Input
               id="project-run-command-input"
@@ -6859,7 +6948,7 @@ export default function Sidebar() {
               autoComplete="off"
               autoCapitalize="off"
               autoCorrect="off"
-              placeholder="e.g. npm run dev"
+              placeholder={t("e.g. npm run dev")}
               value={projectRunDialogCommandDraft}
               aria-invalid={projectRunDialogCommandIsValid ? undefined : true}
               onChange={(event) => setProjectRunDialogCommandDraft(event.target.value)}
@@ -6871,19 +6960,19 @@ export default function Sidebar() {
               }}
             />
             {projectRunDialogCommandIsValid ? null : (
-              <p className="text-ui-sm text-destructive">Enter a command to run.</p>
+              <p className="text-ui-sm text-destructive">{t("Enter a command to run.")}</p>
             )}
           </DialogPanel>
           <DialogFooter>
             <Button variant="outline" onClick={closeProjectRunDialog}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button
               onClick={handleConfirmProjectRun}
               disabled={!projectRunDialogCommandIsValid || Boolean(projectRunDialogExistingRun)}
             >
               <PlayIcon className="size-4" />
-              Run
+              {t("Run")}
             </Button>
           </DialogFooter>
         </DialogPopup>
@@ -6917,8 +7006,8 @@ export default function Sidebar() {
 
       <RenameDialog
         open={renameProjectDialogId !== null && renameProjectDialogProject !== null}
-        title="Rename project"
-        description="Keep it short and recognizable."
+        title={t("Rename project")}
+        description={t("Keep it short and recognizable.")}
         initialValue={
           renameProjectDialogProject?.localName ?? renameProjectDialogProject?.name ?? ""
         }

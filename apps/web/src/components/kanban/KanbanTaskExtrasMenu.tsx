@@ -10,6 +10,7 @@ import {
   ComposerPickerMenuSubPopup,
 } from "~/components/chat/ComposerPickerMenuPopup";
 import { Button } from "~/components/ui/button";
+import { useT } from "~/i18n";
 import {
   Menu,
   MenuRadioGroup,
@@ -41,6 +42,7 @@ export function KanbanTaskExtrasMenu({
   envMode,
   onEnvModeChange,
 }: KanbanTaskExtrasMenuProps) {
+  const t = useT();
   return (
     <Menu>
       <MenuTrigger
@@ -49,7 +51,7 @@ export function KanbanTaskExtrasMenu({
             size="icon-sm"
             variant="chrome"
             className="shrink-0 rounded-md"
-            aria-label="Task options"
+            aria-label={t("Task options")}
           />
         }
       >
@@ -57,7 +59,7 @@ export function KanbanTaskExtrasMenu({
       </MenuTrigger>
       <ComposerPickerMenuPopup align="start">
         <MenuSub>
-          <MenuSubTrigger>Mode</MenuSubTrigger>
+          <MenuSubTrigger>{t("Mode")}</MenuSubTrigger>
           <ComposerPickerMenuSubPopup>
             <MenuRadioGroup
               value={interactionMode}
@@ -70,19 +72,19 @@ export function KanbanTaskExtrasMenu({
               <MenuRadioItem value="default">
                 <span className="inline-flex items-center gap-2">
                   <MessageCircleIcon className="size-4 shrink-0" />
-                  Default
+                  {t("Default")}
                 </span>
               </MenuRadioItem>
               <MenuRadioItem value="plan">
                 <span className="inline-flex items-center gap-2">
                   <ListTodoIcon className="size-4 shrink-0" />
-                  Plan
+                  {t("Plan")}
                 </span>
               </MenuRadioItem>
               <MenuRadioItem value="debug">
                 <span className="inline-flex items-center gap-2">
                   <BugIcon className="size-4 shrink-0" />
-                  Debug
+                  {t("Debug")}
                 </span>
               </MenuRadioItem>
             </MenuRadioGroup>
@@ -100,13 +102,13 @@ export function KanbanTaskExtrasMenu({
           <MenuRadioItem value="local">
             <span className="inline-flex items-center gap-2">
               <CentralIcon name="macbook-air" className="size-4 shrink-0" />
-              Local
+              {t("Local")}
             </span>
           </MenuRadioItem>
           <MenuRadioItem value="worktree">
             <span className="inline-flex items-center gap-2">
               <WorktreeIcon className="size-4 shrink-0" aria-hidden />
-              Worktree
+              {t("Worktree")}
             </span>
           </MenuRadioItem>
         </MenuRadioGroup>

@@ -6,6 +6,7 @@ import {
 } from "@synara/contracts";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
+import { t } from "~/i18n";
 import { useLocalStorage } from "~/hooks/useLocalStorage";
 import { decodeProjectScriptKeybindingRule } from "~/lib/projectScriptKeybindings";
 import { serverQueryKeys } from "~/lib/serverReactQuery";
@@ -260,7 +261,9 @@ export function useChatProjectScripts({
       const deletedName = activeProject.scripts.find((s) => s.id === scriptId)?.name;
       // Resolved before the `try`: a value block (`??`) inside a try body makes React
       // Compiler bail out on the whole component.
-      const deletedScriptToastTitle = `Deleted action "${deletedName ?? "Unknown"}"`;
+      const deletedScriptToastTitle = t('Deleted action "{name}"', {
+        name: deletedName ?? t("Unknown"),
+      });
 
       try {
         await persistProjectScripts({
@@ -276,8 +279,8 @@ export function useChatProjectScripts({
       } catch (error) {
         toastManager.add({
           type: "error",
-          title: "Could not delete action",
-          description: error instanceof Error ? error.message : "An unexpected error occurred.",
+          title: t("Could not delete action"),
+          description: error instanceof Error ? error.message : t("An unexpected error occurred."),
         });
       }
     },

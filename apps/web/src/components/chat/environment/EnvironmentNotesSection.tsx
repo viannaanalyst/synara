@@ -5,6 +5,7 @@
 import { THREAD_NOTES_MAX_CHARS, type ThreadId } from "@synara/contracts";
 
 import { Textarea } from "~/components/ui/textarea";
+import { useT } from "~/i18n";
 
 import { EnvironmentCollapsibleSection } from "./EnvironmentRow";
 import { useThreadNotesAutosave } from "./useThreadNotesAutosave";
@@ -18,10 +19,11 @@ export function EnvironmentNotesSection({
   notes: string;
   onChange: (threadId: ThreadId, notes: string) => Promise<void>;
 }) {
+  const t = useT();
   const autosave = useThreadNotesAutosave({ threadId, notes, onChange });
 
   return (
-    <EnvironmentCollapsibleSection label="Notepad">
+    <EnvironmentCollapsibleSection label={t("Notepad")}>
       <div className="px-2 pb-1">
         <Textarea
           // `unstyled` drops the default surface (filled background + focus ring/border tint),
@@ -35,7 +37,7 @@ export function EnvironmentNotesSection({
           onChange={autosave.onChange}
           onFocus={autosave.onFocus}
           onBlur={autosave.onBlur}
-          placeholder="Type here"
+          placeholder={t("Type here")}
           maxLength={THREAD_NOTES_MAX_CHARS}
         />
       </div>

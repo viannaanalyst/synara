@@ -15,6 +15,7 @@ import {
   type ThreadHandoffImportedMessage,
 } from "@synara/contracts";
 import { getDefaultModel } from "@synara/shared/model";
+import { t } from "../i18n";
 import { type Thread } from "../types";
 import { DEFAULT_PROVIDER_ORDER } from "../providerOrdering";
 import { stripEmbeddedAssistantSelections } from "./assistantSelections";
@@ -77,7 +78,9 @@ export function resolveThreadHandoffBadgeLabel(thread: Pick<Thread, "handoff">):
   if (!thread.handoff) {
     return null;
   }
-  return `Handoff from ${PROVIDER_DISPLAY_NAMES[thread.handoff.sourceProvider]}`;
+  return t("Handoff from {provider}", {
+    provider: PROVIDER_DISPLAY_NAMES[thread.handoff.sourceProvider],
+  });
 }
 
 // Preserve the visible source thread name when creating the destination thread.

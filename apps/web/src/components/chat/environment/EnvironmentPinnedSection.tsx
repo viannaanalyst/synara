@@ -6,6 +6,7 @@
 
 import type { MessageId, PinnedMessage } from "@synara/contracts";
 import { displayLabelFor } from "~/pinnedMessages";
+import { useT } from "~/i18n";
 
 import { EnvironmentEditableChecklistRow } from "./EnvironmentEditableChecklistRow";
 import { EnvironmentCollapsibleSection } from "./EnvironmentRow";
@@ -28,11 +29,12 @@ export function EnvironmentPinnedSection({
   onUnpin,
   onRename,
 }: EnvironmentPinnedSectionProps) {
+  const t = useT();
   if (pins.length === 0) {
     return null;
   }
   return (
-    <EnvironmentCollapsibleSection label="Pinned">
+    <EnvironmentCollapsibleSection label={t("Pinned")}>
       <ul className="flex flex-col">
         {pins.map((pin) => (
           <PinnedMessageRow
@@ -65,9 +67,10 @@ const PinnedMessageRow = function PinnedMessageRow({
   onUnpin: (messageId: MessageId) => void;
   onRename: (messageId: MessageId, label: string | null) => void;
 }) {
+  const t = useT();
   const available = text !== undefined;
   const resolvedLabel = displayLabelFor(pin, text);
-  const displayLabel = resolvedLabel.length > 0 ? resolvedLabel : "(message unavailable)";
+  const displayLabel = resolvedLabel.length > 0 ? resolvedLabel : t("(message unavailable)");
 
   return (
     <EnvironmentEditableChecklistRow
@@ -75,20 +78,20 @@ const PinnedMessageRow = function PinnedMessageRow({
       available={available}
       displayLabel={displayLabel}
       initialEditLabel={resolvedLabel}
-      editPlaceholder={available ? "" : "Label"}
-      checkboxAriaLabel={pin.done ? "Mark not done" : "Mark done"}
+      editPlaceholder={available ? "" : t("Label")}
+      checkboxAriaLabel={pin.done ? t("Mark not done") : t("Mark done")}
       labelAriaLabel={
         available
-          ? "Jump to pinned message. Press F2 to rename."
-          : "Pinned message unavailable. Press Enter to rename."
+          ? t("Jump to pinned message. Press F2 to rename.")
+          : t("Pinned message unavailable. Press Enter to rename.")
       }
       labelTitle={
         available
-          ? "Click to jump · double-click or press F2 to rename"
-          : "Click or press Enter to rename"
+          ? t("Click to jump · double-click or press F2 to rename")
+          : t("Click or press Enter to rename")
       }
-      removeLabel="Unpin message"
-      removeTooltip="Unpin"
+      removeLabel={t("Unpin message")}
+      removeTooltip={t("Unpin")}
       className="group/pin"
       removeButtonClassName="group-hover/pin:opacity-100"
       onJump={() => onJump(pin.messageId)}

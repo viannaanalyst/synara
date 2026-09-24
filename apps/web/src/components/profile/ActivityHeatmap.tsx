@@ -8,6 +8,7 @@ import { type CSSProperties } from "react";
 import type { ProfileHeatmapCell } from "@synara/contracts";
 import { cn } from "~/lib/utils";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "~/components/ui/tooltip";
+import { getLocale, useT } from "~/i18n";
 import { formatCompact, formatShortDate } from "./profileFormatting";
 
 // Single-hue ramp built from the theme accent (`--info`, defaults to blue-500) for the
@@ -30,21 +31,6 @@ export const CARD_HEATMAP_INTENSITY_CLASSES: readonly string[] = [
   "bg-[color-mix(in_srgb,var(--info)_45%,white)]",
   "bg-[color-mix(in_srgb,var(--info)_70%,white)]",
   "bg-[var(--info)]",
-];
-
-const MONTH_LABELS = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
 ];
 
 interface ActivityHeatmapProps {
@@ -71,17 +57,32 @@ interface ActivityHeatmapProps {
   /** Show a styled tooltip on hover. Leave off for the exported card (html-to-image). */
   readonly tooltip?: boolean;
   /** Noun used in the tooltip, e.g. "prompts" or "tokens". */
-  readonly tooltipUnit?: string;
+  readonly tooltipUnit?: "prompts" | "tokens";
   readonly className?: string;
 }
 
-function heatmapTooltipText(cell: ProfileHeatmapCell, unit: string): string {
+function heatmapTooltipText(
+  cell: ProfileHeatmapCell,
+  unit: "tokens" | "prompts",
+  t: ReturnType<typeof useT>,
+): string {
   const date = formatShortDate(cell.day) ?? cell.day;
   if (cell.count <= 0) {
-    return `No ${unit} on ${date}`;
+    return t("No activity on {date}", { date });
   }
-  const noun = cell.count === 1 && unit.endsWith("s") ? unit.slice(0, -1) : unit;
-  return `${formatCompact(cell.count)} ${noun} on ${date}`;
+  const noun =
+    unit === "tokens"
+      ? cell.count === 1
+        ? t("token")
+        : t("tokens")
+      : cell.count === 1
+        ? t("prompt")
+        : t("prompts");
+  return t("{value} {unit} on {date}", {
+    value: formatCompact(cell.count),
+    unit: noun,
+    date,
+  });
 }
 
 type Slot =
@@ -108,6 +109,7 @@ export function ActivityHeatmap({
   tooltipUnit: tooltipUnitProp,
   className,
 }: ActivityHeatmapProps) {
+  const t = useT();
   const cellSize = cellSizeProp ?? 13;
   const gap = gapProp ?? 3;
   const radius = radiusProp ?? 4;
@@ -152,7 +154,9 @@ export function ActivityHeatmap({
       return null;
     }
     previousMonth = monthIndex;
-    return MONTH_LABELS[monthIndex] ?? null;
+    return new Intl.DateTimeFormat(getLocale(), { month: "short", timeZone: "UTC" }).format(
+      new Date(Date.UTC(2020, monthIndex, 1)),
+    );
   });
 
   const columnCount = columns.length;
@@ -235,7 +239,7 @@ export function ActivityHeatmap({
                     key={slot.cell.day}
                     className={cellClassName}
                     style={cellStyle}
-                    title={`${slot.cell.day} · ${slot.cell.count.toLocaleString()}`}
+                    title={heatmapTooltipText(slot.cell, tooltipUnit, t)}
                   />
                 );
               }
@@ -247,7 +251,7 @@ export function ActivityHeatmap({
                     render={<div className={cellClassName} style={cellStyle} />}
                   />
                   <TooltipPopup side="top" sideOffset={6}>
-                    {heatmapTooltipText(slot.cell, tooltipUnit)}
+                    {heatmapTooltipText(slot.cell, tooltipUnit, t)}
                   </TooltipPopup>
                 </Tooltip>
               );

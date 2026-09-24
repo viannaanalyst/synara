@@ -11,6 +11,7 @@ import {
 } from "~/components/ProviderUsageMenuControl";
 import { ProviderIcon } from "~/components/ProviderIcon";
 import { MenuTrigger } from "~/components/ui/menu";
+import { useT } from "~/i18n";
 import {
   serverAllProviderUsageQueryOptions,
   serverSettingsQueryOptions,
@@ -26,6 +27,7 @@ import {
 } from "./EnvironmentRow";
 
 export function EnvironmentUsageSection({ provider }: { provider: ProviderKind }) {
+  const t = useT();
   const usageQuery = useQuery(serverAllProviderUsageQueryOptions());
   const settingsQuery = useQuery(serverSettingsQueryOptions());
   // The batch snapshot is an enrichment, not a gate: when the provider's live fetch fails or is
@@ -52,7 +54,7 @@ export function EnvironmentUsageSection({ provider }: { provider: ProviderKind }
   });
 
   return (
-    <EnvironmentLabeledSection label="Usage">
+    <EnvironmentLabeledSection label={t("Usage")}>
       <ProviderUsageMenuPopup provider={provider} model={model} align="start" showUsageLines={true}>
         <MenuTrigger
           render={

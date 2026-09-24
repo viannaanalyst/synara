@@ -1,12 +1,8 @@
 import type { PullRequestDetail, PullRequestStack, PullRequestStackEntry } from "@synara/contracts";
+import { t } from "~/i18n";
 
 export type PullRequestStackAssessment = {
-  readonly label:
-    | "Ready to merge"
-    | "Stack needs attention"
-    | "Merge status pending"
-    | "Mergeable with failing checks"
-    | "Stack merged";
+  readonly label: string;
   readonly tone: "ready" | "blocked" | "pending" | "warning" | "complete";
   readonly mergeTargetCount: number;
   readonly canAttemptMerge: boolean;
@@ -26,7 +22,7 @@ export function assessPullRequestStack(stack: PullRequestStack): PullRequestStac
   const targets = pullRequestStackTargetEntries(stack);
   if (targets.length === 0) {
     return {
-      label: "Stack merged",
+      label: t("Stack merged"),
       tone: "complete",
       mergeTargetCount: 0,
       canAttemptMerge: false,
@@ -37,22 +33,24 @@ export function assessPullRequestStack(stack: PullRequestStack): PullRequestStac
   const closed = targets.find((entry) => entry.state === "closed");
   if (closed) {
     return {
-      label: "Stack needs attention",
+      label: t("Stack needs attention"),
       tone: "blocked",
       mergeTargetCount: targets.length,
       canAttemptMerge: false,
-      blocker: `#${closed.number} is closed without being merged.`,
+      blocker: t("#{number} is closed without being merged.", {
+        number: closed.number,
+      }),
     };
   }
 
   const draft = targets.find((entry) => entry.isDraft);
   if (draft) {
     return {
-      label: "Stack needs attention",
+      label: t("Stack needs attention"),
       tone: "blocked",
       mergeTargetCount: targets.length,
       canAttemptMerge: false,
-      blocker: `#${draft.number} is still a draft.`,
+      blocker: t("#{number} is still a draft.", { number: draft.number }),
     };
   }
 
@@ -63,17 +61,17 @@ export function assessPullRequestStack(stack: PullRequestStack): PullRequestStac
   );
   if (conflicting) {
     return {
-      label: "Stack needs attention",
+      label: t("Stack needs attention"),
       tone: "blocked",
       mergeTargetCount: targets.length,
       canAttemptMerge: false,
-      blocker: `#${conflicting.number} is not ready to merge.`,
+      blocker: t("#{number} is not ready to merge.", { number: conflicting.number }),
     };
   }
 
   if (targets.some((entry) => entry.mergeStateStatus === "UNSTABLE")) {
     return {
-      label: "Mergeable with failing checks",
+      label: t("Mergeable with failing checks"),
       tone: "warning",
       mergeTargetCount: targets.length,
       canAttemptMerge: true,
@@ -89,7 +87,7 @@ export function assessPullRequestStack(stack: PullRequestStack): PullRequestStac
   );
   if (pending) {
     return {
-      label: "Merge status pending",
+      label: t("Merge status pending"),
       tone: "pending",
       mergeTargetCount: targets.length,
       canAttemptMerge: true,
@@ -98,7 +96,7 @@ export function assessPullRequestStack(stack: PullRequestStack): PullRequestStac
   }
 
   return {
-    label: "Ready to merge",
+    label: t("Ready to merge"),
     tone: "ready",
     mergeTargetCount: targets.length,
     canAttemptMerge: true,
@@ -111,10 +109,10 @@ export function pullRequestMergeBlocker(
   stackAssessment: PullRequestStackAssessment | null,
 ): string | null {
   if (detail.stackMetadataIncomplete === true) {
-    return "Stack details are temporarily unavailable. Refresh before merging.";
+    return t("Stack details are temporarily unavailable. Refresh before merging.");
   }
   if (stackAssessment?.canAttemptMerge === false) {
-    return stackAssessment.blocker ?? "This stack is not ready to merge.";
+    return stackAssessment.blocker ?? t("This stack is not ready to merge.");
   }
-  return detail.mergeability === "conflicting" ? "Resolve merge conflicts before merging" : null;
+  return detail.mergeability === "conflicting" ? t("Resolve merge conflicts before merging") : null;
 }

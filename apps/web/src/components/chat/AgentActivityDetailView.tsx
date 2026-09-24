@@ -3,8 +3,8 @@
 // Layer: Chat presentation component
 // Depends on: agentActivity.logic and ChatMarkdown
 
-import { pluralize } from "@synara/shared/text";
 import { type CSSProperties, type ReactNode } from "react";
+import { useT } from "~/i18n";
 import { BotIcon, ChevronLeftIcon } from "~/lib/icons";
 import { cn } from "~/lib/utils";
 import type { WorkLogEntry } from "../../session-logic";
@@ -46,6 +46,7 @@ export function AgentActivityDetailView({
   onImageExpand,
   timestampFormat,
 }: AgentActivityDetailViewProps) {
+  const t = useT();
   const chatTypographyStyle = getChatTranscriptTextStyle(chatFontSizePx);
   const footerTextStyle = getChatMessageFooterTextStyle(chatFontSizePx);
   const scrollStyle: CSSProperties = {
@@ -75,7 +76,7 @@ export function AgentActivityDetailView({
           onClick={onBack}
         >
           <ChevronLeftIcon className="size-3.5" />
-          <span>Back</span>
+          <span>{t("Back")}</span>
         </button>
 
         <div className="mt-3 border-b border-border/55 pb-4">
@@ -86,10 +87,10 @@ export function AgentActivityDetailView({
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                 <h2 className="truncate text-[18px] font-medium leading-6 text-foreground/92">
-                  {detail.title}
+                  {localizeActivityTitle(detail.title, t)}
                 </h2>
                 <span className="rounded-full border border-border/45 px-2 py-0.5 text-ui-xs font-medium text-muted-foreground/56">
-                  {`${detail.entries.length} ${pluralize(detail.entries.length, "update")}`}
+                  {t("{count} update", { count: detail.entries.length })}
                 </span>
               </div>
               {detail.summary ? (
@@ -102,7 +103,7 @@ export function AgentActivityDetailView({
         </div>
 
         {prompt ? (
-          <AgentActivitySection title="Prompt">
+          <AgentActivitySection title={t("Prompt")}>
             <ChatMarkdown
               text={prompt}
               cwd={markdownCwd}
@@ -114,7 +115,7 @@ export function AgentActivityDetailView({
         ) : null}
 
         {result ? (
-          <AgentActivitySection title="Result">
+          <AgentActivitySection title={t("Result")}>
             <ChatMarkdown
               text={result}
               cwd={markdownCwd}
@@ -125,7 +126,7 @@ export function AgentActivityDetailView({
           </AgentActivitySection>
         ) : null}
 
-        <AgentActivitySection title="Activity">
+        <AgentActivitySection title={t("Activity")}>
           <div className="divide-y divide-border/45">
             {detail.entries.map((entry) => (
               <AgentActivityEventRow
@@ -162,8 +163,9 @@ function AgentActivityEventRow(props: {
   onImageExpand: (preview: ExpandedImagePreview) => void;
   timestampFormat: TimestampFormat;
 }) {
+  const t = useT();
   const preview = formatAgentActivityEntryPreview(props.entry);
-  const title = formatAgentActivityEntryTitle(props.entry);
+  const title = localizeActivityTitle(formatAgentActivityEntryTitle(props.entry), t);
   const body = isReasoningUpdateWorkEntry(props.entry) ? preview : (preview ?? props.entry.detail);
 
   return (
@@ -189,6 +191,24 @@ function AgentActivityEventRow(props: {
       ) : null}
     </div>
   );
+}
+
+function localizeActivityTitle(
+  title: string,
+  t: (key: string, params?: Record<string, string | number>) => string,
+): string {
+  switch (title) {
+    case "Activity":
+      return t("Activity");
+    case "Agent task":
+      return t("Agent task");
+    case "Reasoning":
+      return t("Reasoning");
+    case "Reasoning trace":
+      return t("Reasoning trace");
+    default:
+      return title;
+  }
 }
 
 function findPrompt(entries: ReadonlyArray<WorkLogEntry>): string | null {

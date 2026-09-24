@@ -5,6 +5,7 @@ import {
   type PendingUserInputDraftAnswer,
 } from "../../pendingUserInput";
 import { CheckIcon, ChevronLeftIcon, ChevronRightIcon } from "~/lib/icons";
+import { useT } from "~/i18n";
 import { cn } from "~/lib/utils";
 import { ComposerChoiceRow } from "./ComposerChoiceRow";
 import { COMPOSER_INPUT_SURFACE_CLASS_NAME } from "./composerPickerStyles";
@@ -39,6 +40,7 @@ export function UserInputQuestionForm({
   keyboardShortcuts?: "global" | "local";
   children?: ReactNode;
 }) {
+  const t = useT();
   const progress = derivePendingUserInputProgress(questions, answers, questionIndex);
   const activeQuestion = progress.activeQuestion;
   const selectedOptionLabelSet = new Set(progress.selectedOptionLabels);
@@ -138,19 +140,22 @@ export function UserInputQuestionForm({
               disabled={!canGoBack || isResponding}
               onClick={onPrevious}
               className={NAV_BUTTON_CLASS_NAME}
-              aria-label="Previous question"
+              aria-label={t("Previous question")}
             >
               <ChevronLeftIcon className="size-3.5" />
             </button>
             <span className="px-0.5 text-ui-sm tabular-nums">
-              {progress.questionIndex + 1} of {questionCount}
+              {t("{current} of {total}", {
+                current: progress.questionIndex + 1,
+                total: questionCount,
+              })}
             </span>
             <button
               type="button"
               disabled={!canGoForward || isResponding}
               onClick={() => onAdvance()}
               className={NAV_BUTTON_CLASS_NAME}
-              aria-label="Next question"
+              aria-label={t("Next question")}
             >
               <ChevronRightIcon className="size-3.5" />
             </button>
@@ -158,7 +163,7 @@ export function UserInputQuestionForm({
         ) : null}
       </div>
       {activeQuestion.multiSelect ? (
-        <p className="mt-1 text-ui-sm text-muted-foreground/55">Select one or more.</p>
+        <p className="mt-1 text-ui-sm text-muted-foreground/55">{t("Select one or more.")}</p>
       ) : null}
       {activeQuestion.options.length > 0 ? (
         <div className="mt-2.5 space-y-0.5">
@@ -195,7 +200,7 @@ export function UserInputQuestionForm({
               isResponding && "cursor-not-allowed opacity-50",
             )}
           >
-            Cancel
+            {t("Cancel")}
           </button>
         </div>
       ) : null}

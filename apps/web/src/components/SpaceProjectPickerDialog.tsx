@@ -3,6 +3,7 @@
 
 import type { ProjectId } from "@synara/contracts";
 import { useEffect, useMemo, useState } from "react";
+import { useT } from "~/i18n";
 
 import type { Project, Space } from "~/types";
 import { CheckIcon } from "~/lib/icons";
@@ -36,6 +37,7 @@ export function SpaceProjectPickerDialog(props: {
     projectIds: ReadonlyArray<ProjectId>,
   ) => Promise<ReadonlyArray<ProjectId> | void> | ReadonlyArray<ProjectId> | void;
 }) {
+  const t = useT();
   const [query, setQuery] = useState("");
   const [selectedIds, setSelectedIds] = useState<ReadonlySet<ProjectId>>(() => new Set());
   const [submitting, setSubmitting] = useState(false);
@@ -103,15 +105,27 @@ export function SpaceProjectPickerDialog(props: {
       const failedProjectIds = (await props.onSubmit([...selectedIds])) ?? [];
       if (failedProjectIds.length > 0) {
         setSelectedIds(new Set(failedProjectIds));
+        const failureDetails = {
+          count: failedProjectIds.length,
+          space: props.targetSpace?.name ?? t("the target space"),
+        };
         setError(
-          `${failedProjectIds.length} could not be moved. Projects processed before the failure remain in ${props.targetSpace?.name ?? "the target space"}. Try again.`,
+          failedProjectIds.length === 1
+            ? t(
+                "{count} project could not be moved. Projects processed before the failure remain in {space}. Try again.",
+                failureDetails,
+              )
+            : t(
+                "{count} projects could not be moved. Projects processed before the failure remain in {space}. Try again.",
+                failureDetails,
+              ),
         );
         setSubmitting(false);
         return;
       }
       props.onOpenChange(false);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Unable to move the selected projects.");
+      setError(cause instanceof Error ? cause.message : t("Unable to move the selected projects."));
       setSubmitting(false);
     }
   };
@@ -119,26 +133,30 @@ export function SpaceProjectPickerDialog(props: {
   // Three different nothings: no projects at all, none left to move, none matching the search.
   const emptyMessage =
     props.projects.length === 0
-      ? "No projects yet."
+      ? t("No projects yet.")
       : movableProjects.length === 0
-        ? `Every project is already in ${props.targetSpace?.name ?? "this space"}.`
-        : "No matching projects.";
+        ? t("Every project is already in {space}.", {
+            space: props.targetSpace?.name ?? t("this space"),
+          })
+        : t("No matching projects.");
 
   return (
     <Dialog open={props.open} onOpenChange={props.onOpenChange}>
       <DialogPopup className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Move projects to {props.targetSpace?.name ?? "space"}</DialogTitle>
+          <DialogTitle>
+            {t("Move projects to {space}", { space: props.targetSpace?.name ?? t("space") })}
+          </DialogTitle>
           <DialogDescription>
-            Choose existing projects. Their chats and pinned state move with them.
+            {t("Choose existing projects. Their chats and pinned state move with them.")}
           </DialogDescription>
         </DialogHeader>
         <DialogPanel className="space-y-3">
           <SearchInput
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search projects"
-            aria-label="Search projects"
+            placeholder={t("Search projects")}
+            aria-label={t("Search projects")}
           />
           <div className="max-h-72 space-y-3 overflow-y-auto">
             {candidates.length === 0 ? (
@@ -209,14 +227,14 @@ export function SpaceProjectPickerDialog(props: {
         </DialogPanel>
         <DialogFooter>
           <Button variant="ghost" onClick={() => props.onOpenChange(false)} disabled={submitting}>
-            Cancel
+            {t("Cancel")}
           </Button>
           <Button onClick={() => void submit()} disabled={selectedIds.size === 0 || submitting}>
             {submitting
-              ? "Moving…"
+              ? t("Moving…")
               : selectedIds.size === 0
-                ? "Move projects"
-                : `Move ${selectedIds.size} project${selectedIds.size === 1 ? "" : "s"}`}
+                ? t("Move projects")
+                : t("Move {count} project", { count: selectedIds.size })}
           </Button>
         </DialogFooter>
       </DialogPopup>

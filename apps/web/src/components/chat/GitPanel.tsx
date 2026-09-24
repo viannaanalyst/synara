@@ -14,6 +14,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 
 import { useTheme } from "~/hooks/useTheme";
+import { useT } from "~/i18n";
 import {
   buildFileDiffRenderKey,
   getRenderablePatch,
@@ -196,6 +197,7 @@ export function GitPanel(props: {
   projectId: ProjectId | null;
   onClose?: () => void;
 }) {
+  const t = useT();
   const queryClient = useQueryClient();
   const { resolvedTheme } = useTheme();
   const theme = resolvedTheme as "light" | "dark";
@@ -288,21 +290,23 @@ export function GitPanel(props: {
   const hasChanges = stagedFiles.length > 0 || unstagedFiles.length > 0;
 
   if (!cwd) {
-    return <PanelStateMessage>Source control is unavailable for this thread.</PanelStateMessage>;
+    return (
+      <PanelStateMessage>{t("Source control is unavailable for this thread.")}</PanelStateMessage>
+    );
   }
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col">
       <DockPaneHeader
-        title="Source control"
+        title={t("Source control")}
         onClose={props.onClose}
-        closeLabel="Close source control"
+        closeLabel={t("Close source control")}
         actions={
           <IconButton
             size="icon-xs"
             variant="ghost"
-            label="Refresh changes"
-            tooltip="Refresh changes"
+            label={t("Refresh changes")}
+            tooltip={t("Refresh changes")}
             className={DOCK_HEADER_ICON_BUTTON_CLASS}
             onClick={refresh}
           >
@@ -314,8 +318,9 @@ export function GitPanel(props: {
       <div className="flex max-h-[48%] min-h-0 shrink-0 flex-col gap-2 overflow-auto px-1.5 py-2">
         {truncated ? (
           <DiffTruncationWarning>
-            Synara stopped reading source-control changes at the diff size limit. Some files or
-            changes may be missing; bulk actions only affect the files shown.
+            {t(
+              "Synara stopped reading source-control changes at the diff size limit. Some files or changes may be missing; bulk actions only affect the files shown.",
+            )}
           </DiffTruncationWarning>
         ) : null}
         {error ? (
@@ -324,38 +329,40 @@ export function GitPanel(props: {
           </Alert>
         ) : null}
         {!error && isLoading && !hasChanges ? (
-          <p className="px-1.5 py-1 text-ui-sm text-muted-foreground/70">Loading changes...</p>
+          <p className="px-1.5 py-1 text-ui-sm text-muted-foreground/70">
+            {t("Loading changes...")}
+          </p>
         ) : null}
         {!error && !isLoading && !hasChanges ? (
           <p className="px-1.5 py-2 text-center text-ui text-muted-foreground/70">
-            No changes in the working tree.
+            {t("No changes in the working tree.")}
           </p>
         ) : null}
         {hasChanges ? (
           <>
             <GitFileSection
-              title="Staged"
-              emptyLabel="No staged changes."
+              title={t("Staged")}
+              emptyLabel={t("No staged changes.")}
               files={stagedFiles}
               theme={theme}
               section="staged"
               selectedPath={selectedResolved?.section === "staged" ? selectedPath : null}
-              actionLabel="Unstage file"
-              actionAllLabel="Unstage all"
+              actionLabel={t("Unstage file")}
+              actionAllLabel={t("Unstage all")}
               actionIcon="unstage"
               actionDisabled={mutating}
               onSelect={selectStaged}
               onAction={unstage}
             />
             <GitFileSection
-              title="Changes"
-              emptyLabel="No unstaged changes."
+              title={t("Changes")}
+              emptyLabel={t("No unstaged changes.")}
               files={unstagedFiles}
               theme={theme}
               section="unstaged"
               selectedPath={selectedResolved?.section === "unstaged" ? selectedPath : null}
-              actionLabel="Stage file"
-              actionAllLabel="Stage all"
+              actionLabel={t("Stage file")}
+              actionAllLabel={t("Stage all")}
               actionIcon="stage"
               actionDisabled={mutating}
               onSelect={selectUnstaged}
@@ -373,7 +380,9 @@ export function GitPanel(props: {
             theme={theme}
           />
         ) : (
-          <PanelStateMessage density="compact">Select a file to view its diff.</PanelStateMessage>
+          <PanelStateMessage density="compact">
+            {t("Select a file to view its diff.")}
+          </PanelStateMessage>
         )}
       </div>
     </div>

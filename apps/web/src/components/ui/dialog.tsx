@@ -1,6 +1,7 @@
 "use client";
 
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
+import { useT } from "~/i18n";
 import { XIcon } from "~/lib/icons";
 import { cn } from "~/lib/utils";
 import { Button, dialogActionButtonClassName } from "~/components/ui/button";
@@ -81,6 +82,7 @@ function DialogPopup({
   showCloseButton?: boolean;
   bottomStickOnMobile?: boolean;
 }) {
+  const t = useT();
   const showCloseButton = showCloseButtonProp ?? true;
   const bottomStickOnMobile = bottomStickOnMobileProp ?? true;
   return (
@@ -102,7 +104,7 @@ function DialogPopup({
           {children}
           {showCloseButton && (
             <DialogPrimitive.Close
-              aria-label="Close"
+              aria-label={t("Close")}
               className="absolute end-2 top-2"
               render={<Button size="icon-sm" variant="ghost" />}
             >

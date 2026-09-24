@@ -2,6 +2,8 @@
 // Purpose: Derive OpenUsage-style quota pace indicators from percent-used windows.
 // Used by Settings usage meters to show reserve/deficit and projected run-out timing.
 
+import { t } from "~/i18n";
+
 export type UsagePaceStatus = "ahead" | "on-track" | "behind";
 
 export interface UsagePaceSummary {
@@ -55,7 +57,9 @@ function reserveOrDeficitText(deltaPercent: number): string | null {
   if (rounded <= 0) {
     return null;
   }
-  return deltaPercent > 0 ? `${rounded}% in deficit` : `${rounded}% in reserve`;
+  return deltaPercent > 0
+    ? t("{percent}% in deficit", { percent: rounded })
+    : t("{percent}% in reserve", { percent: rounded });
 }
 
 export function deriveUsagePace(input: {
@@ -90,14 +94,18 @@ export function deriveUsagePace(input: {
   const deltaPercent = usedPercent - expectedUsedPercent;
   const amountText = reserveOrDeficitText(deltaPercent);
 
-  let etaText = status === "behind" ? null : "Lasts until reset";
+  let etaText = status === "behind" ? null : t("Lasts until reset");
   if (status === "behind") {
     const ratePercentPerMs = projectedUsedPercent / durationMs;
     const etaMs = ratePercentPerMs > 0 ? (100 - usedPercent) / ratePercentPerMs : 0;
     const remainingMs = resetMs - nowMs;
     const durationText = etaMs > 0 && etaMs < remainingMs ? compactDuration(etaMs) : null;
     etaText =
-      usedPercent >= 100 ? "Limit reached" : durationText ? `Runs out in ${durationText}` : null;
+      usedPercent >= 100
+        ? t("Limit reached")
+        : durationText
+          ? t("Runs out in {duration}", { duration: durationText })
+          : null;
   }
 
   return {

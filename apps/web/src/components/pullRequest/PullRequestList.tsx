@@ -11,6 +11,7 @@ import { pullRequestListEntryKey, type PullRequestListGroup } from "./pullReques
 import { PullRequestRow } from "./PullRequestRow";
 import { PR_FINE_TEXT_CLASS_NAME, PR_QUIET_INK_CLASS_NAME } from "./pullRequestText";
 import { cn } from "~/lib/utils";
+import { useT } from "~/i18n";
 
 export const PullRequestList = function PullRequestList({
   entries,
@@ -33,6 +34,7 @@ export const PullRequestList = function PullRequestList({
   onSelect: (entry: PullRequestListEntry) => void;
   onTogglePinned: (entry: PullRequestListEntry) => void;
 }) {
+  const t = useT();
   const showProjectTitle = showProjectTitleProp ?? false;
   const showDiffColors = showDiffColorsProp ?? true;
   const renderEntry = (entry: PullRequestListEntry) => (
@@ -65,7 +67,7 @@ export const PullRequestList = function PullRequestList({
               groupIndex > 0 && "pt-2.5",
             )}
           >
-            {group.label}
+            {t(group.label)}
           </h2>,
           ...group.entries.map(renderEntry),
         ])}

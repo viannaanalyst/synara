@@ -10,6 +10,7 @@ import { FaLinkedinIn } from "react-icons/fa6";
 import type { ProfileStats, ProfileTokenStats } from "@synara/contracts";
 import { Dialog, DialogPopup, DialogTitle } from "~/components/ui/dialog";
 import { CopyIcon, DownloadIcon } from "~/lib/icons";
+import { t as translate, useT } from "~/i18n";
 import { cn } from "~/lib/utils";
 import { SHARE_CARD_HEIGHT, SHARE_CARD_WIDTH, ShareCard } from "./ShareCard";
 import {
@@ -46,6 +47,7 @@ export function ShareDialog({
   open,
   onOpenChange,
 }: ShareDialogProps) {
+  const t = useT();
   const cardRef = useRef<HTMLDivElement>(null);
   const previewRef = useRef<HTMLDivElement>(null);
   const [busy, setBusy] = useState<ShareTarget | "copy" | "save" | null>(null);
@@ -131,9 +133,9 @@ export function ShareDialog({
       .then((blob) => {
         if (blob) {
           downloadBlob(blob, `synara-stats-${stats.timezone.today}.png`);
-          setStatus("Saved PNG to your downloads.");
+          setStatus(t("Saved PNG to your downloads."));
         } else {
-          setStatus("Could not render the image.");
+          setStatus(t("Could not render the image."));
         }
       })
       .finally(() => {
@@ -147,7 +149,7 @@ export function ShareDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogPopup className="sm:max-w-[560px]">
-        <DialogTitle className="text-center text-xl">Share your activity</DialogTitle>
+        <DialogTitle className="text-center text-xl">{t("Share your activity")}</DialogTitle>
         <div className="mt-5 flex flex-col items-center gap-7 px-2 pb-3">
           <div
             ref={previewRef}
@@ -175,8 +177,8 @@ export function ShareDialog({
 
           <div className="flex flex-wrap items-start justify-center gap-x-6 gap-y-4">
             <ShareButton
-              label="Copy"
-              ariaLabel="Copy stat card"
+              label={t("Copy")}
+              ariaLabel={t("Copy stat card")}
               busy={busy === "copy"}
               disabled={actionsDisabled}
               onClick={() => void handleCopy()}
@@ -208,8 +210,8 @@ export function ShareDialog({
               <SiReddit className="size-5" />
             </ShareButton>
             <ShareButton
-              label="Save"
-              ariaLabel="Save stat card"
+              label={t("Save")}
+              ariaLabel={t("Save stat card")}
               busy={busy === "save"}
               disabled={actionsDisabled}
               onClick={() => void handleSave()}
@@ -230,22 +232,22 @@ export function ShareDialog({
 function copyStatusMessage(result: CopyResult): string {
   switch (result) {
     case "copied":
-      return "Copied image to clipboard.";
+      return translate("Copied image to clipboard.");
     case "render-failed":
-      return "Could not render the image.";
+      return translate("Could not render the image.");
     case "clipboard-unavailable":
-      return "Image copy unavailable. Use Save instead.";
+      return translate("Image copy unavailable. Use Save instead.");
   }
 }
 
 function shareStatusMessage(result: CopyResult): string {
   switch (result) {
     case "copied":
-      return "Image copied to clipboard — paste it into your post.";
+      return translate("Image copied to clipboard — paste it into your post.");
     case "render-failed":
-      return "Composer opened. Use Save to attach the image.";
+      return translate("Composer opened. Use Save to attach the image.");
     case "clipboard-unavailable":
-      return "Composer opened. Image copy unavailable; use Save to attach.";
+      return translate("Composer opened. Image copy unavailable; use Save to attach.");
   }
 }
 
@@ -259,13 +261,14 @@ interface ShareButtonProps {
 }
 
 function ShareButton({ label, ariaLabel, busy, disabled, onClick, children }: ShareButtonProps) {
+  const t = useT();
   return (
     <div className="flex flex-col items-center gap-2">
       <button
         type="button"
         onClick={onClick}
         disabled={disabled}
-        aria-label={ariaLabel ?? `Share to ${label}`}
+        aria-label={ariaLabel ?? t("Share to {target}", { target: label })}
         className={cn(
           "flex size-14 items-center justify-center rounded-full bg-foreground text-background transition-opacity",
           disabled ? (busy ? "opacity-70" : "opacity-35") : "hover:opacity-90",

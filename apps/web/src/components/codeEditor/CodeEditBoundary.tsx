@@ -2,9 +2,11 @@ import { EditProvider, Virtualizer, type CreateEditor } from "@pierre/diffs/reac
 import { useEffect, useState, type ReactNode } from "react";
 
 import { PanelStateMessage } from "../chat/PanelStateMessage";
+import { useT } from "~/i18n";
 import { loadPierreEdit, resetPierreEditLoad } from "./pierreEdit";
 
 export function CodeEditBoundary(props: { children: ReactNode }) {
+  const t = useT();
   const [createEditor, setCreateEditor] = useState<CreateEditor<undefined> | null>(null);
   const [loadFailed, setLoadFailed] = useState(false);
   const [attempt, setAttempt] = useState(0);
@@ -35,13 +37,13 @@ export function CodeEditBoundary(props: { children: ReactNode }) {
   if (loadFailed) {
     return (
       <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-2 p-4 text-center">
-        <p className="text-ui text-muted-foreground">Could not load the editor.</p>
+        <p className="text-ui text-muted-foreground">{t("Could not load the editor.")}</p>
         <button
           type="button"
           className="rounded-md border border-border px-2.5 py-1 text-ui-sm text-foreground hover:bg-[var(--color-background-elevated-secondary)]"
           onClick={() => setAttempt((previous) => previous + 1)}
         >
-          Retry
+          {t("Retry")}
         </button>
       </div>
     );
@@ -50,7 +52,7 @@ export function CodeEditBoundary(props: { children: ReactNode }) {
   if (!createEditor) {
     return (
       <PanelStateMessage density="compact" fill="flex">
-        <p>Loading editor...</p>
+        <p>{t("Loading editor...")}</p>
       </PanelStateMessage>
     );
   }

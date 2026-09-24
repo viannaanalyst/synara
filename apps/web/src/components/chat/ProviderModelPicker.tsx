@@ -7,6 +7,7 @@ import { type ModelSlug, type ProviderKind, type ServerProviderStatus } from "@s
 import { resolveSelectableModel } from "@synara/shared/model";
 import * as Schema from "effect/Schema";
 import { useDeferredValue, useEffect, useRef, useState } from "react";
+import { useT } from "~/i18n";
 import { type ProviderPickerKind, PROVIDER_OPTIONS } from "../../session-logic";
 import { appHistory } from "../../appNavigation";
 import { formatProviderModelOptionName } from "../../providerModelOptions";
@@ -56,28 +57,31 @@ function isAvailableProviderOption(option: (typeof PROVIDER_OPTIONS)[number]): o
   return option.available;
 }
 
-export function resolveLiveProviderAvailability(provider: ServerProviderStatus | undefined): {
+export function resolveLiveProviderAvailability(
+  provider: ServerProviderStatus | undefined,
+  t: (key: string) => string = (key) => key,
+): {
   disabled: boolean;
   label: string | null;
 } {
   if (!provider) {
     return {
       disabled: true,
-      label: "Checking",
+      label: t("Checking"),
     };
   }
 
   if (!provider.available) {
     return {
       disabled: true,
-      label: provider.authStatus === "unauthenticated" ? "Sign in" : "Unavailable",
+      label: provider.authStatus === "unauthenticated" ? t("Sign in") : t("Unavailable"),
     };
   }
 
   if (provider.authStatus === "unauthenticated") {
     return {
       disabled: true,
-      label: "Sign in",
+      label: t("Sign in"),
     };
   }
 
@@ -219,6 +223,7 @@ type ProviderModelMenuItemsProps = {
 export const ProviderModelMenuItems = function ProviderModelMenuItems(
   props: ProviderModelMenuItemsProps,
 ) {
+  const t = useT();
   const { onAfterSelection } = props;
   const [modelSearchQuery, setModelSearchQuery] = useState("");
   const [cursorFavoriteModelSlugs, setCursorFavoriteModelSlugs] = useLocalStorage(
@@ -278,7 +283,7 @@ export const ProviderModelMenuItems = function ProviderModelMenuItems(
   const renderModelRadioGroup = (provider: ProviderKind) => {
     if (props.loadingModelProviders?.[provider]) {
       return (
-        <div className="space-y-2 px-2 py-2" aria-label="Loading models">
+        <div className="space-y-2 px-2 py-2" aria-label={t("Loading models")}>
           {Array.from({ length: 6 }, (_, index) => (
             <div key={index} className="flex items-center gap-2 rounded-md px-2 py-1.5">
               <Skeleton className="size-3.5 rounded-full" />
@@ -339,8 +344,8 @@ export const ProviderModelMenuItems = function ProviderModelMenuItems(
       ) : (
         <div className="px-2 py-2 text-muted-foreground text-ui leading-snug">
           {provider === "pi" && normalizedModelSearchQuery.length === 0
-            ? "No Pi models found"
-            : "No matches"}
+            ? t("No Pi models found")
+            : t("No matches")}
         </div>
       );
 
@@ -374,7 +379,7 @@ export const ProviderModelMenuItems = function ProviderModelMenuItems(
 
     return (
       <PickerPanelShell
-        searchPlaceholder="Search models or providers"
+        searchPlaceholder={t("Search models or providers")}
         query={modelSearchQuery}
         onQueryChange={setModelSearchQuery}
         stopSearchKeyPropagation
@@ -398,7 +403,7 @@ export const ProviderModelMenuItems = function ProviderModelMenuItems(
       {visibleAvailableProviderOptions.map((option) => {
         const OptionIcon = PROVIDER_ICON_COMPONENT_BY_PROVIDER[option.value];
         const liveProvider = props.providers?.find((entry) => entry.provider === option.value);
-        const availability = resolveLiveProviderAvailability(liveProvider);
+        const availability = resolveLiveProviderAvailability(liveProvider, t);
         if (availability.disabled) {
           return (
             <MenuItem key={option.value} disabled>
@@ -440,7 +445,7 @@ export const ProviderModelMenuItems = function ProviderModelMenuItems(
       {visibleAvailableProviderOptions.length > 0 ? <MenuSeparator /> : null}
       <MenuItem onClick={() => appHistory.push("/settings?section=providers")}>
         <PlusIcon aria-hidden="true" className="size-3 shrink-0 text-muted-foreground/85" />
-        <span>Add Providers</span>
+        <span>{t("Add Providers")}</span>
       </MenuItem>
     </>
   );
@@ -490,6 +495,7 @@ type ProviderModelPickerProps = {
 };
 
 export const ProviderModelPicker = function ProviderModelPicker(props: ProviderModelPickerProps) {
+  const t = useT();
   const { onOpenChange, onSelectionCommitted, open } = props;
   const [uncontrolledMenuOpen, setUncontrolledMenuOpen] = useState(false);
   const selectionCommitTimerRef = useRef<number | null>(null);
@@ -573,7 +579,7 @@ export const ProviderModelPicker = function ProviderModelPicker(props: ProviderM
           {!isMenuOpen ? (
             <TooltipPopup side="top" sideOffset={6} variant="picker">
               <span className="inline-flex items-center gap-2 px-1 py-0.5">
-                <span>Change model</span>
+                <span>{t("Change model")}</span>
                 <ShortcutKbd
                   shortcutLabel={props.shortcutLabel}
                   className="h-4 min-w-4 px-1 text-ui-2xs text-muted-foreground"

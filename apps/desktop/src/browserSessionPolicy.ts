@@ -18,6 +18,7 @@ import {
   deriveChromeUserAgent,
 } from "@synara/shared/browserSession";
 import { LOCAL_HTML_PREVIEW_SCHEME, LocalHtmlPreviewRegistry } from "./localHtmlPreviewProtocol";
+import { t } from "./desktopI18n";
 
 export const BROWSER_SESSION_PARTITION = "persist:synara-browser";
 const MAX_WEB_MCP_POLICY_ENTRIES = 512;
@@ -224,7 +225,7 @@ export class BrowserSessionPolicy {
       fullscreenable: false,
       autoHideMenuBar: true,
       skipTaskbar: true,
-      title: "Sign in",
+      title: t("Sign in"),
       ...(parent ? { parent } : {}),
       webPreferences: {
         partition: BROWSER_SESSION_PARTITION,

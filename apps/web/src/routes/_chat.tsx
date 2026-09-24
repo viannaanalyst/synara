@@ -52,6 +52,7 @@ import {
 } from "~/components/ui/sidebar";
 import type { SidebarResizableOptions } from "~/components/ui/sidebar";
 import { cn, getNavigatorPlatform, isMacPlatform } from "~/lib/utils";
+import { useT } from "~/i18n";
 
 const EMPTY_KEYBINDINGS: ResolvedKeybindingsConfig = [];
 const THREAD_SIDEBAR_WIDTH_STORAGE_KEY = "chat_thread_sidebar_width";
@@ -72,6 +73,7 @@ const MAINTENANCE_EVENT_STALE_MS = 5 * 60 * 1000;
 type MaintenanceToastId = ReturnType<typeof toastManager.add>;
 
 function ThreadRetentionMaintenanceToast() {
+  const t = useT();
   const toastIdRef = useRef<MaintenanceToastId | null>(null);
 
   useEffect(() => {
@@ -93,8 +95,8 @@ function ThreadRetentionMaintenanceToast() {
       if (state === "started") {
         toastIdRef.current = toastManager.add({
           type: "loading",
-          title: "Archiving old chats...",
-          description: "Preparing background maintenance.",
+          title: t("Archiving old chats..."),
+          description: t("Preparing background maintenance."),
           timeout: 0,
           data: { allowCrossThreadVisibility: true },
         });
@@ -106,18 +108,21 @@ function ThreadRetentionMaintenanceToast() {
           toastIdRef.current ??
           toastManager.add({
             type: "loading",
-            title: "Archiving old chats...",
+            title: t("Archiving old chats..."),
             timeout: 0,
             data: { allowCrossThreadVisibility: true },
           });
         toastIdRef.current = toastId;
         toastManager.update(toastId, {
           type: "loading",
-          title: "Archiving old chats...",
+          title: t("Archiving old chats..."),
           description:
             totalCount && totalCount > 0
-              ? `${archivedCount ?? 0} of ${totalCount} chats archived.`
-              : `${archivedCount ?? 0} chats archived.`,
+              ? t("Archived chats: {archived} of {total}.", {
+                  archived: archivedCount ?? 0,
+                  total: totalCount,
+                })
+              : t("Archived chats: {count}.", { count: archivedCount ?? 0 }),
           timeout: 0,
           data: { allowCrossThreadVisibility: true },
         });
@@ -130,8 +135,8 @@ function ThreadRetentionMaintenanceToast() {
         if (toastId) {
           toastManager.update(toastId, {
             type: "warning",
-            title: "Chat maintenance paused",
-            description: error ?? "Old chats will be retried later.",
+            title: t("Chat maintenance paused"),
+            description: error ?? t("Old chats will be retried later."),
             timeout: 6000,
             data: { allowCrossThreadVisibility: true },
           });
@@ -139,8 +144,8 @@ function ThreadRetentionMaintenanceToast() {
         }
         toastManager.add({
           type: "warning",
-          title: "Chat maintenance paused",
-          description: error ?? "Old chats will be retried later.",
+          title: t("Chat maintenance paused"),
+          description: error ?? t("Old chats will be retried later."),
           timeout: 6000,
           data: { allowCrossThreadVisibility: true },
         });
@@ -152,16 +157,18 @@ function ThreadRetentionMaintenanceToast() {
       if (!toastId) return;
       toastManager.update(toastId, {
         type: "success",
-        title: "Old chats archived",
+        title: t("Old chats archived"),
         description:
           archivedCount && archivedCount > 0
-            ? `${archivedCount} old chats moved to Settings → Archived, where you can restore them.`
-            : "No old chats needed archiving.",
+            ? t("Old chats archived: {count}. Restore them from Settings → Archived.", {
+                count: archivedCount,
+              })
+            : t("No old chats needed archiving."),
         timeout: 3500,
         data: { allowCrossThreadVisibility: true },
       });
     });
-  }, []);
+  }, [t]);
 
   return null;
 }

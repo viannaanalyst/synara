@@ -4,6 +4,7 @@
 // Exports: unblockThreadFromClient, describeThreadUnblockResult, isProviderDeliveryReconciliationConflict, type ThreadUnblockResult
 
 import type { NativeApi, ThreadId } from "@synara/contracts";
+import { t } from "~/i18n";
 
 /** Code the server returns when a blocker no longer matches the requested state. */
 export const PROVIDER_DELIVERY_RECONCILIATION_CONFLICT_CODE =
@@ -89,22 +90,26 @@ export function describeThreadUnblockResult(result: ThreadUnblockResult): Thread
     case "unblocked":
       return {
         type: "success",
-        title: "Thread unblocked",
-        description:
+        title: t("Thread unblocked"),
+        description: t(
           "Messages skipped while it was blocked were retried. Resend your last message if the thread stays idle.",
+        ),
       };
     case "resolved-elsewhere":
       return {
         type: "info",
-        title: "Blocker already cleared",
-        description: "Another session settled the failure. Resend your last message to continue.",
+        title: t("Blocker already cleared"),
+        description: t(
+          "Another session settled the failure. Resend your last message to continue.",
+        ),
       };
     case "already-clear":
       return {
         type: "info",
-        title: "Thread is already unblocked",
-        description:
+        title: t("Thread is already unblocked"),
+        description: t(
           "No provider failure is holding it back. Resend your last message to continue.",
+        ),
       };
   }
 }

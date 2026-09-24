@@ -12,6 +12,7 @@ import { ArrowDownIcon, ArrowUpIcon, SearchIcon, XIcon } from "~/lib/icons";
 import { cn } from "~/lib/utils";
 import { MUTED_LABEL_TEXT_CLASS_NAME } from "~/surfaceStyles";
 import { type TimelineEntry } from "../../session-logic";
+import { useT } from "~/i18n";
 import {
   collectThreadFindDocuments,
   createThreadFindDocumentTextCache,
@@ -47,6 +48,7 @@ export function ThreadFindBar({
   onHighlightChange,
   onActiveMatchChange,
 }: ThreadFindBarProps) {
+  const t = useT();
   const inputRef = useRef<HTMLInputElement>(null);
   const matchesRef = useRef<ThreadFindMatch[]>([]);
   const activeIndexRef = useRef(0);
@@ -183,8 +185,8 @@ export function ThreadFindBar({
           value={query}
           onChange={(event) => handleQueryChange(event.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Search chat..."
-          aria-label="Find in thread"
+          placeholder={t("Search chat...")}
+          aria-label={t("Find in thread")}
           autoComplete="off"
           spellCheck={false}
           // The unlayered utility overrides the global `input { font-family: mono }`
@@ -195,7 +197,7 @@ export function ThreadFindBar({
         <IconButton
           onClick={onClose}
           className={FIND_STEP_BUTTON_CLASS_NAME}
-          label="Close find (Esc)"
+          label={t("Close find (Esc)")}
         >
           <XIcon className="size-4" />
         </IconButton>
@@ -207,7 +209,7 @@ export function ThreadFindBar({
               onClick={() => handleStep("previous")}
               disabled={matchCount === 0}
               className={FIND_STEP_BUTTON_CLASS_NAME}
-              label="Previous match (Shift+Enter)"
+              label={t("Previous match (Shift+Enter)")}
             >
               <ArrowUpIcon className="size-4" />
             </IconButton>
@@ -215,7 +217,7 @@ export function ThreadFindBar({
               onClick={() => handleStep("next")}
               disabled={matchCount === 0}
               className={FIND_STEP_BUTTON_CLASS_NAME}
-              label="Next match (Enter)"
+              label={t("Next match (Enter)")}
             >
               <ArrowDownIcon className="size-4" />
             </IconButton>
@@ -229,8 +231,11 @@ export function ThreadFindBar({
           >
             {hasQuery
               ? matchCount === 0
-                ? "No results"
-                : `${safeIndex + 1} / ${matchCount} results`
+                ? t("No results")
+                : t("{current} / {total} results", {
+                    current: safeIndex + 1,
+                    total: matchCount,
+                  })
               : ""}
           </span>
         </div>

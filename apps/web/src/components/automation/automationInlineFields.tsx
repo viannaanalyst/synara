@@ -9,6 +9,7 @@ import type { AutomationMode, AutomationWorktreeMode } from "@synara/contracts";
 import { CentralIcon } from "~/lib/central-icons";
 import { useCommitDraft, useCommitDraftBlurHandlers } from "~/lib/automationInlineDraft";
 import { cn } from "~/lib/utils";
+import { useT } from "~/i18n";
 
 export type SelectOption = {
   readonly value: string;
@@ -158,6 +159,7 @@ export function InlineToggle({
   readonly disabled?: boolean | undefined;
   readonly title?: string | undefined;
 }) {
+  const t = useT();
   return (
     <button
       type="button"
@@ -166,7 +168,7 @@ export function InlineToggle({
       onClick={() => onChange(!value)}
       className={cn(INLINE_CONTROL_CLASS, "min-w-[3rem]")}
     >
-      {value ? "On" : "Off"}
+      {value ? t("On") : t("Off")}
     </button>
   );
 }

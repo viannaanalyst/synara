@@ -5,6 +5,7 @@
 
 import { type ProviderKind, type ServerProviderStatus, type ThreadId } from "@synara/contracts";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { t } from "~/i18n";
 
 import type { Project } from "../../types";
 import {
@@ -59,15 +60,6 @@ export interface UseComposerVoiceControllerResult {
   cancelComposerVoiceRecording: () => void;
 }
 
-const DEFAULT_FAILURE_COPY: ComposerVoiceFailureCopy = {
-  transcriptionFailedTitle: "Voice transcription failed",
-  fallbackDescription: "The voice note could not be transcribed.",
-  authExpiredTitle: "Sign in to ChatGPT again",
-  authExpiredDescription:
-    "Voice transcription uses your ChatGPT session in Codex. That session was rejected, so sign in again there and retry.",
-  refreshActionLabel: "Refresh status",
-};
-
 // Keeps the async transcription lifecycle out of ChatView so the component can stay UI-focused.
 export function useComposerVoiceController(
   options: UseComposerVoiceControllerOptions,
@@ -100,7 +92,13 @@ export function useComposerVoiceController(
   const voiceProviderRef = useRef<ProviderKind>(selectedProvider);
   const voiceRecordingStartedAtRef = useRef<number | null>(null);
   const failureCopy = {
-    ...DEFAULT_FAILURE_COPY,
+    transcriptionFailedTitle: t("Voice transcription failed"),
+    fallbackDescription: t("The voice note could not be transcribed."),
+    authExpiredTitle: t("Sign in to ChatGPT again"),
+    authExpiredDescription: t(
+      "Voice transcription uses your ChatGPT session in Codex. That session was rejected, so sign in again there and retry.",
+    ),
+    refreshActionLabel: t("Refresh status"),
     ...failureCopyOverrides,
   };
   // A transcription can resolve immediately after navigation commits, so stamp
@@ -186,21 +184,21 @@ export function useComposerVoiceController(
     if (activeProviderStatus?.authStatus === "unauthenticated") {
       toastManager.add({
         type: "error",
-        title: "Sign in to ChatGPT in Codex before using voice notes.",
+        title: t("Sign in to ChatGPT in Codex before using voice notes."),
       });
       return;
     }
     if (!canStartVoiceNotes) {
       toastManager.add({
         type: "error",
-        title: "Voice notes require a ChatGPT-authenticated Codex session.",
+        title: t("Voice notes require a ChatGPT-authenticated Codex session."),
       });
       return;
     }
     if (pendingUserInputCount > 0) {
       toastManager.add({
         type: "error",
-        title: "Answer plan questions before recording a voice note.",
+        title: t("Answer plan questions before recording a voice note."),
       });
       return;
     }
@@ -222,7 +220,7 @@ export function useComposerVoiceController(
       }
       toastManager.add({
         type: "error",
-        title: "Could not start recording",
+        title: t("Could not start recording"),
         description: describeVoiceRecordingStartError(error),
       });
     }
@@ -240,7 +238,7 @@ export function useComposerVoiceController(
     if (!api) {
       toastManager.add({
         type: "error",
-        title: "Voice transcription is unavailable right now.",
+        title: t("Voice transcription is unavailable right now."),
       });
       void cancelVoiceRecording();
       return Promise.resolve();
@@ -266,7 +264,7 @@ export function useComposerVoiceController(
         if (!payload) {
           toastManager.add({
             type: "warning",
-            title: "No audio was captured.",
+            title: t("No audio was captured."),
           });
           return;
         }

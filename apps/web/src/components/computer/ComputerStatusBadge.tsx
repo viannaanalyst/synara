@@ -1,5 +1,6 @@
 import type { ThreadComputerState } from "@synara/contracts";
 import { cn } from "~/lib/utils";
+import { useT } from "~/i18n";
 import { resolveComputerHealthBadge } from "../ComputerPanel.logic";
 
 /** Health takes precedence over ownership; Stop remains a separate control. */
@@ -12,6 +13,7 @@ export function ComputerStatusBadge({
   agentActive: boolean;
   visibleDesktop: boolean;
 }) {
+  const t = useT();
   const healthBadge = resolveComputerHealthBadge(state?.health);
   return (
     <>
@@ -36,23 +38,29 @@ export function ComputerStatusBadge({
       ) : state?.inputPause ? (
         <span
           className="text-ui-xs text-amber-600 dark:text-amber-400"
-          title={state.inputPause.message}
+          title={t(state.inputPause.message)}
         >
-          Input paused
+          {t("Input paused")}
         </span>
       ) : state?.controlledByOtherThread ? (
         <span
           className="flex shrink-0 items-center gap-1 text-ui-xs text-muted-foreground"
-          title="Only one conversation can drive the desktop at a time. This one can still watch it."
+          title={t(
+            "Only one conversation can drive the desktop at a time. This one can still watch it.",
+          )}
         >
           <span className="size-1.5 rounded-full bg-current" />
-          {state.controlOwnerLabel ?? "Another conversation"} is controlling
+          {t("Desktop control is with {owner}.", {
+            owner: state.controlOwnerLabel ?? t("Another conversation"),
+          })}
         </span>
       ) : agentActive ? (
         <span className="flex shrink-0 items-center gap-1 text-ui-xs text-emerald-600 dark:text-emerald-400">
           <span className="size-1.5 animate-pulse rounded-full bg-current motion-reduce:animate-none" />
-          {state?.activity ??
-            (visibleDesktop ? "Agent controlling this computer" : "Agent controlling")}
+          {t(
+            state?.activity ??
+              (visibleDesktop ? "Agent controlling this computer" : "Agent controlling"),
+          )}
         </span>
       ) : null}
     </>

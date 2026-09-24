@@ -6,6 +6,7 @@ import { Button } from "~/components/ui/button";
 import { Checkbox } from "~/components/ui/checkbox";
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "~/components/ui/collapsible";
 import { Input } from "~/components/ui/input";
+import { useT } from "~/i18n";
 import { isElectron } from "~/env";
 import { disclosureChevronClassName } from "~/lib/disclosureMotion";
 import { ChevronRightIcon } from "~/lib/icons";
@@ -24,6 +25,7 @@ export function ProjectImportProjectCard(props: {
   readonly onSelectionChange: (keys: readonly string[], checked: boolean) => void;
   readonly onPickerBusyChange: (busy: boolean) => void;
 }) {
+  const t = useT();
   const { project } = props;
   const [expanded, setExpanded] = useState(false);
   const [pickerError, setPickerError] = useState<string | null>(null);
@@ -41,19 +43,21 @@ export function ProjectImportProjectCard(props: {
       const path = await ensureNativeApi().dialogs.pickFolder();
       if (path) props.onWorkspaceRootChange(path);
     } catch (error) {
-      setPickerError(error instanceof Error ? error.message : "Could not open the folder picker.");
+      setPickerError(
+        error instanceof Error ? error.message : t("Could not open the folder picker."),
+      );
     } finally {
       props.onPickerBusyChange(false);
     }
   };
 
-  const conversationLabel = `${project.threads.length} conversation${project.threads.length === 1 ? "" : "s"}`;
+  const conversationLabel = t("{count} conversation", { count: project.threads.length });
 
   return (
     <Collapsible open={expanded} onOpenChange={setExpanded} className="text-ui sm:text-ui">
       <div className="flex items-center gap-2.5 px-3 py-2">
         <Checkbox
-          aria-label={`Select ${project.title}`}
+          aria-label={t("Select {name}", { name: project.title })}
           checked={availableKeys.length > 0 && selectedCount === availableKeys.length}
           indeterminate={selectedCount > 0 && selectedCount < availableKeys.length}
           disabled={props.disabled || availableKeys.length === 0}
@@ -61,7 +65,7 @@ export function ProjectImportProjectCard(props: {
         />
         <CollapsibleTrigger
           className="flex min-w-0 flex-1 cursor-pointer items-center gap-2.5 text-left"
-          aria-label={`Conversations in ${project.title}`}
+          aria-label={t("Conversations in {name}", { name: project.title })}
         >
           <span className="min-w-0 flex-1">
             <span className="block truncate font-medium">{project.title}</span>
@@ -75,10 +79,10 @@ export function ProjectImportProjectCard(props: {
           <span className={cn("shrink-0 text-right text-muted-foreground", "text-ui-sm")}>
             <span className="block">{conversationLabel}</span>
             {!project.directoryExists ? (
-              <span className="block text-warning">Folder unavailable</span>
+              <span className="block text-warning">{t("Folder unavailable")}</span>
             ) : (
               <span className="block text-muted-foreground/70">
-                {project.existingProjectId ? "Adds to existing" : "New project"}
+                {t(project.existingProjectId ? "Adds to existing" : "New project")}
               </span>
             )}
           </span>
@@ -95,13 +99,14 @@ export function ProjectImportProjectCard(props: {
       {!project.directoryExists ? (
         <div className="space-y-2 px-3 pb-2.5 ps-[2.375rem]">
           <p className={cn("text-muted-foreground", "text-ui-sm")}>
-            The folder moved or is missing. Link its new location to continue these conversations,
-            or import the history alone.
+            {t(
+              "The folder moved or is missing. Link its new location to continue these conversations, or import the history alone.",
+            )}
           </p>
           <div className="flex gap-2">
             <Input
-              aria-label={`New folder for ${project.title}`}
-              placeholder="Optional: existing folder path"
+              aria-label={t("New folder for {name}", { name: project.title })}
+              placeholder={t("Optional: existing folder path")}
               value={props.workspaceRoot}
               onChange={(event) => props.onWorkspaceRootChange(event.target.value)}
               disabled={props.disabled}
@@ -115,7 +120,7 @@ export function ProjectImportProjectCard(props: {
                 disabled={props.disabled}
                 onClick={() => void browse()}
               >
-                Browse
+                {t("Browse")}
               </Button>
             ) : null}
           </div>
@@ -131,8 +136,8 @@ export function ProjectImportProjectCard(props: {
           {visibleThreads.length === 0 ? (
             <p className={cn("py-1.5 text-muted-foreground", "text-ui-sm")}>
               {project.threads.length
-                ? "All conversations are archived. Enable archived conversations to select them."
-                : "Links the existing folder without adding conversations."}
+                ? t("All conversations are archived. Enable archived conversations to select them.")
+                : t("Links the existing folder without adding conversations.")}
             </p>
           ) : null}
           {visibleThreads.map((thread) => {
@@ -144,17 +149,19 @@ export function ProjectImportProjectCard(props: {
                   checked={imported || props.selected.has(key)}
                   disabled={props.disabled || imported}
                   onCheckedChange={(checked) => props.onSelectionChange([key], checked)}
-                  aria-label={`Import ${thread.title || "Untitled conversation"}`}
+                  aria-label={t("Import {title}", {
+                    title: thread.title || t("Untitled conversation"),
+                  })}
                 />
                 <ProviderIcon provider={thread.provider} className="size-3.5 shrink-0" />
                 <span className="min-w-0 flex-1 truncate" title={thread.title}>
-                  {thread.title || "Untitled conversation"}
+                  {thread.title || t("Untitled conversation")}
                 </span>
                 <span className={cn("shrink-0 text-muted-foreground", "text-ui-sm")}>
                   {imported
-                    ? "Already present"
+                    ? t("Already present")
                     : thread.archived
-                      ? "Archived"
+                      ? t("Archived")
                       : new Date(thread.updatedAt).toLocaleDateString()}
                 </span>
               </label>

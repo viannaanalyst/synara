@@ -19,6 +19,7 @@ import { Autocomplete as AutocompletePrimitive } from "@base-ui/react/autocomple
 import type { ProjectContentMatch, ProjectEntry } from "@synara/contracts";
 import { PROJECT_SEARCH_CONTENT_MIN_QUERY_LENGTH } from "@synara/contracts";
 import { normalizeWorkspaceEntrySearchQuery } from "@synara/shared/searchQuery";
+import { useT } from "~/i18n";
 
 import {
   prewarmProjectSearchIndex,
@@ -79,31 +80,38 @@ const MUTED_TEXT_CLASS = "text-zinc-400 dark:text-zinc-500";
 const EMPTY_FILE_ENTRIES: readonly ProjectEntry[] = [];
 const EMPTY_SNIPPET_MATCHES: readonly ProjectContentMatch[] = [];
 
-const MODE_COPY: Record<
-  WorkspaceSearchPaletteMode,
-  {
-    groupLabel: string;
-    placeholder: string;
-    prompt: string;
-    noResults: string;
-    error: string;
-  }
-> = {
-  files: {
-    groupLabel: "Files",
-    placeholder: "Search files",
-    prompt: "Type to search for files",
-    noResults: "No matching files",
-    error: "File search failed. Try again.",
-  },
-  snippets: {
-    groupLabel: "Matches",
-    placeholder: "Search code",
-    prompt: `Type at least ${PROJECT_SEARCH_CONTENT_MIN_QUERY_LENGTH} characters to search code`,
-    noResults: "No matches",
-    error: "Code search failed. Try again.",
-  },
+type WorkspaceSearchCopy = {
+  groupLabel: string;
+  placeholder: string;
+  prompt: string;
+  noResults: string;
+  error: string;
 };
+
+function resolveWorkspaceSearchCopy(
+  mode: WorkspaceSearchPaletteMode,
+  t: ReturnType<typeof useT>,
+): WorkspaceSearchCopy {
+  if (mode === "files") {
+    return {
+      groupLabel: t("Files"),
+      placeholder: t("Search files"),
+      prompt: t("Type to search for files"),
+      noResults: t("No matching files"),
+      error: t("File search failed. Try again."),
+    };
+  }
+
+  return {
+    groupLabel: t("Matches"),
+    placeholder: t("Search code"),
+    prompt: t("Type at least {count} characters to search code", {
+      count: PROJECT_SEARCH_CONTENT_MIN_QUERY_LENGTH,
+    }),
+    noResults: t("No matches"),
+    error: t("Code search failed. Try again."),
+  };
+}
 
 interface WorkspaceSearchPaletteProps {
   open: boolean;
@@ -280,7 +288,8 @@ export function WorkspaceSearchPalette(props: WorkspaceSearchPaletteProps) {
 }
 
 function WorkspaceSearchPaletteContent(props: WorkspaceSearchPaletteProps) {
-  const copy = MODE_COPY[props.mode];
+  const t = useT();
+  const copy = resolveWorkspaceSearchCopy(props.mode, t);
 
   const [query, setQuery] = useState("");
   const trimmedQuery = query.trim();

@@ -20,6 +20,7 @@ import type {
 import type { BrowserHistoryEntry } from "../browserStateStore";
 import type { BrowserAnnotationDraft } from "../lib/browserAnnotations";
 import { resolveDesktopDipRectFromCssRect } from "@synara/shared/desktopChrome";
+import { t } from "~/i18n";
 
 export function resolveBrowserRuntimePresentation(input: {
   native: boolean;
@@ -453,24 +454,24 @@ export function formatBrowserAnnotationActionError(
 ): string {
   const message = error instanceof Error ? error.message : "";
   if (/not (?:currently )?visible|must be visible/i.test(message)) {
-    return "Bring the browser tab into view before annotating.";
+    return t("Bring the browser tab into view before annotating.");
   }
   if (/document.*not ready|page.*not ready|still loading/i.test(message)) {
-    return "This page is still loading. Try annotating again in a moment.";
+    return t("This page is still loading. Try annotating again in a moment.");
   }
   if (/guest.*(?:missing|unavailable|not found)|tab.*not found/i.test(message)) {
-    return "This browser tab isn't available for annotation.";
+    return t("This browser tab isn't available for annotation.");
   }
   if (/session.*active|already.*annotat/i.test(message)) {
-    return "Annotation mode is already active.";
+    return t("Annotation mode is already active.");
   }
   if (action === "cancel") {
-    return "Couldn't close annotation mode. Try again.";
+    return t("Couldn't close annotation mode. Try again.");
   }
   if (action === "sync") {
-    return "Couldn't refresh annotation markers.";
+    return t("Couldn't refresh annotation markers.");
   }
-  return "Couldn't start annotation mode. Try again.";
+  return t("Couldn't start annotation mode. Try again.");
 }
 
 // Hides about:blank from the address bar so new tabs behave like real browsers.
@@ -608,14 +609,14 @@ export function resolveBrowserChromeStatus(input: {
   if (!input.hasActiveTab) {
     return {
       tone: "default",
-      label: input.workspaceReady ? "No tabs open" : "Starting browser...",
+      label: input.workspaceReady ? t("No tabs open") : t("Starting browser..."),
     };
   }
 
   if (input.activeTabStatus === "suspended") {
     return {
       tone: "default",
-      label: "Restoring tab...",
+      label: t("Restoring tab..."),
     };
   }
 

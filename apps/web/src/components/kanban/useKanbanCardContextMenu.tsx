@@ -26,6 +26,7 @@ import { useKanbanUiStore } from "../../kanbanUiStore";
 import { readNativeApi } from "../../nativeApi";
 import { useStore } from "../../store";
 import { useTerminalStateStore } from "../../terminalStateStore";
+import { t } from "~/i18n";
 import { getThreadFromState } from "../../threadDerivation";
 import { toastManager } from "../ui/toast";
 import { isKanbanDraftOnlyCard, type KanbanCard } from "./kanban.logic";
@@ -132,10 +133,10 @@ export function useKanbanCardContextMenu(): KanbanCardContextMenuController {
         [
           ...(isThreadActionCard
             ? [
-                { id: "rename", label: "Rename thread", icon: THREAD_CONTEXT_MENU_ICONS.rename },
+                { id: "rename", label: t("Rename thread"), icon: THREAD_CONTEXT_MENU_ICONS.rename },
                 {
                   id: "toggle-pin",
-                  label: pinActionLabel("thread", card.thread?.isPinned ?? false),
+                  label: pinActionLabel(t("thread"), card.thread?.isPinned ?? false, t),
                   icon: THREAD_CONTEXT_MENU_ICONS.pin,
                 },
               ]
@@ -144,7 +145,7 @@ export function useKanbanCardContextMenu(): KanbanCardContextMenuController {
             ? [
                 {
                   id: "copy-path",
-                  label: "Copy Path",
+                  label: t("Copy Path"),
                   icon: THREAD_CONTEXT_MENU_ICONS.copy,
                   separatorBefore: true,
                 },
@@ -154,7 +155,7 @@ export function useKanbanCardContextMenu(): KanbanCardContextMenuController {
             ? [
                 {
                   id: "copy-thread-id",
-                  label: "Copy Thread ID",
+                  label: t("Copy Thread ID"),
                   icon: THREAD_CONTEXT_MENU_ICONS.copy,
                 },
               ]
@@ -163,7 +164,7 @@ export function useKanbanCardContextMenu(): KanbanCardContextMenuController {
             ? [
                 {
                   id: "archive",
-                  label: "Archive",
+                  label: t("Archive"),
                   icon: THREAD_CONTEXT_MENU_ICONS.archive,
                   separatorBefore: true,
                 },
@@ -171,7 +172,7 @@ export function useKanbanCardContextMenu(): KanbanCardContextMenuController {
             : []),
           {
             id: "delete",
-            label: deletesOnlyDraft ? "Delete draft" : "Delete",
+            label: deletesOnlyDraft ? t("Delete draft") : t("Delete"),
             icon: THREAD_CONTEXT_MENU_ICONS.delete,
             destructive: true,
             separatorBefore: !isThreadActionCard,
@@ -250,8 +251,8 @@ export function useKanbanCardContextMenu(): KanbanCardContextMenuController {
         if (outcome === "unavailable") {
           toastManager.add({
             type: "error",
-            title: "Not connected",
-            description: "Reconnect to the server before renaming.",
+            title: t("Not connected"),
+            description: t("Reconnect to the server before renaming."),
           });
           return;
         }

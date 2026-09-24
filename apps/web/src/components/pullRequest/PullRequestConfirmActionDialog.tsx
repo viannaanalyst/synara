@@ -20,6 +20,7 @@ import {
 import { Button } from "~/components/ui/button";
 import { toastManager } from "~/components/ui/toast";
 import { copyTextToClipboard } from "~/hooks/useCopyToClipboard";
+import { t, useT } from "~/i18n";
 
 export type PullRequestConfirmAction =
   | { kind: "merge"; method: PullRequestMergeMethod }
@@ -28,13 +29,13 @@ export type PullRequestConfirmAction =
 export function copyPullRequestLink(url: string): void {
   void copyTextToClipboard(url)
     .then(() => {
-      toastManager.add({ type: "success", title: "Pull request link copied" });
+      toastManager.add({ type: "success", title: t("Pull request link copied") });
     })
     .catch((error: unknown) => {
       toastManager.add({
         type: "error",
-        title: "Could not copy pull request link",
-        description: error instanceof Error ? error.message : "Clipboard access failed.",
+        title: t("Could not copy pull request link"),
+        description: error instanceof Error ? error.message : t("Clipboard access failed."),
       });
     });
 }
@@ -43,11 +44,17 @@ function confirmTitle(
   action: PullRequestConfirmAction,
   stack: PullRequestStack | null,
   stackMergeTargetCount: number,
+  translate: typeof t,
 ): string {
-  if (action.kind === "close") return "Close pull request?";
+  if (action.kind === "close") return translate("Close pull request?");
   return stack
-    ? `Merge ${stackMergeTargetCount} ${stackMergeTargetCount === 1 ? "pull request" : "pull requests"}?`
-    : "Merge pull request?";
+    ? translate(
+        stackMergeTargetCount === 1
+          ? "Merge {count} pull request?"
+          : "Merge {count} pull requests?",
+        { count: stackMergeTargetCount },
+      )
+    : translate("Merge pull request?");
 }
 
 function confirmDescription(
@@ -55,16 +62,27 @@ function confirmDescription(
   number: number,
   baseBranch: string | null,
   stack: PullRequestStack | null,
+  translate: typeof t,
 ): string {
-  if (action.kind === "close") return `This will close #${number} without merging it.`;
-  if (stack) {
-    return `This will atomically merge every open pull request through #${number} into ${stack.baseBranch} using ${action.method}.${
-      stack.position < stack.size
-        ? " Pull requests above it will remain open and GitHub will retarget them."
-        : ""
-    }`;
+  if (action.kind === "close") {
+    return translate("This will close #{number} without merging it.", { number });
   }
-  return `This will merge #${number}${baseBranch ? ` into ${baseBranch}` : ""} using ${action.method}.`;
+  if (stack) {
+    const description = translate(
+      "This will atomically merge every open pull request through #{number} into {branch} using {method}.",
+      { number, branch: stack.baseBranch, method: translate(action.method) },
+    );
+    return stack.position < stack.size
+      ? `${description} ${translate("Pull requests above it will remain open and GitHub will retarget them.")}`
+      : description;
+  }
+  const params = { number, method: translate(action.method) };
+  return baseBranch
+    ? translate("This will merge #{number} into {branch} using {method}.", {
+        ...params,
+        branch: baseBranch,
+      })
+    : translate("This will merge #{number} using {method}.", params);
 }
 
 export function PullRequestConfirmActionDialog({
@@ -87,6 +105,7 @@ export function PullRequestConfirmActionDialog({
   onConfirm: (action: PullRequestConfirmAction) => void;
   onDismiss: () => void;
 }) {
+  const translate = useT();
   // Keep rendering the last action while the dialog animates out, so the copy does not
   // flip to another action's text once the owner resets `action` to null.
   const [shownAction, setShownAction] = useState(action);
@@ -115,15 +134,15 @@ export function PullRequestConfirmActionDialog({
           <>
             <AlertDialogHeader>
               <AlertDialogTitle>
-                {confirmTitle(shown, stack, stackMergeTargetCount)}
+                {confirmTitle(shown, stack, stackMergeTargetCount, translate)}
               </AlertDialogTitle>
               <AlertDialogDescription>
-                {confirmDescription(shown, number, baseBranch, stack)}
+                {confirmDescription(shown, number, baseBranch, stack, translate)}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogClose render={<Button variant="outline" size="sm" />}>
-                Cancel
+                {translate("Cancel")}
               </AlertDialogClose>
               <Button
                 size="sm"
@@ -134,7 +153,11 @@ export function PullRequestConfirmActionDialog({
                   onConfirm(shown);
                 }}
               >
-                {shown.kind === "close" ? "Close" : stack ? "Merge stack" : "Merge"}
+                {shown.kind === "close"
+                  ? translate("Close")
+                  : stack
+                    ? translate("Merge stack")
+                    : translate("Merge")}
               </Button>
             </AlertDialogFooter>
           </>

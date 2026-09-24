@@ -4,6 +4,8 @@
 // leaves the device.
 // Layer: web profile feature.
 
+import { t } from "~/i18n";
+
 // Square output edge in CSS px. 160 covers the largest avatar (size-20 / share card) at 2x
 // without storing anything close to the original photo.
 const AVATAR_MAX_EDGE = 160;
@@ -19,7 +21,7 @@ function readFileAsDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(typeof reader.result === "string" ? reader.result : "");
-    reader.onerror = () => reject(new AvatarImageError("Could not read the selected file."));
+    reader.onerror = () => reject(new AvatarImageError(t("Could not read the selected file.")));
     reader.readAsDataURL(file);
   });
 }
@@ -28,7 +30,7 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => resolve(img);
-    img.onerror = () => reject(new AvatarImageError("That file isn't a readable image."));
+    img.onerror = () => reject(new AvatarImageError(t("That file isn't a readable image.")));
     img.src = src;
   });
 }
@@ -36,7 +38,7 @@ function loadImage(src: string): Promise<HTMLImageElement> {
 // Resize + center-crop to a square and re-encode (WebP, JPEG fallback) at low quality.
 export async function compressAvatarImage(file: File): Promise<string> {
   if (!file.type.startsWith("image/")) {
-    throw new AvatarImageError("Please choose an image file.");
+    throw new AvatarImageError(t("Please choose an image file."));
   }
 
   const sourceUrl = await readFileAsDataUrl(file);
@@ -44,7 +46,7 @@ export async function compressAvatarImage(file: File): Promise<string> {
 
   const sourceEdge = Math.min(img.naturalWidth || img.width, img.naturalHeight || img.height);
   if (sourceEdge <= 0) {
-    throw new AvatarImageError("That image has no pixels.");
+    throw new AvatarImageError(t("That image has no pixels."));
   }
   const edge = Math.min(AVATAR_MAX_EDGE, sourceEdge);
 
@@ -53,7 +55,7 @@ export async function compressAvatarImage(file: File): Promise<string> {
   canvas.height = edge;
   const ctx = canvas.getContext("2d");
   if (!ctx) {
-    throw new AvatarImageError("Image compression isn't supported in this browser.");
+    throw new AvatarImageError(t("Image compression isn't supported in this browser."));
   }
 
   const sx = ((img.naturalWidth || img.width) - sourceEdge) / 2;
@@ -66,7 +68,7 @@ export async function compressAvatarImage(file: File): Promise<string> {
     : canvas.toDataURL("image/jpeg", AVATAR_QUALITY);
 
   if (dataUrl.length > AVATAR_MAX_DATA_URL_LENGTH) {
-    throw new AvatarImageError("That image is too large even after compression.");
+    throw new AvatarImageError(t("That image is too large even after compression."));
   }
   return dataUrl;
 }

@@ -8,6 +8,7 @@ import { useEffect, useMemo, useRef } from "react";
 
 import { useAppSettings } from "~/appSettings";
 import { useStableValue } from "~/hooks/useStableValue";
+import { useT } from "~/i18n";
 import { toastManager } from "~/components/ui/toast";
 import { useComposerDraftStore } from "../../composerDraftStore";
 import { useKanbanUiStore } from "../../kanbanUiStore";
@@ -36,6 +37,7 @@ const OPTIMISTIC_DISPATCH_TIMEOUT_MS = 30_000;
 const OPTIMISTIC_DISPATCH_EXPIRY_CHECK_MS = 5_000;
 
 export function useKanbanBoard(): KanbanBoard {
+  const t = useT();
   const { settings } = useAppSettings();
   // Memoized so the selector's internal reference cache survives across
   // renders (mirroring Sidebar.tsx); rebuilding it inline each render returned
@@ -143,12 +145,14 @@ export function useKanbanBoard(): KanbanBoard {
       if (outcome === "failed") {
         toastManager.add({
           type: "error",
-          title: "Task didn't start",
-          description: thread.session?.lastError ?? `${entry.title} was moved back to Draft.`,
+          title: t("Task didn't start"),
+          description:
+            thread.session?.lastError ??
+            t("{title} was moved back to Draft.", { title: entry.title }),
         });
       }
     }
-  }, [optimisticDispatchByThreadId, threads]);
+  }, [optimisticDispatchByThreadId, t, threads]);
 
   // Safety net: a dispatch whose runtime signal never arrives reverts to Draft
   // instead of leaving a ghost card In Progress forever. Keyed on a boolean so
@@ -178,13 +182,13 @@ export function useKanbanBoard(): KanbanBoard {
         }
         toastManager.add({
           type: "error",
-          title: "Task didn't start",
-          description: `${entry.title} was moved back to Draft.`,
+          title: t("Task didn't start"),
+          description: t("{title} was moved back to Draft.", { title: entry.title }),
         });
       }
     }, OPTIMISTIC_DISPATCH_EXPIRY_CHECK_MS);
     return () => window.clearInterval(intervalId);
-  }, [hasOptimisticDispatches]);
+  }, [hasOptimisticDispatches, t]);
 
   // Project composer drafts down to the few fields the board needs. Empty drafts
   // are dropped so routine composer churn (focus, selections, modes) rarely

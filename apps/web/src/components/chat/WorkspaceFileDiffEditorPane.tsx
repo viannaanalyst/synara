@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useRef, useState } from "react";
+import { useT } from "~/i18n";
 
 import { useWorkspaceFileEditorSession } from "~/hooks/useWorkspaceFileEditorSession";
 import type { DiffEditBaseRev } from "~/lib/diffEditBaseRev";
@@ -32,6 +33,7 @@ export interface WorkspaceFileDiffEditorPaneProps {
 }
 
 export function WorkspaceFileDiffEditorPane(props: WorkspaceFileDiffEditorPaneProps) {
+  const t = useT();
   const [renderSideBySide, setRenderSideBySide] = useState(true);
   const historyControlsRef = useRef<CodeEditHistoryControls | null>(null);
   const paneRef = useRef<HTMLDivElement | null>(null);
@@ -65,7 +67,7 @@ export function WorkspaceFileDiffEditorPane(props: WorkspaceFileDiffEditorPanePr
     originalQuery.error instanceof Error
       ? originalQuery.error.message
       : originalQuery.error
-        ? "Could not read the base revision of this file."
+        ? t("Could not read the base revision of this file.")
         : null;
   const editable = session.canEdit && !originalTruncated;
 
@@ -79,8 +81,8 @@ export function WorkspaceFileDiffEditorPane(props: WorkspaceFileDiffEditorPanePr
         filePath={props.filePath}
         title={
           originalQuery.data?.resolvedRev
-            ? `vs ${originalQuery.data.resolvedRev.slice(0, 7)}`
-            : "Diff"
+            ? t("vs {revision}", { revision: originalQuery.data.resolvedRev.slice(0, 7) })
+            : t("Diff")
         }
         dirty={session.dirty}
         saving={session.state.saving}
@@ -99,8 +101,12 @@ export function WorkspaceFileDiffEditorPane(props: WorkspaceFileDiffEditorPanePr
             <ChatHeaderIconButton
               type="button"
               tone="plain"
-              label={renderSideBySide ? "Switch to inline diff" : "Switch to side-by-side diff"}
-              title={renderSideBySide ? "Switch to inline diff" : "Switch to side-by-side diff"}
+              label={
+                renderSideBySide ? t("Switch to inline diff") : t("Switch to side-by-side diff")
+              }
+              title={
+                renderSideBySide ? t("Switch to inline diff") : t("Switch to side-by-side diff")
+              }
               onClick={() => setRenderSideBySide((previous) => !previous)}
             >
               {renderSideBySide ? (
@@ -121,7 +127,9 @@ export function WorkspaceFileDiffEditorPane(props: WorkspaceFileDiffEditorPanePr
         />
       ) : originalTruncated ? (
         <div className="shrink-0 border-b border-border bg-[var(--color-background-elevated-secondary)] px-3 py-1.5 text-ui-sm text-muted-foreground">
-          The base revision of this file is too large to load in full, so this diff is read-only.
+          {t(
+            "The base revision of this file is too large to load in full, so this diff is read-only.",
+          )}
         </div>
       ) : null}
       {(session.loadError ?? originalError) ? (
@@ -136,7 +144,7 @@ export function WorkspaceFileDiffEditorPane(props: WorkspaceFileDiffEditorPanePr
         </PanelStateMessage>
       ) : session.loading || originalQuery.isLoading || !session.canEdit ? (
         <PanelStateMessage density="compact" fill="flex">
-          <p>Loading diff...</p>
+          <p>{t("Loading diff...")}</p>
         </PanelStateMessage>
       ) : (
         <CodeDiffEditorPane
@@ -156,14 +164,14 @@ export function WorkspaceFileDiffEditorPane(props: WorkspaceFileDiffEditorPanePr
       )}
       <WorkspaceFileEditorDiscardDialog
         open={session.pendingDiscard !== null}
-        title="Discard unsaved changes?"
+        title={t("Discard unsaved changes?")}
         description={
           session.pendingDiscard === "reload"
-            ? "Reloading replaces the editor contents with what is currently on disk."
-            : "Closing the diff editor drops the changes you have not saved yet."
+            ? t("Reloading replaces the editor contents with what is currently on disk.")
+            : t("Closing the diff editor drops the changes you have not saved yet.")
         }
         confirmLabel={
-          session.pendingDiscard === "reload" ? "Reload and discard" : "Discard changes"
+          session.pendingDiscard === "reload" ? t("Reload and discard") : t("Discard changes")
         }
         onOpenChange={(open) => {
           if (!open) {

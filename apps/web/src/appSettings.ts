@@ -32,6 +32,8 @@ import {
   DEFAULT_APP_SNAP_SHORTCUT,
 } from "@synara/shared/appSnapShortcut";
 import { useLocalStorage } from "./hooks/useLocalStorage";
+import { APP_SETTINGS_STORAGE_KEY } from "./appSettingsStorage";
+import { AppLocale, DEFAULT_APP_LOCALE } from "./i18n/locale";
 import { EnvMode } from "./components/BranchToolbar.logic";
 import { normalizeCursorModelVariantBaseId } from "./cursorModelVariants";
 import { formatProviderModelOptionName, type ProviderModelOption } from "./providerModelOptions";
@@ -65,7 +67,7 @@ import {
   normalizeChatWidthMode as normalizeChatWidthModeValue,
 } from "./lib/chatWidth";
 
-const APP_SETTINGS_STORAGE_KEY = "synara:app-settings:v1";
+export { APP_SETTINGS_STORAGE_KEY } from "./appSettingsStorage";
 const SERVER_SETTINGS_MIGRATION_STORAGE_KEY = "synara:server-settings-migrated:v1";
 const MAX_CUSTOM_MODEL_COUNT = 32;
 export const MAX_CUSTOM_MODEL_LENGTH = 256;
@@ -383,6 +385,10 @@ export const AppSettingsSchema = Schema.Struct({
     withDefaults(() => DEFAULT_SIDEBAR_THREAD_SORT_ORDER),
   ),
   timestampFormat: TimestampFormat.pipe(withDefaults(() => DEFAULT_TIMESTAMP_FORMAT)),
+  // Local UI language. English is the source language; pt-BR is translated through
+  // the keyed catalog in ./i18n. Kept local (not server-backed) so each browser
+  // profile can choose independently.
+  locale: AppLocale.pipe(withDefaults(() => DEFAULT_APP_LOCALE)),
   customCodexModels: Schema.Array(Schema.String).pipe(withDefaults(() => [])),
   customClaudeModels: Schema.Array(Schema.String).pipe(withDefaults(() => [])),
   customCursorModels: Schema.Array(Schema.String).pipe(withDefaults(() => [])),

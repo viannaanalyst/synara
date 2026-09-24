@@ -7,6 +7,7 @@ import type { EditorId, ResolvedKeybindingsConfig } from "@synara/contracts";
 import type { CSSProperties } from "react";
 
 import { useCopyPathToClipboard } from "~/hooks/useCopyToClipboard";
+import { useT } from "~/i18n";
 import { CopyIcon } from "~/lib/icons";
 import { cn } from "~/lib/utils";
 
@@ -41,6 +42,7 @@ const EDITED_FILE_EDITOR_ORDER: ReadonlyArray<EditorId> = [
 ];
 
 export function EditedFileRow(props: EditedFileRowProps) {
+  const t = useT();
   const copyPathToClipboard = useCopyPathToClipboard();
   const { absolutePath, relativePath } = resolveEditedFilePathTargets(
     props.filePath,
@@ -60,7 +62,7 @@ export function EditedFileRow(props: EditedFileRowProps) {
     >
       <button
         type="button"
-        aria-label={`Review changes to ${props.filePath}`}
+        aria-label={t("Review changes to {filePath}", { filePath: props.filePath })}
         className="group/file-row flex min-w-0 flex-1 items-center gap-2 self-stretch bg-transparent py-1 pl-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
         onClick={props.onReview}
       >
@@ -97,8 +99,8 @@ export function EditedFileRow(props: EditedFileRowProps) {
         {...(props.availableEditors ? { availableEditors: props.availableEditors } : {})}
         openInTarget={launcherTarget}
         menuEditorOrder={EDITED_FILE_EDITOR_ORDER}
-        groupLabel={`Open ${props.filePath}`}
-        menuLabel={`Open ${props.filePath} options`}
+        groupLabel={t("Open {filePath}", { filePath: props.filePath })}
+        menuLabel={t("Open {filePath} options", { filePath: props.filePath })}
         additionalMenuItems={
           <>
             <MenuItem
@@ -108,7 +110,7 @@ export function EditedFileRow(props: EditedFileRowProps) {
               }}
             >
               <CopyIcon className={MENU_ICON_CLASS_NAME} />
-              <span>Copy absolute path</span>
+              <span>{t("Copy absolute path")}</span>
             </MenuItem>
             <MenuItem
               disabled={relativePath === null}
@@ -117,7 +119,7 @@ export function EditedFileRow(props: EditedFileRowProps) {
               }}
             >
               <CopyIcon className={MENU_ICON_CLASS_NAME} />
-              <span>Copy relative path</span>
+              <span>{t("Copy relative path")}</span>
             </MenuItem>
           </>
         }

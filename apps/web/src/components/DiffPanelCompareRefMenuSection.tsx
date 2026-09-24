@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
+import { useT } from "~/i18n";
 
 import { gitBranchesQueryOptions, gitRecentCommitsQueryOptions } from "~/lib/gitReactQuery";
 import { GitBranchIcon, GitCommitIcon } from "~/lib/icons";
@@ -40,6 +41,7 @@ export function DiffPanelCompareRefMenuSection(props: {
   iconClassName: string;
   onSelectCompareRef: (ref: string) => void;
 }) {
+  const t = useT();
   const [refDraft, setRefDraft] = useState("");
   const branchesQuery = useQuery({
     ...gitBranchesQueryOptions(props.cwd),
@@ -74,7 +76,7 @@ export function DiffPanelCompareRefMenuSection(props: {
 
   return (
     <MenuGroup>
-      <MenuGroupLabel>Compare with</MenuGroupLabel>
+      <MenuGroupLabel>{t("Compare with")}</MenuGroupLabel>
       <MenuRadioGroup
         value={activeRef.length > 0 ? buildDiffPanelCompareRefValue(activeRef) : ""}
         onValueChange={(value) => {
@@ -118,7 +120,7 @@ export function DiffPanelCompareRefMenuSection(props: {
           nativeInput
           size="sm"
           type="text"
-          placeholder="Branch, tag, or commit"
+          placeholder={t("Branch, tag, or commit")}
           value={refDraft}
           onChange={(event) => setRefDraft(event.target.value)}
           onKeyDownCapture={(event) => {

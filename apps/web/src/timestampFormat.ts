@@ -1,4 +1,5 @@
 import { type TimestampFormat } from "./appSettings";
+import { getLocale } from "./i18n/runtime";
 
 export function getTimestampFormatOptions(
   timestampFormat: TimestampFormat,
@@ -33,13 +34,14 @@ function getTimestampFormatter(
   includeSeconds: boolean,
   includeDate = false,
 ): Intl.DateTimeFormat {
-  const cacheKey = `${timestampFormat}:${includeSeconds ? "seconds" : "minutes"}:${includeDate ? "date" : "time"}`;
+  const locale = getLocale();
+  const cacheKey = `${locale}:${timestampFormat}:${includeSeconds ? "seconds" : "minutes"}:${includeDate ? "date" : "time"}`;
   const cachedFormatter = timestampFormatterCache.get(cacheKey);
   if (cachedFormatter) {
     return cachedFormatter;
   }
 
-  const formatter = new Intl.DateTimeFormat(undefined, {
+  const formatter = new Intl.DateTimeFormat(locale, {
     ...(includeDate ? CALENDAR_DATE_OPTIONS : {}),
     ...getTimestampFormatOptions(timestampFormat, includeSeconds),
   });
@@ -65,13 +67,14 @@ export function formatShortDateTimestamp(
 const dayLabelFormatterCache = new Map<string, Intl.DateTimeFormat>();
 
 function getDayLabelFormatter(options: Intl.DateTimeFormatOptions): Intl.DateTimeFormat {
-  const cacheKey = JSON.stringify(options);
+  const locale = getLocale();
+  const cacheKey = `${locale}:${JSON.stringify(options)}`;
   const cachedFormatter = dayLabelFormatterCache.get(cacheKey);
   if (cachedFormatter) {
     return cachedFormatter;
   }
 
-  const formatter = new Intl.DateTimeFormat(undefined, options);
+  const formatter = new Intl.DateTimeFormat(locale, options);
   dayLabelFormatterCache.set(cacheKey, formatter);
   return formatter;
 }

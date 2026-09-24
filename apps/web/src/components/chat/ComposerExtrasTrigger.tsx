@@ -8,12 +8,14 @@ import { PlusIcon } from "~/lib/icons";
 import { cn } from "~/lib/utils";
 import { Button } from "../ui/button";
 import { COMPOSER_EXTRAS_TRIGGER_ATTRIBUTE } from "./ComposerExtrasPanel";
+import { useT } from "~/i18n";
 
 export function ComposerExtrasTrigger(props: {
   open: boolean;
   panelId: string;
   onToggle: () => void;
 }) {
+  const t = useT();
   return (
     <Button
       size="icon-sm"
@@ -22,7 +24,7 @@ export function ComposerExtrasTrigger(props: {
         "shrink-0 rounded-md",
         props.open && "bg-[var(--color-background-button-secondary)]",
       )}
-      aria-label="Composer extras"
+      aria-label={t("Composer extras")}
       aria-expanded={props.open}
       aria-controls={props.open ? props.panelId : undefined}
       {...{ [COMPOSER_EXTRAS_TRIGGER_ATTRIBUTE]: "" }}

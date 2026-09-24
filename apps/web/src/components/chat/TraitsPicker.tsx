@@ -12,6 +12,7 @@ import {
 } from "@synara/contracts";
 import { memo, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { ChevronDownIcon, FastModeIcon, FastModeOutlineIcon, SettingsIcon } from "~/lib/icons";
+import { useT } from "~/i18n";
 import { cn } from "~/lib/utils";
 import { Button } from "../ui/button";
 import {
@@ -89,6 +90,7 @@ export function resolveTraitsTriggerSummary(options: {
   model: string | null | undefined;
   prompt: string;
   modelOptions: ProviderOptions | null | undefined;
+  t?: (key: string) => string;
   runtimeModel?: ProviderModelDescriptor | undefined;
   runtimeAgents: ReadonlyArray<ProviderAgentDescriptor> | null | undefined;
 }): {
@@ -104,6 +106,7 @@ export function resolveTraitsTriggerSummary(options: {
     options.modelOptions,
     options.runtimeModel,
   );
+  const t = options.t ?? ((key: string) => key);
   const {
     effortLevels,
     thinkingEnabled,
@@ -123,7 +126,7 @@ export function resolveTraitsTriggerSummary(options: {
   // that exposes those controls; the fast-only fallback only applies when it does not.
   const primaryLabel =
     resolveComposerTraitStatusLabel(selection) ??
-    (isFastOnlyControl ? (fastModeEnabled ? "Fast" : "Default") : null);
+    (isFastOnlyControl ? (fastModeEnabled ? t("Fast") : t("Default")) : null);
   // Only departures from the default context window earn a label.
   const contextWindowLabel =
     contextWindowOptions.length > 1 && contextWindow !== defaultContextWindow
@@ -136,7 +139,7 @@ export function resolveTraitsTriggerSummary(options: {
   // (opencode) that expose no effort/thinking controls.
   const resolvedPrimaryLabel = primaryLabel ?? agentLabel;
   const showsFastBadge = showsComposerFastModeBadge(selection) && !isFastOnlyControl;
-  const summaryText = [resolvedPrimaryLabel, showsFastBadge ? "Fast" : null, contextWindowLabel]
+  const summaryText = [resolvedPrimaryLabel, showsFastBadge ? t("Fast") : null, contextWindowLabel]
     .filter((value): value is string => Boolean(value))
     .join(" · ");
 
@@ -162,6 +165,7 @@ export function FastModeToggle({
   onToggle: () => void;
   tone?: "muted" | "accent";
 }) {
+  const t = useT();
   const tone = toneProp ?? "muted";
   const Icon = enabled ? FastModeIcon : FastModeOutlineIcon;
   return (
@@ -170,7 +174,7 @@ export function FastModeToggle({
         render={
           <button
             type="button"
-            aria-label="Fast mode"
+            aria-label={t("Fast mode")}
             aria-pressed={enabled}
             className={cn(
               "flex shrink-0 cursor-pointer items-center justify-center transition-colors hover:bg-[color-mix(in_srgb,var(--foreground)_6%,transparent)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[color:var(--color-border-focus)]/60",
@@ -193,7 +197,7 @@ export function FastModeToggle({
         />
       </TooltipTrigger>
       <TooltipPopup side="top" variant="picker">
-        {enabled ? "Fast mode on" : "Fast mode off"}
+        {enabled ? t("Fast mode on") : t("Fast mode off")}
       </TooltipPopup>
     </Tooltip>
   );
@@ -230,6 +234,7 @@ function TraitRadioSection({
   onValueChange: (value: string) => void;
   onSelectionComplete?: (() => void) | undefined;
 }) {
+  const t = useT();
   return (
     <MenuGroup>
       {labelTrailing ? (
@@ -251,7 +256,7 @@ function TraitRadioSection({
               onClick={() => onSelectionComplete?.()}
             >
               {option.label}
-              {option.isDefault ? " (default)" : ""}
+              {option.isDefault ? ` (${t("default")})` : ""}
             </MenuRadioItem>
           );
           return option.description ? (
@@ -304,6 +309,7 @@ export const TraitsMenuContent = memo(function TraitsMenuContentImpl({
   modelOptions,
   onSelectionComplete,
 }: TraitsMenuContentProps) {
+  const t = useT();
   const excludeEffort = excludeEffortProp ?? false;
   const includeFastMode = (includeFastModeProp ?? true) && !excludeEffort;
   const selection = getComposerTraitSelection(provider, model, prompt, modelOptions, runtimeModel);
@@ -379,11 +385,11 @@ export const TraitsMenuContent = memo(function TraitsMenuContentImpl({
     <>
       {thinkingEnabled !== null ? (
         <TraitRadioSection
-          label="Thinking"
+          label={t("Thinking")}
           value={thinkingEnabled ? "on" : "off"}
           options={[
-            { value: "on", label: "On (default)" },
-            { value: "off", label: "Off" },
+            { value: "on", label: t("On (default)") },
+            { value: "off", label: t("Off") },
           ]}
           onValueChange={(value) => commitTrait({ thinking: value === "on" })}
           onSelectionComplete={onSelectionComplete}
@@ -393,7 +399,7 @@ export const TraitsMenuContent = memo(function TraitsMenuContentImpl({
         <>
           {hasPriorContextWindowSection ? <MenuDivider /> : null}
           <TraitRadioSection
-            label={contextWindowDescriptor?.label ?? "Context"}
+            label={contextWindowDescriptor?.label ?? t("Context")}
             value={contextWindow ?? defaultContextWindow ?? ""}
             options={contextWindowOptions.map((option) => ({
               value: option.value,
@@ -409,7 +415,7 @@ export const TraitsMenuContent = memo(function TraitsMenuContentImpl({
         <>
           {hasPriorEffortSection ? <MenuDivider /> : null}
           <TraitRadioSection
-            label={provider === "opencode" ? "Variant" : "Effort"}
+            label={provider === "opencode" ? t("Variant") : t("Effort")}
             labelTrailing={
               showsFastModeEffortToggle ? (
                 <FastModeToggle
@@ -423,7 +429,7 @@ export const TraitsMenuContent = memo(function TraitsMenuContentImpl({
             note={
               ultrathinkPromptControlled ? (
                 <div className="px-2 pb-1.5 text-muted-foreground/80 text-ui leading-snug">
-                  Remove Ultrathink from the prompt to change effort.
+                  {t("Remove Ultrathink from the prompt to change effort.")}
                 </div>
               ) : undefined
             }
@@ -444,11 +450,11 @@ export const TraitsMenuContent = memo(function TraitsMenuContentImpl({
         <>
           {hasPriorFastModeSection ? <MenuDivider /> : null}
           <TraitRadioSection
-            label="Speed"
+            label={t("Speed")}
             value={fastModeEnabled ? "on" : "off"}
             options={[
-              { value: "off", label: "Default" },
-              { value: "on", label: "Fast" },
+              { value: "off", label: t("Default") },
+              { value: "on", label: t("Fast") },
             ]}
             onValueChange={(value) => commitTrait({ fastMode: value === "on" })}
             onSelectionComplete={onSelectionComplete}
@@ -459,7 +465,7 @@ export const TraitsMenuContent = memo(function TraitsMenuContentImpl({
         <>
           {hasVisibleControls ? <MenuDivider /> : null}
           <TraitRadioSection
-            label="Agent"
+            label={t("Agent")}
             value={selectedAgent ?? defaultAgent ?? ""}
             options={agentOptions.map((agent) => ({
               value: agent.name,
@@ -503,6 +509,7 @@ export const TraitsPicker = memo(function TraitsPicker({
   // summary moves to title/sr-only.
   hideLabel?: boolean;
 }) {
+  const t = useT();
   const includeFastMode = includeFastModeProp ?? true;
   const hideLabel = hideLabelProp ?? false;
   const [uncontrolledMenuOpen, setUncontrolledMenuOpen] = useState(false);
@@ -562,6 +569,7 @@ export const TraitsPicker = memo(function TraitsPicker({
     model,
     prompt,
     modelOptions,
+    t,
     runtimeModel,
     runtimeAgents,
   });
@@ -573,7 +581,7 @@ export const TraitsPicker = memo(function TraitsPicker({
       size="sm"
       variant="chrome"
       className={`min-w-0 shrink-0 justify-start overflow-hidden whitespace-nowrap px-2 sm:px-2.5 [&_svg]:mx-0 ${COMPOSER_PICKER_TRIGGER_TEXT_CLASS_NAME}`}
-      aria-label="Change effort, context, and speed"
+      aria-label={t("Change effort, context, and speed")}
       {...(hideLabel && hiddenLabelTitle.length > 0 ? { title: hiddenLabelTitle } : {})}
     />
   );
@@ -590,14 +598,14 @@ export const TraitsPicker = memo(function TraitsPicker({
         {visiblePrimaryTriggerLabel ? (
           <span className="truncate">{visiblePrimaryTriggerLabel}</span>
         ) : (
-          <span className="truncate">Options</span>
+          <span className="truncate">{t("Options")}</span>
         )}
         {showsFastBadge ? (
           <>
             <span className="shrink-0 text-muted-foreground/45">·</span>
             <span className="inline-flex shrink-0 items-center gap-1">
               <FastModeIcon aria-hidden="true" className="size-3 text-[hsl(var(--chart-4))]" />
-              <span>Fast</span>
+              <span>{t("Fast")}</span>
             </span>
           </>
         ) : null}
@@ -615,13 +623,13 @@ export const TraitsPicker = memo(function TraitsPicker({
   ) : (
     <>
       <span className="inline-flex items-center gap-1.5">
-        <span>{visiblePrimaryTriggerLabel ?? "Options"}</span>
+        <span>{visiblePrimaryTriggerLabel ?? t("Options")}</span>
         {showsFastBadge ? (
           <>
             <span className="text-muted-foreground/45">·</span>
             <span className="inline-flex items-center gap-1">
               <FastModeIcon aria-hidden="true" className="size-3 text-[hsl(var(--chart-4))]" />
-              <span>Fast</span>
+              <span>{t("Fast")}</span>
             </span>
           </>
         ) : null}
@@ -653,7 +661,7 @@ export const TraitsPicker = memo(function TraitsPicker({
           {!isMenuOpen ? (
             <TooltipPopup side="top" sideOffset={6} variant="picker">
               <span className="inline-flex items-center gap-2 px-1 py-0.5">
-                <span>Change effort, context, and speed</span>
+                <span>{t("Change effort, context, and speed")}</span>
                 <ShortcutKbd
                   shortcutLabel={shortcutLabel}
                   className="h-4 min-w-4 px-1 text-ui-2xs text-muted-foreground"

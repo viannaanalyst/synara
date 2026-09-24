@@ -1,5 +1,6 @@
 import type { FileDiffMetadata } from "@pierre/diffs/react";
 import { useEffect, useState, type RefObject } from "react";
+import { useT } from "~/i18n";
 
 import { resolveFileDiffPath } from "~/lib/diffRendering";
 import { readDiffFileAnchors, resolveDiffRenderSurface } from "~/lib/diffScrollSurface";
@@ -16,17 +17,23 @@ const CHANGE_MARKER_COLOR_BY_KIND: Record<DiffChangeMarkerKind, string> = {
   modified: "var(--muted-foreground)",
 };
 
-const CHANGE_MARKER_LABEL_BY_KIND: Record<DiffChangeMarkerKind, string> = {
-  added: "Added",
-  removed: "Deleted",
-  modified: "Modified",
-};
+function changeMarkerLabel(kind: DiffChangeMarkerKind, t: (key: string) => string): string {
+  switch (kind) {
+    case "added":
+      return t("Added");
+    case "removed":
+      return t("Deleted");
+    case "modified":
+      return t("Modified");
+  }
+}
 
 export function DiffPanelChangeMarkers(props: {
   viewportRef: RefObject<HTMLElement | null>;
   renderableFiles: ReadonlyArray<FileDiffMetadata>;
   onSelectFilePath: (filePath: string) => void;
 }) {
+  const t = useT();
   const { renderableFiles, viewportRef } = props;
   const [markers, setMarkers] = useState<ReadonlyArray<DiffChangeMarker>>([]);
 
@@ -96,14 +103,17 @@ export function DiffPanelChangeMarkers(props: {
   return (
     <div
       role="group"
-      aria-label="Change markers"
+      aria-label={t("Change markers")}
       className="pointer-events-none absolute inset-y-0 right-[10px] z-10 w-[6px]"
     >
       {markers.map((marker) => (
         <button
           key={marker.path}
           type="button"
-          aria-label={`${CHANGE_MARKER_LABEL_BY_KIND[marker.kind]}: ${marker.path}`}
+          aria-label={t("{change}: {path}", {
+            change: changeMarkerLabel(marker.kind, t),
+            path: marker.path,
+          })}
           title={marker.path}
           className="pointer-events-auto absolute left-0 w-full cursor-pointer rounded-full opacity-70 transition-opacity hover:opacity-100"
           style={{

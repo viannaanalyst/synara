@@ -6,6 +6,7 @@
 import { Schema } from "effect";
 
 import { useLocalStorage } from "~/hooks/useLocalStorage";
+import { useT } from "~/i18n";
 import { XIcon } from "~/lib/icons";
 import { cn } from "~/lib/utils";
 import { ProjectImportGlyph } from "./ProjectImportGlyph";
@@ -14,6 +15,7 @@ import { useProjectImportDialogStore } from "./projectImportDialogStore";
 const DISMISSED_STORAGE_KEY = "synara:project-import-landing-banner:dismissed:v1";
 
 export function ProjectImportLandingBanner(props: { className?: string }) {
+  const t = useT();
   const [dismissed, setDismissed] = useLocalStorage(DISMISSED_STORAGE_KEY, false, Schema.Boolean);
   if (dismissed) return null;
   return (
@@ -27,16 +29,16 @@ export function ProjectImportLandingBanner(props: { className?: string }) {
         <ProjectImportGlyph />
         <span className="flex min-w-0 flex-col gap-0.5">
           <span className="truncate text-ui font-medium text-foreground">
-            Import your Claude Code and Codex projects
+            {t("Import your Claude Code and Codex projects")}
           </span>
           <span className="truncate text-ui text-muted-foreground">
-            Bring your chats and continue them in Synara
+            {t("Bring your chats and continue them in Synara")}
           </span>
         </span>
       </button>
       <button
         type="button"
-        aria-label="Dismiss project import banner"
+        aria-label={t("Dismiss project import banner")}
         className="absolute -right-1.5 -top-1.5 flex size-[22px] items-center justify-center rounded-full border border-border/70 bg-background text-muted-foreground opacity-0 shadow-xs transition-opacity duration-150 ease-out hover:text-foreground focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 group-hover/import-banner:opacity-100 motion-reduce:transition-none"
         onClick={() => setDismissed(true)}
       >

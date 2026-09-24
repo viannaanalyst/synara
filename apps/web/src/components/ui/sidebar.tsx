@@ -2,6 +2,7 @@ import { mergeProps } from "@base-ui/react/merge-props";
 import { useRender } from "@base-ui/react/use-render";
 import { cva, type VariantProps } from "class-variance-authority";
 import * as React from "react";
+import { useT } from "~/i18n";
 import { PanelLeftIcon } from "~/lib/icons";
 import { cn } from "~/lib/utils";
 import { Button } from "~/components/ui/button";
@@ -258,6 +259,7 @@ function Sidebar({
   innerClassName?: string;
   transparentSurface?: boolean;
 }) {
+  const t = useT();
   const side = sideProp ?? "left";
   const variant = variantProp ?? "sidebar";
   const collapsible = collapsibleProp ?? "offcanvas";
@@ -312,8 +314,8 @@ function Sidebar({
             }
           >
             <SheetHeader className="sr-only">
-              <SheetTitle>Sidebar</SheetTitle>
-              <SheetDescription>Displays the mobile sidebar.</SheetDescription>
+              <SheetTitle>{t("Sidebar")}</SheetTitle>
+              <SheetDescription>{t("Displays the mobile sidebar.")}</SheetDescription>
             </SheetHeader>
             <div className={cn("flex h-full w-full flex-col", innerClassName)}>{children}</div>
           </SheetPopup>
@@ -389,6 +391,7 @@ function Sidebar({
 }
 
 function SidebarTrigger({ className, onClick, ...props }: React.ComponentProps<typeof Button>) {
+  const t = useT();
   const { toggleSidebar } = useSidebar();
 
   return (
@@ -405,7 +408,7 @@ function SidebarTrigger({ className, onClick, ...props }: React.ComponentProps<t
       {...props}
     >
       <PanelLeftIcon aria-hidden className="size-4" />
-      <span className="sr-only">Toggle Sidebar</span>
+      <span className="sr-only">{t("Toggle Sidebar")}</span>
     </Button>
   );
 }

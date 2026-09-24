@@ -11,6 +11,7 @@ import {
 import { getDefaultModel } from "@synara/shared/model";
 import type { QueryClient } from "@tanstack/react-query";
 import { gitStatusQueryOptions } from "~/lib/gitReactQuery";
+import { t } from "~/i18n";
 import { newCommandId, newProjectId } from "~/lib/utils";
 import { readNativeApi } from "~/nativeApi";
 import { setupProjectScript } from "~/projectScripts";
@@ -130,7 +131,10 @@ export async function prepareChatSendWorkspace({
       titleSeed = formatFileCommentTitleSeed(composerFileCommentsForSend.length);
     } else if (sendableComposerPastedTexts.length > 0) {
       titleSeed =
-        formatPastedTextTitleSeed(sendableComposerPastedTexts) ?? GENERIC_CHAT_THREAD_TITLE;
+        formatPastedTextTitleSeed(sendableComposerPastedTexts, {
+          pastedText: t("Pasted text"),
+          multiplePastedTexts: (count) => t("{count} pasted texts", { count }),
+        }) ?? GENERIC_CHAT_THREAD_TITLE;
     } else {
       titleSeed = GENERIC_CHAT_THREAD_TITLE;
     }

@@ -65,6 +65,7 @@ import {
 } from "../session-logic";
 import { localSubagentThreadId } from "./ChatView.selectors";
 import { buildModelSelection, type ProviderModelOption } from "../providerModelOptions";
+import { t } from "~/i18n";
 
 export const LAST_INVOKED_SCRIPT_BY_PROJECT_KEY = "synara:last-invoked-script-by-project";
 export const DISMISSED_PROVIDER_HEALTH_BANNERS_KEY = "synara:dismissed-provider-health-banners";
@@ -915,7 +916,7 @@ export function appendVoiceTranscriptToPrompt(
 export function sanitizeVoiceErrorMessage(message: string): string {
   const normalized = message.trim();
   if (normalized.length === 0) {
-    return "The voice note could not be transcribed.";
+    return t("The voice note could not be transcribed.");
   }
 
   const firstLine = normalized.split("\n")[0]?.trim() ?? normalized;
@@ -928,7 +929,7 @@ export function sanitizeVoiceErrorMessage(message: string): string {
 
   return withoutRepeatedErrorPrefix.length > 0
     ? withoutRepeatedErrorPrefix
-    : "The voice note could not be transcribed.";
+    : t("The voice note could not be transcribed.");
 }
 
 export function isVoiceAuthExpiredMessage(message: string): boolean {
@@ -938,29 +939,33 @@ export function isVoiceAuthExpiredMessage(message: string): boolean {
 
 export function describeVoiceRecordingStartError(error: unknown): string {
   if (!(error instanceof Error)) {
-    return "The microphone could not be opened.";
+    return t("The microphone could not be opened.");
   }
 
   const normalizedMessage = error.message.trim();
   const errorName = typeof error.name === "string" ? error.name : "";
 
   if (errorName === "NotAllowedError" || errorName === "PermissionDeniedError") {
-    return "Microphone access was denied. Enable it in macOS Privacy & Security > Microphone for Synara, then try again.";
+    return t(
+      "Microphone access was denied. Enable it in macOS Privacy & Security > Microphone for Synara, then try again.",
+    );
   }
   if (errorName === "NotFoundError" || errorName === "DevicesNotFoundError") {
-    return "No microphone was found. Connect one and try again.";
+    return t("No microphone was found. Connect one and try again.");
   }
   if (errorName === "NotReadableError" || errorName === "TrackStartError") {
-    return "The microphone is busy or unavailable right now. Close other audio apps and try again.";
+    return t(
+      "The microphone is busy or unavailable right now. Close other audio apps and try again.",
+    );
   }
   if (errorName === "SecurityError") {
-    return "Microphone access is blocked in this environment.";
+    return t("Microphone access is blocked in this environment.");
   }
   if (normalizedMessage.length > 0) {
     return sanitizeVoiceErrorMessage(normalizedMessage);
   }
 
-  return "The microphone could not be opened.";
+  return t("The microphone could not be opened.");
 }
 
 export function deriveComposerVoiceState(input: {
@@ -1878,16 +1883,21 @@ export function buildExpiredTerminalContextToastCopy(
   variant: "omitted" | "empty",
 ): { title: string; description: string } {
   const count = Math.max(1, Math.floor(expiredTerminalContextCount));
-  const noun = count === 1 ? "Expired terminal context" : "Expired terminal contexts";
   if (variant === "empty") {
     return {
-      title: `${noun} won't be sent`,
-      description: "Remove it or re-add it to include terminal output.",
+      title:
+        count === 1
+          ? t("Expired terminal context won't be sent")
+          : t("Expired terminal contexts won't be sent"),
+      description: t("Remove it or re-add it to include terminal output."),
     };
   }
   return {
-    title: `${noun} omitted from message`,
-    description: "Re-add it if you want that terminal output included.",
+    title:
+      count === 1
+        ? t("Expired terminal context omitted from message")
+        : t("Expired terminal contexts omitted from message"),
+    description: t("Re-add it if you want that terminal output included."),
   };
 }
 

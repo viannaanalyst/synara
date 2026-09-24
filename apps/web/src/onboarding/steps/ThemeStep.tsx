@@ -6,6 +6,7 @@
 import { ThemeModePicker } from "~/components/settings/ThemeModePicker";
 import { useRadioGroupKeyboardNav } from "~/hooks/useRadioGroupKeyboardNav";
 import { useTheme } from "~/hooks/useTheme";
+import { useT } from "~/i18n";
 import { cn } from "~/lib/utils";
 import { CODE_THEME_OPTIONS, getCodeThemeSeed, type ThemeVariant } from "~/theme/theme.logic";
 
@@ -38,6 +39,7 @@ function ThemePackSwatch(props: { codeThemeId: string; variant: ThemeVariant }) 
 }
 
 export function ThemeStep() {
+  const t = useT();
   const { theme, setTheme, activeTheme, resolvedTheme, setCodeThemeId } = useTheme();
   const selectedPackId = activeTheme.codeThemeId;
   const selectPack = (codeThemeId: string) => {
@@ -57,15 +59,15 @@ export function ThemeStep() {
   return (
     <div className="flex flex-col gap-[22px]">
       <div className="px-[100px]">
-        <ThemeModePicker value={theme} onValueChange={setTheme} ariaLabel="Theme preference" />
+        <ThemeModePicker value={theme} onValueChange={setTheme} ariaLabel={t("Theme preference")} />
       </div>
       <div className="flex flex-col gap-2.5">
         <div className="flex items-baseline justify-between">
           <span id="onboarding-theme-pack-label" className="text-ui font-medium text-foreground/80">
-            Theme
+            {t("Theme")}
           </span>
           <span className="text-ui-sm text-muted-foreground/80">
-            Applies to both light and dark
+            {t("Applies to both light and dark")}
           </span>
         </div>
         <div
@@ -93,7 +95,7 @@ export function ThemeStep() {
               >
                 <ThemePackSwatch codeThemeId={option.id} variant={resolvedTheme} />
                 <span className={cn("truncate text-ui text-foreground", selected && "font-medium")}>
-                  {option.label}
+                  {t(option.label)}
                 </span>
               </button>
             );

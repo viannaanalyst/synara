@@ -19,8 +19,9 @@ import {
   type ThreadComputerState,
 } from "@synara/contracts";
 import { isComputerNamedKey } from "@synara/shared/computerKeyNames";
-import { listComputerPermissions } from "@synara/shared/computerGrants";
+import { COMPUTER_PERMISSION_LABELS, sortComputerPermissions } from "@synara/shared/computerGrants";
 import { COMPUTER_TOOL_TITLES, computerToolName } from "../lib/computerToolPresentation";
+import { getLocale, t } from "~/i18n";
 
 export interface ComputerFrameGateState {
   readonly lastSequence: number | null;
@@ -88,6 +89,14 @@ export type ComputerAvailabilityView =
       readonly description: string;
     };
 
+export function computerPermissionSummary(permissions: readonly ComputerPermission[]): string {
+  return new Intl.ListFormat(getLocale(), { style: "long", type: "conjunction" }).format(
+    sortComputerPermissions(permissions).map((permission) =>
+      t(COMPUTER_PERMISSION_LABELS[permission]),
+    ),
+  );
+}
+
 /**
  * `grantsConfirmed` is fresh evidence from the OS itself (the desktop app's
  * native grant check) that every permission is granted. The server cannot
@@ -104,67 +113,72 @@ export function resolveComputerAvailabilityView(
   if (health?.status === "reconnecting") {
     return {
       kind: "checking",
-      title: "Reconnecting to the desktop",
-      description: health.lastFailure ? health.lastFailure.message : COMPUTER_RECONNECTING_NOTE,
+      title: t("Reconnecting to the desktop"),
+      description: health.lastFailure ? health.lastFailure.message : t(COMPUTER_RECONNECTING_NOTE),
     };
   }
   if (!availability) {
     return {
       kind: "checking",
-      title: "Checking computer availability",
-      description: "Waiting for the desktop backend.",
+      title: t("Checking computer availability"),
+      description: t("Waiting for the desktop backend."),
     };
   }
   if (availability.kind === "available") {
     if (grantsConfirmed && computerBackendIsIdle(health)) {
       return {
         kind: "ready",
-        title: "All permissions granted",
-        description: "Synara connects to the desktop the next time an agent uses it.",
+        title: t("All permissions granted"),
+        description: t("Synara connects to the desktop the next time an agent uses it."),
       };
     }
     if (health && health.status !== "connected") {
       return {
         kind: "checking",
-        title: "Computer access has not been checked",
-        description: "Choose Set up to check that Synara can see and control the desktop.",
+        title: t("Computer access has not been checked"),
+        description: t("Choose Set up to check that Synara can see and control the desktop."),
       };
     }
     if (health?.captureAvailable === false) {
       return {
         kind: "blocked",
-        title: "Screen capture is unavailable",
-        description:
+        title: t("Screen capture is unavailable"),
+        description: t(
           "Desktop input is connected, but Synara cannot take screenshots. Choose Set up to check access.",
+        ),
       };
     }
     return {
       kind: "ready",
-      title: "Connected to the desktop",
-      description: "Synara can see and control the desktop through its computer tools.",
+      title: t("Connected to the desktop"),
+      description: t("Synara can see and control the desktop through its computer tools."),
     };
   }
   if (availability.kind === "unsupported-platform") {
     return {
       kind: "blocked",
-      title: "Computer control is unavailable",
-      description: `This server is running on ${availability.platform}. Computer control needs macOS, or a Wayland desktop on Linux — KWin or Hyprland, or Synara's own nested desktop.`,
+      title: t("Computer control is unavailable"),
+      description: t(
+        "This server is running on {platform}. Computer control needs macOS, or a Wayland desktop on Linux — KWin or Hyprland, or Synara's own nested desktop.",
+        { platform: availability.platform },
+      ),
     };
   }
   // A withheld grant is blocked like anything else, but it is the one blocked
   // state with a name and a fix, so the title says which permission rather than
   // making the user read the paragraph to find out.
   if (availability.kind === "permission-required") {
+    const permissions = computerPermissionSummary(availability.missing);
     return {
       kind: "blocked",
-      title: `Computer control needs ${listComputerPermissions(availability.missing)}`,
-      description: availability.message,
+      title: t("Computer control needs {permissions}", { permissions }),
+      description: t(availability.message),
     };
   }
   return {
     kind: "blocked",
-    title: "Computer control is unavailable",
-    description: availability.message,
+    title: t("Computer control is unavailable"),
+    description: t(availability.message),
   };
 }
 
@@ -272,7 +286,7 @@ export function resolveComputerHealthBadge(
   if (computerBackendIsIdle(health)) return null;
   const reconnecting = health.status === "reconnecting";
   return {
-    label: reconnecting ? "Reconnecting to desktop" : "Desktop unavailable",
+    label: reconnecting ? t("Reconnecting to desktop") : t("Desktop unavailable"),
     title: computerHealthDetail(health),
     tone: reconnecting ? "warning" : "danger",
     pulse: reconnecting,
@@ -292,25 +306,35 @@ const COMPUTER_DISCONNECTED_NOTE = "The desktop backend is not connected.";
 
 /** The note naming what the supervisor last saw fail, or null when nothing has. */
 export function computerLastFailureNote(health: ComputerHealth | undefined): string | null {
-  return health?.lastFailure ? `Last failure: ${health.lastFailure.message}` : null;
+  return health?.lastFailure
+    ? t("Last failure: {message}", { message: health.lastFailure.message })
+    : null;
 }
 
 /** The note counting reconnects since startup, or null when there were none. */
 export function computerReconnectsNote(health: ComputerHealth | undefined): string | null {
   const reconnects = health?.reconnects ?? 0;
   if (reconnects <= 0) return null;
-  return `Reconnected ${reconnects === 1 ? "once" : `${reconnects} times`} since startup.`;
+  return reconnects === 1
+    ? t("Reconnected once since startup.")
+    : t("Reconnected {count} times since startup.", { count: reconnects });
 }
 
 /** Counters belong in the badge's tooltip, not in chrome of their own. */
 function computerHealthDetail(health: ComputerHealth): string {
   const parts = [
-    health.status === "reconnecting" ? COMPUTER_RECONNECTING_NOTE : COMPUTER_DISCONNECTED_NOTE,
+    health.status === "reconnecting"
+      ? t(COMPUTER_RECONNECTING_NOTE)
+      : t(COMPUTER_DISCONNECTED_NOTE),
   ];
   const lastFailure = computerLastFailureNote(health);
   if (lastFailure) parts.push(lastFailure);
   if (health.consecutiveFailures > 0) {
-    parts.push(`Failed attempts since the last connection: ${health.consecutiveFailures}.`);
+    parts.push(
+      t("Failed attempts since the last connection: {count}.", {
+        count: health.consecutiveFailures,
+      }),
+    );
   }
   const reconnects = computerReconnectsNote(health);
   if (reconnects) parts.push(reconnects);
@@ -347,7 +371,9 @@ export function computerReleaseControlHint(input: {
     return null;
   }
   return {
-    text: `Press ${COMPUTER_RELEASE_CONTROL_HOTKEY} to stop the agent at any time.`,
+    text: t("Press {shortcut} to stop the agent at any time.", {
+      shortcut: COMPUTER_RELEASE_CONTROL_HOTKEY,
+    }),
     visible: input.agentActive,
   };
 }
@@ -364,10 +390,10 @@ export function computerCanvasLabel(input: {
   readonly visibleDesktop: boolean;
 }): string {
   const backend = input.availability?.kind === "available" ? input.availability.backend : undefined;
-  if (backend === COMPUTER_MAC_BACKEND) return "This Mac's desktop";
-  if (backend === COMPUTER_NESTED_KWIN_BACKEND) return "The agent's own desktop";
-  if (input.visibleDesktop) return "This computer's desktop";
-  return "The agent's desktop";
+  if (backend === COMPUTER_MAC_BACKEND) return t("This Mac's desktop");
+  if (backend === COMPUTER_NESTED_KWIN_BACKEND) return t("The agent's own desktop");
+  if (input.visibleDesktop) return t("This computer's desktop");
+  return t("The agent's desktop");
 }
 
 /**
@@ -412,8 +438,8 @@ export function computerStopControlLabel(input: {
 }): string | null {
   if (!input.agentActive) return null;
   return input.visibleDesktop
-    ? "Stop the agent controlling this computer"
-    : "Stop the agent controlling the desktop";
+    ? t("Stop the agent controlling this computer")
+    : t("Stop the agent controlling the desktop");
 }
 
 /**
@@ -429,7 +455,9 @@ export function computerDeliveryWarning(
   result: Pick<ComputerActionResult, "delivery"> | undefined,
 ): string | null {
   return result?.delivery?.verified === "unconfirmed"
-    ? "The desktop accepted that input but could not confirm it arrived. Check the screen before relying on it."
+    ? t(
+        "The desktop accepted that input but could not confirm it arrived. Check the screen before relying on it.",
+      )
     : null;
 }
 
@@ -452,10 +480,12 @@ export function computerActionLabel(
     .trim();
   if (!tool && fallback.length === 0) return null;
   const label = tool
-    ? COMPUTER_TOOL_TITLES[tool]
+    ? t(COMPUTER_TOOL_TITLES[tool])
     : `${fallback[0]!.toUpperCase()}${fallback.slice(1)}`;
   if (action.ok) return label;
-  return action.message ? `${label} failed: ${action.message}` : `${label} failed`;
+  return action.message
+    ? t("{label} failed: {message}", { label, message: action.message })
+    : t("{label} failed", { label });
 }
 
 export function shouldSubscribeToComputerStream(input: {

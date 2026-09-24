@@ -9,7 +9,6 @@ import {
   type ServerSettings,
 } from "@synara/contracts";
 import { PROVIDER_DESCRIPTORS } from "@synara/shared/providerMetadata";
-import { pluralize } from "@synara/shared/text";
 import {
   closestCenter,
   DndContext,
@@ -32,6 +31,7 @@ import { type MouseEvent, type ReactNode, useCallback, useMemo, useRef, useState
 import type { AppSettings, AppSettingsBinding } from "~/appSettings";
 import { useProviderStatusesForLocalConfig } from "~/hooks/useProviderStatusesForLocalConfig";
 import { useRefreshProviderStatusesNow } from "~/hooks/useProviderStatusRefresh";
+import { t as translate, useT } from "~/i18n";
 import { CentralIcon } from "~/lib/central-icons";
 import { DownloadIcon, ExternalLinkIcon, Loader2Icon } from "~/lib/icons";
 import { providerSetupStatusLabel } from "~/lib/providerSetupStatus";
@@ -89,13 +89,14 @@ type ProviderInstallTextKey =
 type ProviderInstallPasswordKey = "openCodeServerPassword";
 type ProviderInstallPasswordConfiguredKey = "openCodeServerPasswordConfigured";
 type ProviderInstallBooleanKey = "claudeEnableArtifacts" | "openCodeExperimentalWebSockets";
+type ProviderInstallDescription = string | ((t: typeof translate) => ReactNode);
 
 type ProviderInstallTextField = {
   readonly kind: "text";
   readonly settingsKey: ProviderInstallTextKey;
   readonly label: string;
   readonly placeholder: string;
-  readonly description: ReactNode;
+  readonly description: ProviderInstallDescription;
 };
 type ProviderInstallPasswordField = {
   readonly kind: "password";
@@ -103,13 +104,13 @@ type ProviderInstallPasswordField = {
   readonly configuredKey: ProviderInstallPasswordConfiguredKey;
   readonly label: string;
   readonly placeholder: string;
-  readonly description: ReactNode;
+  readonly description: ProviderInstallDescription;
 };
 type ProviderInstallBooleanField = {
   readonly kind: "boolean";
   readonly settingsKey: ProviderInstallBooleanKey;
   readonly label: string;
-  readonly description: ReactNode;
+  readonly description: ProviderInstallDescription;
 };
 type ProviderInstallField =
   | ProviderInstallTextField
@@ -141,9 +142,9 @@ const PROVIDER_INSTALL_SETTINGS: readonly ProviderInstallSettings[] = [
         settingsKey: "codexBinaryPath",
         label: "Codex binary path",
         placeholder: "Codex binary path",
-        description: (
+        description: (t) => (
           <>
-            Leave blank to use <code>codex</code> from your PATH.
+            {t("Leave blank to use")} <code>codex</code> {t("from your PATH.")}
           </>
         ),
       },
@@ -169,9 +170,9 @@ const PROVIDER_INSTALL_SETTINGS: readonly ProviderInstallSettings[] = [
         settingsKey: "claudeBinaryPath",
         label: "Claude binary path",
         placeholder: "Claude binary path",
-        description: (
+        description: (t) => (
           <>
-            Leave blank to use <code>claude</code> from your PATH.
+            {t("Leave blank to use")} <code>claude</code> {t("from your PATH.")}
           </>
         ),
       },
@@ -179,11 +180,13 @@ const PROVIDER_INSTALL_SETTINGS: readonly ProviderInstallSettings[] = [
         kind: "boolean",
         settingsKey: "claudeEnableArtifacts",
         label: "Artifacts, /design and /slides",
-        description: (
+        description: (t) => (
           <>
-            Claude Code keeps Artifacts off in embedded sessions. Turn this on so{" "}
-            <code>/design</code> and <code>/slides</code> publish to claude.ai. Needs a claude.ai
-            login on a Pro, Max, Team or Enterprise plan, and applies to new sessions.
+            {t("Claude Code keeps Artifacts off in embedded sessions. Turn this on so")}{" "}
+            <code>/design</code> {t("and")} <code>/slides</code>{" "}
+            {t(
+              "publish to claude.ai. Needs a claude.ai login on a Pro, Max, Team or Enterprise plan, and applies to new sessions.",
+            )}
           </>
         ),
       },
@@ -202,10 +205,10 @@ const PROVIDER_INSTALL_SETTINGS: readonly ProviderInstallSettings[] = [
         settingsKey: "cursorBinaryPath",
         label: "Cursor binary path",
         placeholder: "Cursor Agent or Cursor CLI path",
-        description: (
+        description: (t) => (
           <>
-            Leave blank to use <code>cursor-agent</code> from your PATH. Cursor editor CLI paths are
-            accepted too.
+            {t("Leave blank to use")} <code>cursor-agent</code>{" "}
+            {t("from your PATH. Cursor editor CLI paths are accepted too.")}
           </>
         ),
       },
@@ -231,9 +234,9 @@ const PROVIDER_INSTALL_SETTINGS: readonly ProviderInstallSettings[] = [
         settingsKey: "antigravityBinaryPath",
         label: "Antigravity binary path",
         placeholder: "Antigravity CLI binary path",
-        description: (
+        description: (t) => (
           <>
-            Leave blank to use <code>agy</code> from your PATH.
+            {t("Leave blank to use")} <code>agy</code> {t("from your PATH.")}
           </>
         ),
       },
@@ -252,9 +255,9 @@ const PROVIDER_INSTALL_SETTINGS: readonly ProviderInstallSettings[] = [
         settingsKey: "grokBinaryPath",
         label: "Grok binary path",
         placeholder: "Grok binary path",
-        description: (
+        description: (t) => (
           <>
-            Leave blank to use <code>grok</code> from your PATH.
+            {t("Leave blank to use")} <code>grok</code> {t("from your PATH.")}
           </>
         ),
       },
@@ -274,9 +277,9 @@ const PROVIDER_INSTALL_SETTINGS: readonly ProviderInstallSettings[] = [
         settingsKey: "droidBinaryPath",
         label: "Droid binary path",
         placeholder: "droid",
-        description: (
+        description: (t) => (
           <>
-            Leave blank to use <code>droid</code> from your PATH.
+            {t("Leave blank to use")} <code>droid</code> {t("from your PATH.")}
           </>
         ),
       },
@@ -295,10 +298,10 @@ const PROVIDER_INSTALL_SETTINGS: readonly ProviderInstallSettings[] = [
         settingsKey: "devinBinaryPath",
         label: "Devin binary path",
         placeholder: "devin",
-        description: (
+        description: (t) => (
           <>
-            Leave blank to use <code>devin</code> from your PATH. Authenticate with{" "}
-            <code>devin auth login</code> or set WINDSURF_API_KEY.
+            {t("Leave blank to use")} <code>devin</code> {t("from your PATH. Authenticate with")}{" "}
+            <code>devin auth login</code> {t("or set WINDSURF_API_KEY.")}
           </>
         ),
       },
@@ -317,9 +320,9 @@ const PROVIDER_INSTALL_SETTINGS: readonly ProviderInstallSettings[] = [
         settingsKey: "openCodeBinaryPath",
         label: "OpenCode binary path",
         placeholder: "OpenCode binary path",
-        description: (
+        description: (t) => (
           <>
-            Leave blank to use <code>opencode</code> from your PATH.
+            {t("Leave blank to use")} <code>opencode</code> {t("from your PATH.")}
           </>
         ),
       },
@@ -360,9 +363,9 @@ const PROVIDER_INSTALL_SETTINGS: readonly ProviderInstallSettings[] = [
         settingsKey: "piBinaryPath",
         label: "Pi binary path",
         placeholder: "Pi binary path",
-        description: (
+        description: (t) => (
           <>
-            Leave blank to use <code>pi</code> from your PATH.
+            {t("Leave blank to use")} <code>pi</code> {t("from your PATH.")}
           </>
         ),
       },
@@ -489,7 +492,7 @@ function SortableProviderVisibilityRow(props: {
             ELEVATED_HOVER_SURFACE_RAISED_TEXT_CLASS_NAME,
             SETTINGS_INSET_RADIUS_CLASS_NAME,
           )}
-          aria-label={`Reorder ${props.option.title}`}
+          aria-label={translate("Reorder {provider}", { provider: props.option.title })}
           {...attributes}
           {...listeners}
         >
@@ -501,11 +504,13 @@ function SortableProviderVisibilityRow(props: {
             {props.option.title}
           </span>
           <span className="block text-ui-sm text-muted-foreground">
-            {providerSetupStatusLabel({
-              status: props.providerStatus,
-              reconciled: props.statusReconciled,
-              disabled: props.isDisabled,
-            })}
+            {translate(
+              providerSetupStatusLabel({
+                status: props.providerStatus,
+                reconciled: props.statusReconciled,
+                disabled: props.isDisabled,
+              }),
+            )}
           </span>
         </span>
       </div>
@@ -515,10 +520,14 @@ function SortableProviderVisibilityRow(props: {
         onCheckedChange={(checked) => props.onHiddenChange(!Boolean(checked))}
         aria-label={
           isChecking
-            ? `Checking ${props.option.title} CLI availability`
+            ? translate("Checking {provider} CLI availability", { provider: props.option.title })
             : isAvailable
-              ? `Show ${props.option.title} in the provider picker`
-              : `${props.option.title} is unavailable in the provider picker`
+              ? translate("Show {provider} in the provider picker", {
+                  provider: props.option.title,
+                })
+              : translate("{provider} is unavailable in the provider picker", {
+                  provider: props.option.title,
+                })
         }
       />
     </div>
@@ -529,7 +538,9 @@ function ProviderDocsLinks({ docs }: { docs: ProviderInstallSettings["docs"] }) 
   return (
     <div className={cn(SETTINGS_OUTLINED_SURFACE_CLASS_NAME, "px-3 py-2.5")}>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <span className="text-ui leading-snug font-medium text-foreground">CLI docs</span>
+        <span className="text-ui leading-snug font-medium text-foreground">
+          {translate("CLI docs")}
+        </span>
         <div className="flex flex-wrap gap-2">
           {docs.map((doc) => (
             <Button
@@ -538,7 +549,7 @@ function ProviderDocsLinks({ docs }: { docs: ProviderInstallSettings["docs"] }) 
               size="sm"
               render={<a href={doc.href} target="_blank" rel="noreferrer" />}
             >
-              <span>{doc.label}</span>
+              <span>{translate(doc.label)}</span>
               <ExternalLinkIcon className="size-3" />
             </Button>
           ))}
@@ -556,25 +567,30 @@ function formatProviderVersion(value: string | null | undefined): string | null 
 
 function providerUpdateStatusLabel(provider: ServerProviderStatus): string | null {
   const state = provider.updateState?.status;
-  if (state === "queued") return "Update queued";
-  if (state === "running") return "Updating";
-  if (state === "succeeded") return "Updated";
-  if (state === "failed") return "Update failed";
-  if (state === "unchanged") return "Still outdated";
+  if (state === "queued") return translate("Update queued");
+  if (state === "running") return translate("Updating");
+  if (state === "succeeded") return translate("Updated");
+  if (state === "failed") return translate("Update failed");
+  if (state === "unchanged") return translate("Still outdated");
   const advisory = provider.versionAdvisory;
   if (advisory?.status === "behind_latest" && advisory.latestVersion) {
     const currentVersion = formatProviderVersion(advisory.currentVersion);
     const latestVersion = formatProviderVersion(advisory.latestVersion);
-    return currentVersion ? `${currentVersion} -> ${latestVersion}` : `Latest ${latestVersion}`;
+    if (!latestVersion) return null;
+    return currentVersion
+      ? translate("{current} → {latest}", { current: currentVersion, latest: latestVersion })
+      : translate("Latest {version}", { version: latestVersion });
   }
   const currentVersion = formatProviderVersion(provider.version);
-  return currentVersion ? `Current ${currentVersion}` : null;
+  return currentVersion ? translate("Current {version}", { version: currentVersion }) : null;
 }
 
 function providerUpdateFailureMessage(provider: ServerProviderStatus | undefined): string | null {
   const state = provider?.updateState;
   if (!state || (state.status !== "failed" && state.status !== "unchanged")) return null;
-  return state.output?.trim() || state.message || "The provider update did not complete.";
+  return (
+    state.output?.trim() || state.message || translate("The provider update did not complete.")
+  );
 }
 
 function ProviderUpdateAction(props: {
@@ -584,13 +600,18 @@ function ProviderUpdateAction(props: {
   onUpdate: (provider: ProviderKind) => void;
 }) {
   const advisory = props.providerStatus.versionAdvisory;
+  const t = useT();
   return (
     <Button
       type="button"
       size="xs"
       variant="outline"
       disabled={props.disabled}
-      title={advisory?.updateCommand ? `Run ${advisory.updateCommand}` : undefined}
+      title={
+        advisory?.updateCommand
+          ? t("Run {command}", { command: advisory.updateCommand })
+          : undefined
+      }
       onClick={(event: MouseEvent<HTMLButtonElement>) => {
         event.stopPropagation();
         props.onUpdate(props.providerStatus.provider);
@@ -601,7 +622,7 @@ function ProviderUpdateAction(props: {
       ) : (
         <DownloadIcon className="size-3.5" />
       )}
-      {props.active ? "Updating" : "Update"}
+      {props.active ? t("Updating") : t("Update")}
     </Button>
   );
 }
@@ -611,7 +632,12 @@ function ProviderInstallFieldControl(props: {
   settings: AppSettings;
   updateSettings: (patch: Partial<AppSettings>) => void;
 }) {
+  const t = useT();
   const id = `provider-install-${props.field.settingsKey}`;
+  const description =
+    typeof props.field.description === "function"
+      ? props.field.description(t)
+      : t(props.field.description);
   if (props.field.kind === "boolean") {
     return (
       <label
@@ -620,10 +646,10 @@ function ProviderInstallFieldControl(props: {
       >
         <span className="min-w-0">
           <span className="block text-ui leading-snug font-medium text-foreground">
-            {props.field.label}
+            {t(props.field.label)}
           </span>
           <span className="mt-1 block text-ui leading-snug text-muted-foreground">
-            {props.field.description}
+            {description}
           </span>
         </span>
         <Switch
@@ -643,7 +669,7 @@ function ProviderInstallFieldControl(props: {
   return (
     <label htmlFor={id} className="block">
       <span className="block text-ui leading-snug font-medium text-foreground">
-        {props.field.label}
+        {t(props.field.label)}
       </span>
       <DebouncedSettingTextInput
         id={id}
@@ -656,16 +682,14 @@ function ProviderInstallFieldControl(props: {
         }
         placeholder={
           isPassword && configured
-            ? "Configured — enter a replacement or leave blank"
-            : props.field.placeholder
+            ? t("Configured — enter a replacement or leave blank")
+            : t(props.field.placeholder)
         }
         type={isPassword ? "password" : undefined}
         autoComplete={isPassword ? "new-password" : undefined}
         spellCheck={false}
       />
-      <span className="mt-1 block text-ui leading-snug text-muted-foreground">
-        {props.field.description}
-      </span>
+      <span className="mt-1 block text-ui leading-snug text-muted-foreground">{description}</span>
     </label>
   );
 }
@@ -683,6 +707,7 @@ function ProviderToolRow(props: {
   onUpdate: (provider: ProviderKind) => void;
   updateSettings: (patch: Partial<AppSettings>) => void;
 }) {
+  const t = useT();
   const title = PROVIDER_DISPLAY_NAMES[props.config.provider];
   const isDirty = isProviderInstallConfigDirty(props.config, props.settings, props.defaults);
   const showProviderUpdateStatus = props.providerStatus
@@ -699,7 +724,7 @@ function ProviderToolRow(props: {
   const providerUpdateLabel = props.providerStatus
     ? !props.settings.enableProviderUpdateChecks
       ? currentProviderVersion
-        ? `Current ${currentProviderVersion}`
+        ? t("Current {version}", { version: currentProviderVersion })
         : null
       : providerUpdateSuppressed
         ? null
@@ -730,7 +755,7 @@ function ProviderToolRow(props: {
           >
             <span className="min-w-0 flex-1 text-ui-lg font-medium text-foreground">{title}</span>
             {isDirty ? (
-              <span className="shrink-0 text-ui-sm text-muted-foreground">Custom</span>
+              <span className="shrink-0 text-ui-sm text-muted-foreground">{t("Custom")}</span>
             ) : null}
             {providerUpdateLabel ? (
               <span
@@ -767,19 +792,23 @@ function ProviderToolRow(props: {
                 <div className="text-ui leading-snug text-muted-foreground">
                   {updateAdvisory.canUpdate && updateAdvisory.updateCommand ? (
                     <>
-                      <span>Command: </span>
+                      <span>{t("Command:")} </span>
                       <code className="font-mono">{updateAdvisory.updateCommand}</code>
                     </>
                   ) : (
-                    "A newer version is available, but Synara could not identify a safe one-click update command for this installation."
+                    t(
+                      "A newer version is available, but Synara could not identify a safe one-click update command for this installation.",
+                    )
                   )}
                 </div>
               ) : null}
               {showSelfManagedUpdate && props.providerStatus ? (
                 <div className="flex items-center justify-between gap-3">
                   <div className="min-w-0 text-ui leading-snug text-muted-foreground">
-                    {title} manages its own releases, so Synara cannot tell whether a newer version
-                    exists. Run the update to be sure.
+                    {t(
+                      "{provider} manages its own releases, so Synara cannot tell whether a newer version exists. Run the update to be sure.",
+                      { provider: title },
+                    )}
                   </div>
                   <ProviderUpdateAction
                     providerStatus={props.providerStatus}
@@ -819,6 +848,7 @@ export function ProvidersSettingsPanel({
   active,
   resetEpoch,
 }: ProvidersSettingsPanelProps) {
+  const t = useT();
   const queryClient = useQueryClient();
   const serverConfigQuery = useQuery(serverConfigQueryOptions());
   const localProviderStatuses = useProviderStatusesForLocalConfig();
@@ -946,9 +976,11 @@ export function ProvidersSettingsPanel({
             const manualCommand = refreshedProvider?.versionAdvisory?.updateCommand?.trim();
             toastManager.add({
               type: "error",
-              title: `Could not update ${PROVIDER_DISPLAY_NAMES[provider]}`,
+              title: t("Could not update {provider}", {
+                provider: PROVIDER_DISPLAY_NAMES[provider],
+              }),
               description: manualCommand
-                ? `${failureMessage}\n\nCopy the command below to update manually in a terminal.`
+                ? `${failureMessage}\n\n${t("Copy the command below to update manually in a terminal.")}`
                 : failureMessage,
               ...(manualCommand ? { data: { copyText: manualCommand } } : {}),
             });
@@ -956,15 +988,19 @@ export function ProvidersSettingsPanel({
           }
           toastManager.add({
             type: "success",
-            title: `${PROVIDER_DISPLAY_NAMES[provider]} update finished`,
-            description: "New sessions will use the refreshed provider.",
+            title: t("{provider} update finished", {
+              provider: PROVIDER_DISPLAY_NAMES[provider],
+            }),
+            description: t("New sessions will use the refreshed provider."),
           });
         })
         .catch((error: unknown) => {
           toastManager.add({
             type: "error",
-            title: `Could not update ${PROVIDER_DISPLAY_NAMES[provider]}`,
-            description: error instanceof Error ? error.message : "The provider update failed.",
+            title: t("Could not update {provider}", {
+              provider: PROVIDER_DISPLAY_NAMES[provider],
+            }),
+            description: error instanceof Error ? error.message : t("The provider update failed."),
           });
         })
         .finally(async () => {
@@ -978,7 +1014,7 @@ export function ProvidersSettingsPanel({
           });
         });
     },
-    [queryClient, updatingProviders],
+    [queryClient, t, updatingProviders],
   );
 
   if (!active) return null;
@@ -997,10 +1033,12 @@ export function ProvidersSettingsPanel({
 
   return (
     <div className="space-y-6">
-      <SettingsSection title="Provider activity">
+      <SettingsSection title={t("Provider activity")}>
         <SettingsRow
-          title="Enabled providers"
-          description="Allow background checks and new turns. Enabling a provider does not install it or sign it in. Disabling keeps existing threads and does not interrupt a running turn."
+          title={t("Enabled providers")}
+          description={t(
+            "Allow background checks and new turns. Enabling a provider does not install it or sign it in. Disabling keeps existing threads and does not interrupt a running turn.",
+          )}
           control={
             <Button
               variant="outline"
@@ -1009,18 +1047,21 @@ export function ProvidersSettingsPanel({
               onClick={() => void refreshProviders()}
             >
               {refreshingProviders ? <Loader2Icon className="size-3.5 animate-spin" /> : null}
-              {refreshingProviders ? "Checking setup" : "Refresh status"}
+              {refreshingProviders ? t("Checking setup") : t("Refresh status")}
             </Button>
           }
           status={
             providerEnablementMutationPending
-              ? "Saving provider activity"
-              : `${enabledProviderCount} of ${PROVIDER_VISIBILITY_OPTIONS.length} enabled`
+              ? t("Saving provider activity")
+              : t("{enabled} of {total} enabled", {
+                  enabled: enabledProviderCount,
+                  total: PROVIDER_VISIBILITY_OPTIONS.length,
+                })
           }
           resetAction={
             disabledProviderSet.size > 0 && !providerEnablementMutationPending ? (
               <SettingResetButton
-                label="enabled providers"
+                label={t("enabled providers")}
                 onClick={() => void updateProviderEnablement([...defaults.disabledProviders])}
               />
             ) : null
@@ -1048,11 +1089,13 @@ export function ProvidersSettingsPanel({
                   description={
                     <>
                       <span className="block">
-                        {providerSetupStatusLabel({
-                          status: providerStatus,
-                          reconciled: providerStatusesReconciled,
-                          disabled: !enabled,
-                        })}
+                        {translate(
+                          providerSetupStatusLabel({
+                            status: providerStatus,
+                            reconciled: providerStatusesReconciled,
+                            disabled: !enabled,
+                          }),
+                        )}
                       </span>
                       {enabled &&
                       providerStatusesReconciled &&
@@ -1069,9 +1112,9 @@ export function ProvidersSettingsPanel({
                         variant="outline"
                         size="xs"
                         render={<a href={option.setupDocsHref} target="_blank" rel="noreferrer" />}
-                        aria-label={`${option.title} setup guide`}
+                        aria-label={t("{provider} setup guide", { provider: option.title })}
                       >
-                        Setup guide
+                        {t("Setup guide")}
                         <ExternalLinkIcon className="size-3" />
                       </Button>
                       <Switch
@@ -1086,7 +1129,9 @@ export function ProvidersSettingsPanel({
                             ),
                           )
                         }
-                        aria-label={`${enabled ? "Disable" : "Enable"} ${option.title}`}
+                        aria-label={t(enabled ? "Disable {provider}" : "Enable {provider}", {
+                          provider: option.title,
+                        })}
                       />
                     </>
                   }
@@ -1097,25 +1142,30 @@ export function ProvidersSettingsPanel({
         </SettingsRow>
       </SettingsSection>
 
-      <SettingsSection title="Provider picker">
+      <SettingsSection title={t("Provider picker")}>
         <SettingsRow
-          title="Available CLIs"
-          description="Show or hide installed providers in the picker and drag them into your preferred order. Hiding a provider here does not disable its server activity."
+          title={t("Available CLIs")}
+          description={t(
+            "Show or hide installed providers in the picker and drag them into your preferred order. Hiding a provider here does not disable its server activity.",
+          )}
           status={
             serverConfigQuery.isPending || hasPendingProviderStatuses
-              ? "Checking installed CLIs"
+              ? t("Checking installed CLIs")
               : availableProviderCount === 0
-                ? "No CLIs detected"
+                ? t("No CLIs detected")
                 : visibleAvailableProviderCount < availableProviderCount
-                  ? `${visibleAvailableProviderCount} of ${availableProviderCount} installed shown`
+                  ? t("{visible} of {available} installed shown", {
+                      visible: visibleAvailableProviderCount,
+                      available: availableProviderCount,
+                    })
                   : isProviderOrderDirty
-                    ? `${availableProviderCount} installed · custom order`
-                    : `${availableProviderCount} installed`
+                    ? t("{count} installed · custom order", { count: availableProviderCount })
+                    : t("{count} installed", { count: availableProviderCount })
           }
           resetAction={
             hiddenProviderCount > 0 || isProviderOrderDirty ? (
               <SettingResetButton
-                label="provider picker"
+                label={t("provider picker")}
                 onClick={() =>
                   updateSettings({
                     hiddenProviders: defaults.hiddenProviders,
@@ -1163,14 +1213,16 @@ export function ProvidersSettingsPanel({
       </SettingsSection>
 
       <div id={SETTINGS_TARGETS.providerUpdates}>
-        <SettingsSection title="Updates">
+        <SettingsSection title={t("Updates")}>
           <SettingsRow
-            title="Automatic CLI update checks"
-            description="Check Codex, Claude, and other provider CLIs for newer versions in the background."
+            title={t("Automatic CLI update checks")}
+            description={t(
+              "Check Codex, Claude, and other provider CLIs for newer versions in the background.",
+            )}
             resetAction={
               settings.enableProviderUpdateChecks !== defaults.enableProviderUpdateChecks ? (
                 <SettingResetButton
-                  label="CLI update checks"
+                  label={t("CLI update checks")}
                   onClick={() =>
                     updateSettings({
                       enableProviderUpdateChecks: defaults.enableProviderUpdateChecks,
@@ -1185,20 +1237,25 @@ export function ProvidersSettingsPanel({
                 onCheckedChange={(checked) =>
                   updateSettings({ enableProviderUpdateChecks: Boolean(checked) })
                 }
-                aria-label="Automatic CLI update checks"
+                aria-label={t("Automatic CLI update checks")}
               />
             }
           />
 
           <SettingsRow
-            title="Provider updates"
-            description="Review installed provider tools that Synara can safely update."
+            title={t("Provider updates")}
+            description={t("Review installed provider tools that Synara can safely update.")}
             status={
               !settings.enableProviderUpdateChecks
-                ? "Automatic checks off"
+                ? t("Automatic checks off")
                 : outdatedProviderCount > 0
-                  ? `${outdatedProviderCount} ${pluralize(outdatedProviderCount, "update")} available`
-                  : "No provider updates detected"
+                  ? t(
+                      outdatedProviderCount === 1
+                        ? "{count} update available"
+                        : "{count} updates available",
+                      { count: outdatedProviderCount },
+                    )
+                  : t("No provider updates detected")
             }
           >
             {settings.enableProviderUpdateChecks && outdatedProviderStatuses.length > 0 ? (
@@ -1228,7 +1285,9 @@ export function ProvidersSettingsPanel({
                             onUpdate={(provider) => void runProviderUpdate(provider)}
                           />
                         ) : (
-                          <span className="text-ui-sm text-muted-foreground">Manual update</span>
+                          <span className="text-ui-sm text-muted-foreground">
+                            {t("Manual update")}
+                          </span>
                         )
                       }
                     />
@@ -1241,21 +1300,28 @@ export function ProvidersSettingsPanel({
       </div>
 
       <div>
-        <SettingsSection title="Provider tools">
+        <SettingsSection title={t("Provider tools")}>
           <SettingsRow
-            title="Installed CLIs"
-            description="Review provider versions and update tools. Open a row only when you need binary overrides."
+            title={t("Installed CLIs")}
+            description={t(
+              "Review provider versions and update tools. Open a row only when you need binary overrides.",
+            )}
             status={
               !settings.enableProviderUpdateChecks
-                ? "Automatic checks off"
+                ? t("Automatic checks off")
                 : outdatedProviderCount > 0
-                  ? `${outdatedProviderCount} ${pluralize(outdatedProviderCount, "update")} available`
-                  : "No provider updates detected"
+                  ? t(
+                      outdatedProviderCount === 1
+                        ? "{count} update available"
+                        : "{count} updates available",
+                      { count: outdatedProviderCount },
+                    )
+                  : t("No provider updates detected")
             }
             resetAction={
               installSettingsDirty ? (
                 <SettingResetButton
-                  label="provider tools"
+                  label={t("provider tools")}
                   onClick={() => {
                     updateSettings(createProviderInstallResetPatch(defaults));
                     setOpenInstallProviders(createClosedProviderInstallDisclosureState());

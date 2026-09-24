@@ -55,6 +55,7 @@ import { useIsMobile } from "~/hooks/useMediaQuery";
 import { useRefreshProviderStatusesNow } from "~/hooks/useProviderStatusRefresh";
 import { useRepoDiffTotals } from "~/hooks/useRepoDiffTotals";
 import { useThreadRecap } from "~/hooks/useThreadRecap";
+import { useT } from "~/i18n";
 import { SINGLE_CHAT_PANE_SCOPE_ID } from "~/lib/chatPaneScope";
 import { formatComposerMentionToken } from "~/lib/composerMentions";
 import {
@@ -163,7 +164,6 @@ import {
 import {
   canCreateThreadHandoff,
   resolveAvailableHandoffTargetProviders,
-  resolveThreadHandoffBadgeLabel,
 } from "../lib/threadHandoff";
 import { buildDraftThreadRenameCreateInput, dispatchThreadRename } from "../lib/threadRename";
 import { useProjectEnvironmentStore } from "../projectEnvironmentStore";
@@ -471,16 +471,17 @@ function ComposerControlSkeleton(props: { widthClassName: string }) {
 }
 
 function ComposerModelLoadingControl(props: { widthClassName: string }) {
+  const t = useT();
   return (
     <div
-      aria-label="Loading models"
+      aria-label={t("Loading models")}
       className={cn(
         "flex h-8 shrink-0 items-center gap-2 rounded-md border border-border/50 px-2 text-muted-foreground",
         props.widthClassName,
       )}
     >
       <RefreshCwIcon aria-hidden="true" className="size-3.5 animate-spin" />
-      <span className="truncate text-ui-xs">Loading models</span>
+      <span className="truncate text-ui-xs">{t("Loading models")}</span>
     </div>
   );
 }
@@ -540,6 +541,7 @@ export default function ChatView({
   onChangeThreadInSplitPane,
   onCloseThreadPane,
 }: ChatViewProps) {
+  const t = useT();
   // Prop defaults are resolved here instead of in the destructuring pattern: an
   // AssignmentPattern in the parameter list makes React Compiler bail out (silently —
   // `panicThreshold` is unset) on this entire component, the hottest one in the app.
@@ -1442,9 +1444,13 @@ export default function ChatView({
       sidebarPlanSourceThreadProposedPlans,
     ],
   );
-  const planSidebarLabel = sidebarProposedPlan ? "Plan details" : "Tasks";
-  const planSidebarToggleLabel = planSidebarOpen ? `Hide ${planSidebarLabel}` : planSidebarLabel;
-  const planSidebarToggleTitle = `${planSidebarOpen ? "Hide" : "Show"} ${planSidebarLabel.toLowerCase()} sidebar`;
+  const planSidebarLabel = sidebarProposedPlan ? t("Plan details") : t("Tasks");
+  const planSidebarToggleLabel = planSidebarOpen
+    ? t("Hide {label}", { label: planSidebarLabel })
+    : planSidebarLabel;
+  const planSidebarToggleTitle = planSidebarOpen
+    ? t("Hide {label} sidebar", { label: planSidebarLabel.toLowerCase() })
+    : t("Show {label} sidebar", { label: planSidebarLabel.toLowerCase() });
   const activeTaskList = useMemo((): ActiveTaskListState | null => {
     if (showDebugTaskBanner) {
       return {
@@ -1755,13 +1761,13 @@ export default function ChatView({
       .then(() => {
         toastManager.add({
           type: "success",
-          title: "Project instructions added to notepad.",
+          title: t("Project instructions added to notepad."),
         });
       })
       .catch(() => {
         // `handleNotesChange` already surfaces the save failure through the shared notes toast.
       });
-  }, [activeThreadId, handleNotesChange, projectInstructions, threadNotes]);
+  }, [activeThreadId, handleNotesChange, projectInstructions, t, threadNotes]);
   const handleJumpToPinnedMessage = useCallback(
     (messageId: MessageId) => {
       timelineControllerRef.current?.scrollToMessage(messageId);
@@ -2108,18 +2114,18 @@ export default function ChatView({
           id: "fork-target:worktree",
           type: "fork-target" as const,
           target: "worktree" as const,
-          label: "Fork Into New Worktree",
-          description: "Continue in a new worktree",
+          label: t("Fork Into New Worktree"),
+          description: t("Continue in a new worktree"),
         },
         {
           id: "fork-target:local",
           type: "fork-target" as const,
           target: "local" as const,
-          label: "Fork Into Local",
+          label: t("Fork Into Local"),
           description:
             activeThread?.worktreePath || activeThread?.envMode === "worktree"
-              ? "Continue in this local worktree"
-              : "Continue in the current local thread",
+              ? t("Continue in this local worktree")
+              : t("Continue in the current local thread"),
         },
       ];
     }
@@ -2129,15 +2135,15 @@ export default function ChatView({
           id: "review-target:changes",
           type: "review-target" as const,
           target: "changes" as const,
-          label: "Review Uncommitted Changes",
-          description: "Review local uncommitted changes",
+          label: t("Review Uncommitted Changes"),
+          description: t("Review local uncommitted changes"),
         },
         {
           id: "review-target:base-branch",
           type: "review-target" as const,
           target: "base-branch" as const,
-          label: "Review Against Base Branch",
-          description: "Review the current branch diff against its base",
+          label: t("Review Against Base Branch"),
+          description: t("Review the current branch diff against its base"),
         },
       ];
     }
@@ -2148,6 +2154,7 @@ export default function ChatView({
     activeThread?.worktreePath,
     composerCommandPicker,
     normalComposerMenuItems,
+    t,
   ]);
   const composerMenuOpen = Boolean(composerTrigger || composerCommandPicker);
   // The `+` panel yields the floating slot to the slash/mention menu as soon as a
@@ -2189,10 +2196,6 @@ export default function ChatView({
     settings,
     configuredProviderStatuses: serverConfigQuery.data?.providers,
   });
-  const handoffBadgeLabel = useMemo(
-    () => (activeThread ? resolveThreadHandoffBadgeLabel(activeThread) : null),
-    [activeThread],
-  );
   const handoffBadgeSourceProvider = activeThread?.handoff?.sourceProvider ?? null;
   const handoffBadgeTargetProvider = activeThread?.handoff
     ? activeThread.modelSelection.provider
@@ -2364,9 +2367,9 @@ export default function ChatView({
       void api?.browser.open({ threadId, initialUrl: url }).catch((error) => {
         toastManager.add({
           type: "error",
-          title: "Could not open repository",
+          title: t("Could not open repository"),
           description:
-            error instanceof Error ? error.message : "The in-app browser could not open GitHub.",
+            error instanceof Error ? error.message : t("The in-app browser could not open GitHub."),
         });
       });
       if (onOpenBrowserUrl) {
@@ -2383,7 +2386,7 @@ export default function ChatView({
         }),
       });
     },
-    [navigate, onOpenBrowserUrl, threadId],
+    [navigate, onOpenBrowserUrl, t, threadId],
   );
 
   const envLocked = Boolean(
@@ -2608,7 +2611,7 @@ export default function ChatView({
     refreshVoiceStatus: refreshProviderStatuses,
     actionArmDelayMs: VOICE_RECORDER_ACTION_ARM_DELAY_MS,
     failureCopy: {
-      transcriptionFailedTitle: "Couldn't transcribe voice note",
+      transcriptionFailedTitle: t("Couldn't transcribe voice note"),
     },
     onGuardWarning: warnVoiceGuard,
   });
@@ -3369,14 +3372,14 @@ export default function ChatView({
     void onInterrupt().catch((error: unknown) => {
       toastManager.add({
         type: "error",
-        title: "Could not stop the current response",
+        title: t("Could not stop the current response"),
         description:
           error instanceof Error
             ? error.message
-            : "The interrupt request failed. Try again in a moment.",
+            : t("The interrupt request failed. Try again in a moment."),
       });
     });
-  }, [onInterrupt]);
+  }, [onInterrupt, t]);
 
   const onStopWorkflowRun = useCallback(async () => {
     const api = readNativeApi();
@@ -3606,14 +3609,14 @@ export default function ChatView({
       if (pendingUserInputs.length > 0) {
         toastManager.add({
           type: "error",
-          title: "Attach images after answering plan questions.",
+          title: t("Attach images after answering plan questions."),
         });
         return;
       }
 
       enqueueComposerImages(files);
     },
-    [activeThreadId, enqueueComposerImages, isSidechatExpired, pendingUserInputs.length],
+    [activeThreadId, enqueueComposerImages, isSidechatExpired, pendingUserInputs.length, t],
   );
 
   const removeComposerImage = (imageId: string) => {
@@ -3627,7 +3630,7 @@ export default function ChatView({
       if (pendingUserInputs.length > 0) {
         toastManager.add({
           type: "error",
-          title: "Attach files after answering plan questions.",
+          title: t("Attach files after answering plan questions."),
         });
         return;
       }
@@ -3643,7 +3646,9 @@ export default function ChatView({
       setThreadError(
         activeThreadId,
         insertedCount < nextFiles.length
-          ? `You can attach up to ${PROVIDER_SEND_TURN_MAX_ATTACHMENTS} references per message.`
+          ? t("You can attach up to {count} references per message.", {
+              count: PROVIDER_SEND_TURN_MAX_ATTACHMENTS,
+            })
           : error,
       );
     },
@@ -3653,6 +3658,7 @@ export default function ChatView({
       isSidechatExpired,
       pendingUserInputs.length,
       setThreadError,
+      t,
     ],
   );
 
@@ -3713,8 +3719,8 @@ export default function ChatView({
       if (!mention) {
         toastManager.add({
           type: "error",
-          title: "Could not reference this chat",
-          description: "This chat is unavailable or cannot be mentioned here.",
+          title: t("Could not reference this chat"),
+          description: t("This chat is unavailable or cannot be mentioned here."),
         });
         return;
       }
@@ -3854,15 +3860,15 @@ export default function ChatView({
       } catch (error) {
         toastManager.add({
           type: "error",
-          title: "Could not create handoff thread",
+          title: t("Could not create handoff thread"),
           description:
             error instanceof Error
               ? error.message
-              : "An error occurred while creating the handoff thread.",
+              : t("An error occurred while creating the handoff thread."),
         });
       }
     },
-    [activeThread, createThreadHandoff, handoffDisabled],
+    [activeThread, createThreadHandoff, handoffDisabled, t],
   );
 
   const clearComposerInput = useCallback(
@@ -4213,6 +4219,7 @@ export default function ChatView({
     model: selectedModelForPickerWithCustomFallback,
     prompt,
     modelOptions: selectedProviderModelOptions,
+    t,
     ...(selectedRuntimeModel ? { runtimeModel: selectedRuntimeModel } : {}),
     runtimeAgents: dynamicAgents,
   });
@@ -4432,8 +4439,8 @@ export default function ChatView({
       if (!activeProject) {
         toastManager.add({
           type: "warning",
-          title: "Clear is unavailable",
-          description: "Open a project before starting a fresh thread.",
+          title: t("Clear is unavailable"),
+          description: t("Open a project before starting a fresh thread."),
         });
         return;
       }
@@ -4764,7 +4771,7 @@ export default function ChatView({
             <div className="flex items-center gap-2">
               <SidebarHeaderTrigger className="size-7 shrink-0" />
               <span className="text-ui-lg font-medium text-[var(--color-text-foreground)]">
-                Threads
+                {t("Threads")}
               </span>
             </div>
           </header>
@@ -4779,13 +4786,15 @@ export default function ChatView({
             )}
           >
             <SidebarHeaderNavigationControls />
-            <span className="text-ui leading-snug text-muted-foreground/50">No active thread</span>
+            <span className="text-ui leading-snug text-muted-foreground/50">
+              {t("No active thread")}
+            </span>
           </div>
         )}
         <div className="flex flex-1 items-center justify-center">
           <div className="text-center">
             <p className="text-ui leading-snug">
-              Select a thread or create a new one to get started.
+              {t("Select a thread or create a new one to get started.")}
             </p>
           </div>
         </div>
@@ -4793,7 +4802,7 @@ export default function ChatView({
     );
   }
 
-  const activeThreadDisplayTitle = resolveActiveThreadTitle({
+  const resolvedActiveThreadDisplayTitle = resolveActiveThreadTitle({
     title: activeThread.title,
     subagentTitle: activeThread.parentThreadId
       ? resolveSubagentPresentationForThread({
@@ -4804,6 +4813,10 @@ export default function ChatView({
     isHomeChat: isChatProject,
     isEmpty: timelineEntries.length === 0,
   });
+  const activeThreadDisplayTitle =
+    resolvedActiveThreadDisplayTitle === "New Chat"
+      ? t("New Chat")
+      : resolvedActiveThreadDisplayTitle;
 
   const handleRenameActiveThread = async (newTitle: string) => {
     const outcome = await dispatchThreadRename({
@@ -4816,8 +4829,8 @@ export default function ChatView({
     }).catch((error) => {
       toastManager.add({
         type: "error",
-        title: "Failed to rename thread",
-        description: error instanceof Error ? error.message : "An error occurred.",
+        title: t("Failed to rename thread"),
+        description: error instanceof Error ? error.message : t("An error occurred."),
       });
       throw error;
     });
@@ -4825,7 +4838,7 @@ export default function ChatView({
     if (outcome === "empty") {
       toastManager.add({
         type: "warning",
-        title: "Thread title cannot be empty",
+        title: t("Thread title cannot be empty"),
       });
       return;
     }
@@ -5006,10 +5019,10 @@ export default function ChatView({
           onClick={toggleDraftTemporary}
           title={
             isThreadTemporary
-              ? "Temporary chat — deleted when you leave. Click to keep it."
-              : "Make this a temporary chat (deleted when you leave)"
+              ? t("Temporary chat — deleted when you leave. Click to keep it.")
+              : t("Make this a temporary chat (deleted when you leave)")
           }
-          aria-label="Temporary chat"
+          aria-label={t("Temporary chat")}
           className={cn(
             "ml-auto shrink-0 gap-1.5 whitespace-nowrap px-2 sm:px-2.5",
             COMPOSER_TOOLBAR_CAPSULE_HOVER_CLASS_NAME,
@@ -5018,7 +5031,7 @@ export default function ChatView({
           )}
         >
           <TemporaryThreadIcon className="size-3.5" />
-          <span className="sr-only sm:not-sr-only">Temporary</span>
+          <span className="sr-only sm:not-sr-only">{t("Temporary")}</span>
         </Button>
       ) : null}
     </div>
@@ -5137,8 +5150,8 @@ export default function ChatView({
         if (!createSidechat) {
           toastManager.add({
             type: "warning",
-            title: "Side chat is unavailable",
-            description: "Open the parent chat before starting a replacement side chat.",
+            title: t("Side chat is unavailable"),
+            description: t("Open the parent chat before starting a replacement side chat."),
           });
           return;
         }
@@ -5147,11 +5160,11 @@ export default function ChatView({
       .catch((error) => {
         toastManager.add({
           type: "error",
-          title: "Could not start side chat",
+          title: t("Could not start side chat"),
           description:
             error instanceof Error
               ? error.message
-              : "An error occurred while creating the side chat.",
+              : t("An error occurred while creating the side chat."),
         });
       });
   };
@@ -5702,7 +5715,6 @@ export default function ChatView({
           keybindings={keybindings}
           availableEditors={availableEditors}
           diffToggleShortcutLabel={diffPanelShortcutLabel}
-          handoffBadgeLabel={handoffBadgeLabel}
           handoffActionLabel={handoffActionLabel}
           handoffDisabled={handoffDisabled}
           handoffActionTargetProviders={handoffTargetProviders}
@@ -5722,14 +5734,14 @@ export default function ChatView({
             surfaceMode === "single" && onSplitSurface
               ? {
                   kind: "split",
-                  label: "Split chat",
+                  label: t("Split chat"),
                   shortcutLabel: chatSplitShortcutLabel,
                   onClick: onSplitSurface,
                 }
               : surfaceMode === "split" && isFocusedPane && onMaximizeSurface
                 ? {
                     kind: "maximize",
-                    label: "Expand this chat",
+                    label: t("Expand this chat"),
                     shortcutLabel: null,
                     onClick: onMaximizeSurface,
                   }
@@ -5753,7 +5765,7 @@ export default function ChatView({
           changeThreadAction={
             surfaceMode === "split" && isFocusedPane && onChangeThreadInSplitPane
               ? {
-                  label: "Change thread",
+                  label: t("Change thread"),
                   onClick: onChangeThreadInSplitPane,
                 }
               : null
@@ -5872,10 +5884,10 @@ export default function ChatView({
                       className="text-[26px] font-normal leading-[1.15] tracking-[-0.015em] text-foreground/95 sm:text-[30px]"
                     >
                       {isEmptyChatLanding ? (
-                        "What should we work on?"
+                        t("What should we work on?")
                       ) : (
                         <>
-                          What should we do in{" "}
+                          {t("What should we do in")}{" "}
                           {showEmptyLandingProjectPicker ? (
                             <ProjectPicker
                               align="center"
@@ -5893,13 +5905,13 @@ export default function ChatView({
                                   data-testid="empty-landing-heading-project-trigger"
                                   className="cursor-pointer rounded-sm text-inherit underline decoration-dotted decoration-[1.5px] underline-offset-[6px] transition-colors duration-150 ease-out hover:text-foreground/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 motion-reduce:transition-none"
                                 >
-                                  {activeProjectDisplayName ?? "this folder"}
+                                  {activeProjectDisplayName ?? t("this folder")}
                                 </button>
                               }
                             />
                           ) : (
                             <span className="text-inherit">
-                              {activeProjectDisplayName ?? "this folder"}
+                              {activeProjectDisplayName ?? t("this folder")}
                             </span>
                           )}
                           ?

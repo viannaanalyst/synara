@@ -4,6 +4,7 @@
 
 import type { OpenUsageUsageLine } from "~/lib/openUsageRateLimits";
 import { cn } from "~/lib/utils";
+import { useT } from "~/i18n";
 
 type ProviderUsageLineListSurface = "settings" | "popover";
 
@@ -42,6 +43,7 @@ export function ProviderUsageLineList({
   lines: ReadonlyArray<OpenUsageUsageLine>;
   surface: ProviderUsageLineListSurface;
 }) {
+  const t = useT();
   const classes = SURFACE_CLASSES[surface];
 
   return (
@@ -49,10 +51,10 @@ export function ProviderUsageLineList({
       {lines.map((line) => (
         <div key={`${line.label}:${line.value}`} className={classes.item}>
           <div className={classes.row}>
-            <span className={classes.label}>{line.label}</span>
+            <span className={classes.label}>{t(line.label)}</span>
             <span className={classes.value}>{line.value}</span>
           </div>
-          {line.subtitle ? <div className={classes.subtitle}>{line.subtitle}</div> : null}
+          {line.subtitle ? <div className={classes.subtitle}>{t(line.subtitle)}</div> : null}
         </div>
       ))}
     </div>

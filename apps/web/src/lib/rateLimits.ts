@@ -4,6 +4,7 @@
 
 import type { OrchestrationThread } from "@synara/contracts";
 import { providerUsageLearnMoreHref } from "@synara/shared/providerUsage";
+import { getLocale, t } from "~/i18n";
 
 export interface RateLimitWindow {
   window: string;
@@ -399,7 +400,7 @@ export function deriveVisibleRateLimitRows(
 
 export function formatRateLimitRemainingPercent(remainingPercent: number | undefined): string {
   if (remainingPercent === undefined) return "—";
-  return `${Math.round(Math.min(100, Math.max(0, remainingPercent)))}%`;
+  return `${new Intl.NumberFormat(getLocale()).format(Math.round(Math.min(100, Math.max(0, remainingPercent))))}%`;
 }
 
 /** Relative reset countdown, e.g. "Resets in 2h 16m" / "Resets in 5d 11h". */
@@ -410,22 +411,22 @@ export function formatRateLimitResetCountdown(resetsAt: string): string {
   }
   const diffMs = resetMs - Date.now();
   if (diffMs <= 0) {
-    return "Resets soon";
+    return t("Resets soon");
   }
   const totalMinutes = Math.floor(diffMs / 60_000);
   const days = Math.floor(totalMinutes / 1_440);
   const hours = Math.floor((totalMinutes % 1_440) / 60);
   const minutes = totalMinutes % 60;
   if (days > 0) {
-    return `Resets in ${days}d ${hours}h`;
+    return t("Resets in {days}d {hours}h", { days, hours });
   }
   if (hours > 0) {
-    return `Resets in ${hours}h ${minutes}m`;
+    return t("Resets in {hours}h {minutes}m", { hours, minutes });
   }
   if (minutes > 0) {
-    return `Resets in ${minutes}m`;
+    return t("Resets in {minutes}m", { minutes });
   }
-  return "Resets soon";
+  return t("Resets soon");
 }
 
 export function deriveRateLimitLearnMoreHref(

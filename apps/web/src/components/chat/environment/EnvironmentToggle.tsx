@@ -7,6 +7,7 @@
 // Layer: Chat header control
 
 import { WindowIcon } from "~/lib/icons";
+import { useT } from "~/i18n";
 import { cn } from "~/lib/utils";
 
 import { Toggle } from "../../ui/toggle";
@@ -25,6 +26,7 @@ const TOGGLE_CLASS_NAME = cn(
 );
 
 export function EnvironmentToggle({ environment }: { environment: EnvironmentToggleState }) {
+  const t = useT();
   return (
     <Tooltip>
       <TooltipTrigger
@@ -33,7 +35,7 @@ export function EnvironmentToggle({ environment }: { environment: EnvironmentTog
             className={TOGGLE_CLASS_NAME}
             pressed={environment.open}
             onPressedChange={environment.onOpenChange}
-            aria-label="Toggle environment panel"
+            aria-label={t("Toggle environment panel")}
             variant="default"
             size="xs"
           >
@@ -41,7 +43,7 @@ export function EnvironmentToggle({ environment }: { environment: EnvironmentTog
           </Toggle>
         }
       />
-      <TooltipPopup side="bottom">Environment</TooltipPopup>
+      <TooltipPopup side="bottom">{t("Environment")}</TooltipPopup>
     </Tooltip>
   );
 }

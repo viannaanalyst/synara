@@ -7,6 +7,7 @@ import {
   type ServerProviderStatus,
 } from "@synara/contracts";
 import { useCallback, useEffect, useRef } from "react";
+import { t } from "~/i18n";
 import { newCommandId } from "~/lib/utils";
 import { readNativeApi } from "~/nativeApi";
 import { useComposerDraftStore } from "../../composerDraftStore";
@@ -79,8 +80,8 @@ export function useChatRuntimeModes({
           if (!api) {
             toastManager.add({
               type: "error",
-              title: "Could not update access mode",
-              description: "Synara is not connected to the server.",
+              title: t("Could not update access mode"),
+              description: t("Synara is not connected to the server."),
             });
             return false;
           }
@@ -110,8 +111,9 @@ export function useChatRuntimeModes({
           } catch (error) {
             toastManager.add({
               type: "error",
-              title: "Could not update access mode",
-              description: error instanceof Error ? error.message : "An unexpected error occurred.",
+              title: t("Could not update access mode"),
+              description:
+                error instanceof Error ? error.message : t("An unexpected error occurred."),
             });
             return false;
           }
@@ -184,9 +186,9 @@ export function useChatRuntimeModes({
             .catch((error) => {
               toastManager.add({
                 type: "error",
-                title: "Could not update interaction mode",
+                title: t("Could not update interaction mode"),
                 description:
-                  error instanceof Error ? error.message : "An unexpected error occurred.",
+                  error instanceof Error ? error.message : t("An unexpected error occurred."),
               });
             });
         }

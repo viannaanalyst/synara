@@ -64,6 +64,7 @@ import type { RepoDiffTotals } from "~/hooks/useRepoDiffTotals";
 import { ProviderIcon } from "../ProviderIcon";
 import { ProviderUsageMenuControl } from "../ProviderUsageMenuControl";
 import { EnvironmentToggle, type EnvironmentToggleState } from "./environment/EnvironmentToggle";
+import { useT } from "~/i18n";
 
 /**
  * Width (px) below which collapsible header controls drop their text labels and
@@ -96,7 +97,6 @@ interface ChatHeaderProps {
   keybindings: ResolvedKeybindingsConfig;
   availableEditors: ReadonlyArray<EditorId>;
   diffToggleShortcutLabel: string | null;
-  handoffBadgeLabel: string | null;
   handoffActionLabel: string;
   handoffDisabled: boolean;
   handoffActionTargetProviders: ReadonlyArray<ProviderKind>;
@@ -174,6 +174,7 @@ function EditorChatHistoryMenu(props: {
   activeThreadId: ThreadId;
   onNavigateToThread: (threadId: ThreadId) => void;
 }) {
+  const t = useT();
   const { settings } = useAppSettings();
   const selectDisplayThreads = createSidebarDisplayThreadsSelector({
     hideAutomationRunThreads: !settings.showAutomationRunThreads,
@@ -191,8 +192,8 @@ function EditorChatHistoryMenu(props: {
           <IconButton
             variant="ghost"
             size="icon-xs"
-            label="Chat history"
-            title="Chat history"
+            label={t("Chat history")}
+            title={t("Chat history")}
             className="size-5 shrink-0 text-muted-foreground hover:text-foreground"
           >
             <HistoryIcon className="size-3.5" />
@@ -201,7 +202,7 @@ function EditorChatHistoryMenu(props: {
       />
       <ComposerPickerMenuPopup align="start" side="bottom" sideOffset={6} className="w-72 min-w-72">
         {historyThreads.length === 0 ? (
-          <MenuItem disabled>No chats in this project yet</MenuItem>
+          <MenuItem disabled>{t("No chats in this project yet")}</MenuItem>
         ) : (
           historyThreads.map((thread) => (
             <MenuItem
@@ -248,6 +249,7 @@ function EditorRailTabs(props: {
   onCloseTerminal: () => void;
   onNavigateToThread: (threadId: ThreadId) => void;
 }) {
+  const t = useT();
   const { settings } = useAppSettings();
   const [openChatTabs, setOpenChatTabs] = useState<ReadonlyArray<EditorRailChatTab>>(() => {
     const storedTabs = readEditorRailChatTabs(props.projectId);
@@ -412,8 +414,8 @@ function EditorRailTabs(props: {
               <IconButton
                 variant="ghost"
                 size="icon-xs"
-                label="New editor rail item"
-                title="New"
+                label={t("New editor rail item")}
+                title={t("New")}
                 className="size-5 shrink-0 text-muted-foreground hover:text-foreground"
               >
                 <PlusIcon className="size-3.5" />
@@ -428,11 +430,11 @@ function EditorRailTabs(props: {
           >
             <MenuItem onClick={props.onNewChat}>
               <MessageCircleIcon className="size-3.5 shrink-0 text-muted-foreground" />
-              <span>New chat</span>
+              <span>{t("New chat")}</span>
             </MenuItem>
             <MenuItem onClick={newTerminalTab}>
               <TerminalIcon className="size-3.5 shrink-0 text-muted-foreground" />
-              <span>New terminal</span>
+              <span>{t("New terminal")}</span>
             </MenuItem>
           </ComposerPickerMenuPopup>
         </Menu>
@@ -452,7 +454,7 @@ function EditorRailTabs(props: {
               key={thread.id}
               active={props.activeSurface === "chat" && thread.id === props.activeThreadId}
               title={thread.title}
-              label={`Chat ${index + 1}`}
+              label={t("Chat {number}", { number: index + 1 })}
               labelClassName="max-w-24"
               icon={
                 <ProviderIcon
@@ -461,7 +463,7 @@ function EditorRailTabs(props: {
                   className="size-3 shrink-0"
                 />
               }
-              closeLabel={`Close ${thread.title}`}
+              closeLabel={t("Close {title}", { title: thread.title })}
               onSelect={() => openChatTab(thread.id)}
               onClose={() => closeChatTab(thread.id)}
             />
@@ -469,8 +471,8 @@ function EditorRailTabs(props: {
           {terminalTabVisible ? (
             <SurfaceTabChip
               active={props.activeSurface === "terminal"}
-              title="Terminal"
-              label="Terminal"
+              title={t("Terminal")}
+              label={t("Terminal")}
               labelClassName="max-w-24"
               icon={<TerminalIcon className="size-3 shrink-0 text-[var(--color-text-accent)]" />}
               trailing={
@@ -479,7 +481,7 @@ function EditorRailTabs(props: {
                 ) : null
               }
               onSelect={openTerminalTab}
-              closeLabel="Close Terminal"
+              closeLabel={t("Close Terminal")}
               onClose={closeTerminalTab}
             />
           ) : null}
@@ -519,7 +521,6 @@ export function ChatHeader({
   keybindings,
   availableEditors,
   diffToggleShortcutLabel,
-  handoffBadgeLabel,
   handoffActionLabel,
   handoffDisabled,
   handoffActionTargetProviders,
@@ -550,6 +551,7 @@ export function ChatHeader({
   onRenameThread,
   onCloseThreadPane,
 }: ChatHeaderProps) {
+  const t = useT();
   const hideSidebarControls = hideSidebarControlsProp ?? false;
   const hideHandoffControls = hideHandoffControlsProp ?? false;
   const minimalChrome = minimalChromeProp ?? false;
@@ -627,7 +629,7 @@ export function ChatHeader({
             )}
             pressed={togglesRightDock ? rightDockOpen : diffOpen}
             onPressedChange={togglesRightDock ? onToggleRightDock : onToggleDiff}
-            aria-label={togglesRightDock ? "Toggle right sidebar" : "Toggle diff panel"}
+            aria-label={togglesRightDock ? t("Toggle right sidebar") : t("Toggle diff panel")}
             variant="default"
             size="xs"
             disabled={
@@ -648,15 +650,15 @@ export function ChatHeader({
       <TooltipPopup side="bottom">
         {togglesRightDock
           ? rightDockOpen
-            ? "Close right sidebar"
-            : "Open right sidebar"
+            ? t("Close right sidebar")
+            : t("Open right sidebar")
           : !isGitRepo
-            ? "Diff panel is unavailable because this project is not a git repository."
+            ? t("Diff panel is unavailable because this project is not a git repository.")
             : diffDisabledReason && !diffOpen
-              ? diffDisabledReason
+              ? t(diffDisabledReason)
               : diffToggleShortcutLabel
-                ? `Toggle diff panel (${diffToggleShortcutLabel})`
-                : "Toggle diff panel"}
+                ? t("Toggle diff panel ({shortcut})", { shortcut: diffToggleShortcutLabel })
+                : t("Toggle diff panel")}
       </TooltipPopup>
     </Tooltip>
   ) : null;
@@ -716,7 +718,7 @@ export function ChatHeader({
                     className="inline-flex size-3.5 shrink-0 items-center justify-center"
                     title={
                       threadIconKind === "terminal"
-                        ? "Terminal"
+                        ? t("Terminal")
                         : PROVIDER_DISPLAY_NAMES[activeProvider]
                     }
                   >
@@ -738,8 +740,8 @@ export function ChatHeader({
                   <IconButton
                     variant="chrome"
                     size="icon-xs"
-                    label="Close selected Side"
-                    tooltip="Close selected Side"
+                    label={t("Close selected Side")}
+                    tooltip={t("Close selected Side")}
                     tooltipSide="bottom"
                     className="size-5 rounded-lg [-webkit-app-region:no-drag] [&_svg]:size-3"
                     onClick={(event) => {
@@ -768,7 +770,7 @@ export function ChatHeader({
                   onNavigateToThread={onNavigateToThread}
                 />
               ) : null}
-              {!hideHandoffControls && handoffBadgeLabel ? (
+              {!hideHandoffControls && handoffBadgeSourceProvider ? (
                 <Tooltip>
                   <TooltipTrigger
                     render={
@@ -786,7 +788,11 @@ export function ChatHeader({
                       </Badge>
                     }
                   />
-                  <TooltipPopup side="bottom">{handoffBadgeLabel}</TooltipPopup>
+                  <TooltipPopup side="bottom">
+                    {t("Handoff from {provider}", {
+                      provider: PROVIDER_DISPLAY_NAMES[handoffBadgeSourceProvider],
+                    })}
+                  </TooltipPopup>
                 </Tooltip>
               ) : null}
             </div>
@@ -808,24 +814,30 @@ export function ChatHeader({
                         type="button"
                         tone="outline"
                         className={compact ? "gap-1" : "gap-1.5"}
-                        aria-label={handoffActionLabel}
+                        aria-label={t(handoffActionLabel)}
                         disabled={handoffDisabled || handoffActionTargetProviders.length === 0}
                       />
                     }
                   >
                     <HandoffIcon className="size-[1em] shrink-0 opacity-80" />
-                    {!compact ? <span className="truncate font-normal">Hand off</span> : null}
+                    {!compact ? (
+                      <span className="truncate font-normal">{t("Hand off")}</span>
+                    ) : null}
                   </MenuTrigger>
                 }
               />
-              <TooltipPopup side="bottom">{handoffActionLabel}</TooltipPopup>
+              <TooltipPopup side="bottom">{t(handoffActionLabel)}</TooltipPopup>
             </Tooltip>
             <ComposerPickerMenuPopup align="end" side="bottom" className="w-48 min-w-48">
               {handoffActionTargetProviders.map((provider) => (
                 <MenuItem key={provider} onClick={() => onCreateHandoff(provider)}>
                   {/* opacity-100 opts brand icons out of the option row's 80% icon dim. */}
                   {renderProviderIcon(provider, "size-3.5 shrink-0 opacity-100")}
-                  <span>Handoff to {PROVIDER_DISPLAY_NAMES[provider]}</span>
+                  <span>
+                    {t("Handoff to {provider}", {
+                      provider: PROVIDER_DISPLAY_NAMES[provider],
+                    })}
+                  </span>
                 </MenuItem>
               ))}
             </ComposerPickerMenuPopup>

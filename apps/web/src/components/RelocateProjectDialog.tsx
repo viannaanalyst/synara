@@ -5,6 +5,7 @@
 import { useState } from "react";
 import type { ProjectId } from "@synara/contracts";
 import { useQueryClient } from "@tanstack/react-query";
+import { useT } from "~/i18n";
 
 import { ensureNativeApi } from "../nativeApi";
 import { relocateProjectFromClient } from "../lib/projectRelocation";
@@ -17,20 +18,25 @@ export function RelocateProjectDialog(props: {
   workspaceRoot: string;
   onOpenChange: (open: boolean) => void;
 }) {
+  const t = useT();
   const queryClient = useQueryClient();
   const [originalWorkspaceRoot] = useState(props.workspaceRoot);
   return (
     <RenameDialog
       open
-      title="Change project path"
-      description="Enter the restored folder's path on the Synara server. Your existing project and conversations stay in place. This does not recover lost files or move/repair linked Git worktrees. Finish active turns first."
+      title={t("Change project path")}
+      description={t(
+        "Enter the restored folder's path on the Synara server. Your existing project and conversations stay in place. This does not recover lost files or move/repair linked Git worktrees. Finish active turns first.",
+      )}
       initialValue={originalWorkspaceRoot}
       saveLabel="Change path"
       onOpenChange={props.onOpenChange}
       onSave={async (workspaceRoot) => {
         try {
           if (hasUnsavedWorkspaceEditors(queryClient)) {
-            throw new Error("Save or discard unsaved file edits before changing a project path.");
+            throw new Error(
+              t("Save or discard unsaved file edits before changing a project path."),
+            );
           }
           await relocateProjectFromClient(ensureNativeApi().orchestration, {
             projectId: props.projectId,
@@ -39,15 +45,16 @@ export function RelocateProjectDialog(props: {
           });
           toastManager.add({
             type: "success",
-            title: "Project path updated",
-            description:
+            title: t("Project path updated"),
+            description: t(
               "Continue in your existing threads. A blocked thread may still require its explicit Unblock action.",
+            ),
           });
         } catch (error) {
           toastManager.add({
             type: "error",
-            title: "Could not change project path",
-            description: error instanceof Error ? error.message : "An unknown error occurred.",
+            title: t("Could not change project path"),
+            description: error instanceof Error ? error.message : t("An unknown error occurred."),
           });
           throw error;
         }

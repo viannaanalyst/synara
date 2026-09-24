@@ -174,13 +174,15 @@ export const SETTINGS_SEARCH_ENTRIES: readonly SettingsSearchEntry[] = [
     id: "appearance:theme",
     section: "appearance",
     title: "Theme",
-    keywords: "Choose how Synara looks across the app. dark light system color",
+    keywords:
+      "Choose how Synara looks across the app. dark light system color tema escuro claro sistema cor",
   },
   {
     id: "appearance:app-icon",
     section: "appearance",
     title: "App icon",
-    keywords: "Choose the icon Synara uses in the dock or taskbar desktop application logo.",
+    keywords:
+      "Choose the icon Synara uses in the dock or taskbar desktop application logo. icone aplicativo",
     target: null,
   },
   {
@@ -188,54 +190,57 @@ export const SETTINGS_SEARCH_ENTRIES: readonly SettingsSearchEntry[] = [
     section: "appearance",
     title: "Use custom title bar",
     keywords:
-      "frameless window system title bar Windows Linux caption controls minimize maximize close chrome",
+      "frameless window system title bar Windows Linux caption controls minimize maximize close chrome barra de titulo janela",
     target: null,
   },
   {
     id: "appearance:system-ui-font",
     section: "appearance",
     title: "Use system UI font",
-    keywords: "Use the operating system interface font throughout Synara.",
+    keywords:
+      "Use the operating system interface font throughout Synara. fonte do sistema interface",
   },
   {
     id: "appearance:ui-density",
     section: "appearance",
     title: "UI density",
     keywords:
-      "Control spacing in the sidebar, composer, chat gutters, and settings rows without changing font size. compact comfortable",
+      "Control spacing in the sidebar, composer, chat gutters, and settings rows without changing font size. compact comfortable densidade espacamento compacta confortavel espacosa",
   },
   {
     id: "appearance:chat-width",
     section: "appearance",
     title: "Chat width",
     keywords:
-      "Control how wide the chat column grows so tables and wide content get more room. standard wide full",
+      "Control how wide the chat column grows so tables and wide content get more room. standard wide full largura chat amplo total padrao",
   },
   {
     id: "appearance:base-font-size",
     section: "appearance",
     title: "Base font size",
     keywords:
-      "Adjust the app text base in pixels. Chat and UI typography scale proportionally. font",
+      "Adjust the app text base in pixels. Chat and UI typography scale proportionally. font tamanho base fonte",
   },
   {
     id: "appearance:terminal-font-size",
     section: "appearance",
     title: "Terminal font size",
-    keywords: "Adjust terminal text independently from the app and chat font size.",
+    keywords:
+      "Adjust terminal text independently from the app and chat font size. tamanho fonte terminal",
   },
   {
     id: "appearance:terminal-font",
     section: "appearance",
     title: "Terminal font",
     keywords:
-      "Type any monospace font installed on this device e.g. Fira Code. system monospace family",
+      "Type any monospace font installed on this device e.g. Fira Code. system monospace family fonte terminal monoespacada",
   },
   {
     id: "appearance:font-smoothing",
     section: "appearance",
     title: "Font smoothing",
-    keywords: "Use macOS-style antialiasing for lighter, crisper text rendering.",
+    keywords:
+      "Use macOS-style antialiasing for lighter, crisper text rendering. suavizacao de fontes",
     target: null,
   },
   {
@@ -243,7 +248,14 @@ export const SETTINGS_SEARCH_ENTRIES: readonly SettingsSearchEntry[] = [
     section: "appearance",
     title: "Time format",
     keywords:
-      "System default follows your browser or OS clock preference. timestamp 12-hour 24-hour locale",
+      "System default follows your browser or OS clock preference. timestamp 12-hour 24-hour locale formato de hora padrao do sistema",
+  },
+  {
+    id: "appearance:language",
+    section: "appearance",
+    title: "Language",
+    keywords:
+      "Choose the language used across the app. English Portuguese Brasil idioma portugues ingles lingua",
   },
 
   // ── Notifications ─────────────────────────────────────────────────────────────

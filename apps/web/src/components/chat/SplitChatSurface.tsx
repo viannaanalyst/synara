@@ -1,5 +1,6 @@
 import { type ProjectId, type ProviderKind, type ThreadId, type TurnId } from "@synara/contracts";
 import { useNavigate } from "@tanstack/react-router";
+import { useT } from "~/i18n";
 import {
   type CSSProperties,
   type PointerEvent as ReactPointerEvent,
@@ -117,6 +118,7 @@ function SplitPaneEmbeddedPanel(props: {
     patch: Partial<Pick<SplitViewPanePanelState, "panel" | "diffTurnId" | "diffFilePath">>,
   ) => void;
 }) {
+  const t = useT();
   const wrapperRef = useRef<HTMLDivElement>(null);
   const panelWidthStorageKey =
     props.panel === "browser" ? "browser" : props.panel === "diff" ? "diff" : "panel";
@@ -215,7 +217,7 @@ function SplitPaneEmbeddedPanel(props: {
         onPointerDown={startResize}
       />
       {props.panel === "browser" ? (
-        <Suspense fallback={<PanelStateMessage>Loading browser...</PanelStateMessage>}>
+        <Suspense fallback={<PanelStateMessage>{t("Loading browser...")}</PanelStateMessage>}>
           <LazyBrowserPanel
             mode="sidebar"
             threadId={props.threadId}
@@ -249,6 +251,7 @@ function SplitPaneEmptyState(props: {
   excludedThreadIds: ReadonlySet<ThreadId>;
   onSelectThread: (threadId: ThreadId) => void;
 }) {
+  const t = useT();
   return (
     <div
       className={cn(
@@ -259,12 +262,14 @@ function SplitPaneEmptyState(props: {
       onMouseDown={props.onFocus}
     >
       <div className="w-full max-w-sm space-y-4">
-        <p className="text-center text-ui-lg font-medium text-foreground/70">Select a chat</p>
+        <p className="text-center text-ui-lg font-medium text-foreground/70">
+          {t("Select a chat")}
+        </p>
         <div className="max-h-[60vh] space-y-1 overflow-y-auto">
           {props.threads.map((thread) => {
             const isUsed = props.excludedThreadIds.has(thread.id);
             const projectName =
-              props.projects.find((p) => p.id === thread.projectId)?.name ?? "Project";
+              props.projects.find((p) => p.id === thread.projectId)?.name ?? t("Project");
             return (
               <button
                 key={thread.id}
@@ -604,6 +609,7 @@ function SplitPaneSurface(props: {
 const selectThreadShells = createThreadShellsSelector();
 
 export function SplitChatSurface(props: { splitViewId: SplitViewId; routeThreadId: ThreadId }) {
+  const t = useT();
   const navigate = useNavigate();
   const { handleNewChat } = useHandleNewChat();
   const threads = useStore(selectThreadShells);
@@ -1053,16 +1059,16 @@ export function SplitChatSurface(props: { splitViewId: SplitViewId; routeThreadI
       >
         <DialogPopup className="max-w-lg">
           <DialogHeader className="items-center text-center">
-            <DialogTitle>Choose Chat</DialogTitle>
+            <DialogTitle>{t("Choose Chat")}</DialogTitle>
             <DialogDescription className="max-w-sm text-center">
-              Pick which chat should appear in the focused split pane.
+              {t("Pick which chat should appear in the focused split pane.")}
             </DialogDescription>
           </DialogHeader>
           <DialogPanel className="space-y-3">
             <div className="max-h-[56vh] space-y-1 overflow-y-auto">
               {selectableThreads.map((thread) => {
                 const projectName =
-                  projects.find((project) => project.id === thread.projectId)?.name ?? "Project";
+                  projects.find((project) => project.id === thread.projectId)?.name ?? t("Project");
                 const isSelected = pickerLeaf?.threadId === thread.id;
                 return (
                   <button

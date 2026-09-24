@@ -8,6 +8,7 @@ import {
   type ProviderSkillDescriptor,
 } from "@synara/contracts";
 import { type ReactNode } from "react";
+import { useT } from "~/i18n";
 import { type ComposerTriggerKind } from "../../composer-logic";
 import { type ComposerSlashCommand } from "../../composerSlashCommands";
 import {
@@ -47,46 +48,50 @@ function humanizeProviderCommandName(command: string): string {
 
 function commandMenuTitle(
   item: Extract<ComposerCommandItem, { type: "slash-command" | "provider-native-command" }>,
+  t: (key: string) => string,
 ): string {
   switch (item.command) {
     case "clear":
-      return "Clear";
+      return t("Clear");
     case "compact":
-      return "Compact Context";
+      return t("Compact Context");
     case "model":
-      return "Model";
+      return t("Model");
     case "fast":
-      return "Fast Mode";
+      return t("Fast Mode");
     case "plan":
-      return "Plan Mode";
+      return t("Plan Mode");
     case "debug":
-      return "Debug Mode";
+      return t("Debug Mode");
     case "default":
-      return "Default Mode";
+      return t("Default Mode");
     case "review":
-      return "Code Review";
+      return t("Code Review");
     case "fork":
-      return "Fork";
+      return t("Fork");
     case "side":
-      return "Sidechat";
+      return t("Sidechat");
     case "status":
-      return "Status";
+      return t("Status");
     case "subagents":
-      return "Subagents";
+      return t("Subagents");
     case "feedback":
-      return "Feedback Synara";
+      return t("Feedback Synara");
     default:
       return humanizeProviderCommandName(item.command);
   }
 }
 
-function commandMenuTrailingMeta(item: ComposerCommandItem): string | null {
+function commandMenuTrailingMeta(
+  item: ComposerCommandItem,
+  t: (key: string) => string,
+): string | null {
   if (item.type === "agent") {
-    return "delegate task to subagent";
+    return t("delegate task to subagent");
   }
 
   if (item.type === "plugin") {
-    return "Plugin";
+    return t("Plugin");
   }
 
   if (item.type === "thread") {
@@ -94,15 +99,15 @@ function commandMenuTrailingMeta(item: ComposerCommandItem): string | null {
   }
 
   if (item.type === "local-root") {
-    return "Local";
+    return t("Local");
   }
 
   if (item.type === "skill") {
-    return formatSkillScope(item.skill.scope);
+    return t(formatSkillScope(item.skill.scope));
   }
 
   if (item.type === "model") {
-    return "Model";
+    return t("Model");
   }
 
   if (item.type === "slash-command" || item.type === "provider-native-command") {
@@ -118,27 +123,71 @@ function commandMenuTrailingMeta(item: ComposerCommandItem): string | null {
   return null;
 }
 
-function commandMenuSecondaryText(item: ComposerCommandItem): string | null {
+function commandMenuSecondaryText(
+  item: ComposerCommandItem,
+  t: (key: string) => string,
+): string | null {
   // The menu is driven from the composer, so focus never reaches the warning icon:
   // the row itself has to say why the command will not work.
   if (item.type === "provider-native-command" && item.notice) {
     return item.notice.summary;
   }
 
-  if (item.type === "slash-command" || item.type === "provider-native-command") {
+  if (item.type === "slash-command") {
+    switch (item.command) {
+      case "clear":
+        return t("Start a fresh thread and clear the current conversation context");
+      case "compact":
+        return t("Compact the current thread context to free space");
+      case "model":
+        return t("Switch response model for this thread");
+      case "plan":
+        return t("Switch this thread into plan mode");
+      case "debug":
+        return t("Switch this thread into evidence-first debug mode");
+      case "default":
+        return t("Switch this thread back to normal chat mode");
+      case "review":
+        return t("Start a code review for current changes");
+      case "fork":
+        return t("Fork this thread into local or a new worktree");
+      case "side":
+        return t("Open a guarded Side from this thread, optionally on another provider");
+      case "status":
+        return t("Show context usage and rate-limit status");
+      case "subagents":
+        return t("Insert a prompt that asks the assistant to delegate work");
+      case "computer-use":
+        return t("Use Synara Computer for this request only");
+      case "fast":
+        return t("Turn fast mode on or off for this thread");
+      case "export":
+        return t("Download this thread as a ZIP archive (thread.json + transcript.md)");
+      case "goal":
+        return t("Set, edit, pause, resume, or clear this thread's persistent goal");
+      case "rename":
+        return t("Regenerate this thread title, or set an exact title");
+      case "feedback":
+        return t("Send feedback to the Synara team");
+      case "automation":
+        return t("Create a scheduled automation from this prompt");
+    }
+    return null;
+  }
+
+  if (item.type === "provider-native-command") {
     return item.description;
+  }
+
+  if (item.type === "local-root") {
+    return t("Browse folders on this computer");
   }
 
   if (item.type === "agent") {
     return item.description;
   }
 
-  if (
-    item.type === "plugin" ||
-    item.type === "skill" ||
-    item.type === "local-root" ||
-    item.type === "thread"
-  ) {
+  if (item.type === "plugin" || item.type === "skill" || item.type === "thread") {
     return item.description;
   }
 
@@ -338,30 +387,51 @@ export function ComposerCommandMenu(props: {
   onHighlightedItemChange: (itemId: string | null) => void;
   onSelect: (item: ComposerCommandItem) => void;
 }) {
+  const t = useT();
   const groups = groupCommandItems(
     props.items,
     props.triggerKind,
     props.groupSlashCommandSections ?? true,
   );
+  const translateGroupLabel = (label: string | null) => {
+    switch (label) {
+      case "Plugins":
+        return t("Plugins");
+      case "Chats":
+        return t("Chats");
+      case "Local":
+        return t("Local");
+      case "Subagents":
+        return t("Subagents");
+      case "Built-in":
+        return t("Built-in");
+      case "Provider":
+        return t("Provider");
+      case "Skills":
+        return t("Skills");
+      default:
+        return null;
+    }
+  };
   const panelGroups: ComposerMenuPanelGroup[] = groups.map((group) => ({
     id: group.id,
-    label: group.label,
+    label: translateGroupLabel(group.label),
     rows: group.items.map((item) => ({
       id: item.id,
       icon: commandMenuItemGlyph(item, props.resolvedTheme),
       title:
         item.type === "slash-command" || item.type === "provider-native-command"
-          ? commandMenuTitle(item)
+          ? commandMenuTitle(item, t)
           : item.label,
-      secondary: commandMenuSecondaryText(item),
+      secondary: commandMenuSecondaryText(item, t),
       trailing:
         item.type === "provider-native-command" && item.notice ? (
           <span className="inline-flex items-center gap-1.5">
-            {commandMenuTrailingMeta(item)}
+            {commandMenuTrailingMeta(item, t)}
             <CommandNoticeBadge notice={item.notice.detail} />
           </span>
         ) : (
-          commandMenuTrailingMeta(item)
+          commandMenuTrailingMeta(item, t)
         ),
     })),
   }));
@@ -386,10 +456,10 @@ export function ComposerCommandMenu(props: {
                 "px-2 py-0 font-medium text-muted-foreground text-ui leading-snug",
               )}
             >
-              Files
+              {t("Files")}
             </p>
             <p className="px-2 pt-0.5 text-ui-sm text-muted-foreground/55">
-              Type to search for files
+              {t("Type to search for files")}
             </p>
           </div>
         ) : null
@@ -406,16 +476,16 @@ export function ComposerCommandMenu(props: {
           >
             {props.isLoading
               ? props.triggerKind === "mention"
-                ? "Searching mentions..."
+                ? t("Searching mentions...")
                 : props.triggerKind === "skill"
-                  ? "Loading skills..."
-                  : "Loading commands..."
+                  ? t("Loading skills...")
+                  : t("Loading commands...")
               : (props.emptyStateText ??
                 (props.triggerKind === "mention"
-                  ? "No matching plugin, chat, or file."
+                  ? t("No matching plugin, chat, or file.")
                   : props.triggerKind === "skill"
-                    ? "No matching skill."
-                    : "No matching command."))}
+                    ? t("No matching skill.")
+                    : t("No matching command.")))}
           </p>
         ) : null
       }

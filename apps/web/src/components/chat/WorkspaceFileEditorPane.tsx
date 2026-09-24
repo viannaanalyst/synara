@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { useT } from "~/i18n";
 
 import { useWorkspaceFileEditorSession } from "~/hooks/useWorkspaceFileEditorSession";
 import { CodeEditorPane } from "../codeEditor/CodeEditorPane";
@@ -24,6 +25,7 @@ export interface WorkspaceFileEditorPaneProps {
 }
 
 export function WorkspaceFileEditorPane(props: WorkspaceFileEditorPaneProps) {
+  const t = useT();
   const paneRef = useRef<HTMLDivElement | null>(null);
   const session = useWorkspaceFileEditorSession({
     cwd: props.workspaceRoot,
@@ -45,7 +47,7 @@ export function WorkspaceFileEditorPane(props: WorkspaceFileEditorPaneProps) {
       <WorkspaceFileEditorHeader
         workspaceRoot={props.workspaceRoot}
         filePath={props.filePath}
-        title="Editing"
+        title={t("Editing")}
         dirty={session.dirty}
         saving={session.state.saving}
         canSave={session.dirty && session.canEdit}
@@ -79,7 +81,7 @@ export function WorkspaceFileEditorPane(props: WorkspaceFileEditorPaneProps) {
         </PanelStateMessage>
       ) : session.loading || !session.canEdit ? (
         <PanelStateMessage density="compact" fill="flex">
-          <p>Loading file...</p>
+          <p>{t("Loading file...")}</p>
         </PanelStateMessage>
       ) : (
         <CodeEditorPane
@@ -95,14 +97,14 @@ export function WorkspaceFileEditorPane(props: WorkspaceFileEditorPaneProps) {
       )}
       <WorkspaceFileEditorDiscardDialog
         open={session.pendingDiscard !== null}
-        title="Discard unsaved changes?"
+        title={t("Discard unsaved changes?")}
         description={
           session.pendingDiscard === "reload"
-            ? "Reloading replaces the editor contents with what is currently on disk."
-            : "Closing the editor drops the changes you have not saved yet."
+            ? t("Reloading replaces the editor contents with what is currently on disk.")
+            : t("Closing the editor drops the changes you have not saved yet.")
         }
         confirmLabel={
-          session.pendingDiscard === "reload" ? "Reload and discard" : "Discard changes"
+          session.pendingDiscard === "reload" ? t("Reload and discard") : t("Discard changes")
         }
         onOpenChange={(open) => {
           if (!open) {

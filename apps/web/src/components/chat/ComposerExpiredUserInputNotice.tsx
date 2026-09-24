@@ -4,6 +4,7 @@ import {
   restoreUserInputDraft,
   type PendingUserInputRecoveryDraft,
 } from "../../pendingUserInputRecovery";
+import { useT } from "~/i18n";
 
 export function ComposerExpiredUserInputNotice({
   threadId,
@@ -16,6 +17,7 @@ export function ComposerExpiredUserInputNotice({
   draft: PendingUserInputRecoveryDraft;
   onRestore: (prompt: string) => void;
 }) {
+  const t = useT();
   const dismiss = () => {
     const store = useComposerDraftStore.getState();
     const drafts = store.draftsByThreadId[threadId]?.pendingUserInputDrafts ?? {};
@@ -38,13 +40,17 @@ export function ComposerExpiredUserInputNotice({
       className="mb-2 rounded-xl border border-border px-4 py-3 text-ui leading-snug"
       role="status"
     >
-      <p>These questions have expired. Restore your answers to review and send as a new message.</p>
+      <p>
+        {t(
+          "These questions have expired. Restore your answers to review and send as a new message.",
+        )}
+      </p>
       <div className="mt-2 flex gap-3">
         <button type="button" className="font-medium underline" onClick={restore}>
-          Restore answers
+          {t("Restore answers")}
         </button>
         <button type="button" className="text-muted-foreground" onClick={dismiss}>
-          Dismiss
+          {t("Dismiss")}
         </button>
       </div>
     </div>

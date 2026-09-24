@@ -6,6 +6,7 @@
 // Layer: overlay — rendered once from the root route next to the dialog.
 
 import { useEffect, useState, type KeyboardEvent } from "react";
+import { useT } from "~/i18n";
 
 import { XIcon } from "~/lib/icons";
 import { cn } from "~/lib/utils";
@@ -74,8 +75,9 @@ export function WhatsNewPopoutCard({
   onDismiss,
   className,
 }: WhatsNewPopoutCardProps) {
+  const t = useT();
   const cardWidth = useSidebarFittedWidth();
-  const heroAlt = entry.heroImageAlt ?? `What's new in v${currentVersion}`;
+  const heroAlt = entry.heroImageAlt ?? t("What's new in v{version}", { version: currentVersion });
   const primaryFeature = entry.features[0];
   const primaryFeatureTitle = primaryFeature?.title;
   const primaryFeatureDescription = primaryFeature?.description;
@@ -108,7 +110,7 @@ export function WhatsNewPopoutCard({
       <div
         role="button"
         tabIndex={0}
-        aria-label={`Open What's new in v${currentVersion}`}
+        aria-label={t("Open What's new in v{version}", { version: currentVersion })}
         onClick={onOpen}
         onKeyDown={onKeyDown}
         className={cn(
@@ -123,7 +125,7 @@ export function WhatsNewPopoutCard({
             the card's onOpen handler. */}
         <button
           type="button"
-          aria-label="Dismiss What's new"
+          aria-label={t("Dismiss What's new")}
           onClick={(event) => {
             event.stopPropagation();
             onDismiss();
@@ -166,9 +168,11 @@ export function WhatsNewPopoutCard({
         </div>
 
         <div className="flex flex-col px-4 pb-4 pt-2.5">
-          <p className="text-ui leading-snug font-medium text-primary">New · v{currentVersion}</p>
+          <p className="text-ui leading-snug font-medium text-primary">
+            {t("New · v{version}", { version: currentVersion })}
+          </p>
           <p className="mt-1 line-clamp-2 text-ui-lg font-semibold leading-snug text-foreground">
-            {primaryFeatureTitle ?? `What's new in v${currentVersion}`}
+            {primaryFeatureTitle ?? t("What's new in v{version}", { version: currentVersion })}
           </p>
           {primaryFeatureDescription !== undefined && (
             <p className="mt-1.5 line-clamp-2 text-ui leading-relaxed text-muted-foreground/90">
@@ -176,7 +180,7 @@ export function WhatsNewPopoutCard({
             </p>
           )}
           <p className="mt-2.5 text-ui leading-snug font-medium text-muted-foreground transition-colors group-hover:text-foreground">
-            Find out what&rsquo;s new <span aria-hidden="true">→</span>
+            {t("Find out what’s new")} <span aria-hidden="true">→</span>
           </p>
         </div>
       </div>

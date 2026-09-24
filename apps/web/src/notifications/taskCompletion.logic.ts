@@ -10,6 +10,7 @@ import {
 } from "@synara/shared/terminalThreads";
 import { pendingRequestInstanceKey } from "@synara/shared/threadSummary";
 import type { Thread, ThreadSession } from "../types";
+import { t } from "~/i18n";
 import {
   derivePendingApprovals,
   derivePendingUserInputs,
@@ -651,15 +652,15 @@ function approvalSummary(
 ): string {
   switch (requestKind) {
     case "command":
-      return "Command approval requested.";
+      return t("Command approval requested.");
     case "file-read":
-      return "File-read approval requested.";
+      return t("File-read approval requested.");
     case "file-change":
-      return "File-change approval requested.";
+      return t("File-change approval requested.");
     case "permissions":
-      return "Permission approval requested.";
+      return t("Permission approval requested.");
     case "tool":
-      return "Tool approval requested.";
+      return t("Tool approval requested.");
   }
 }
 

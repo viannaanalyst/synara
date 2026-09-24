@@ -14,9 +14,6 @@ import type { ComposerTraitSelection } from "./composerTraits";
 /** Effort rung the hint offers; must exist on the model's ladder to be offered. */
 export const COMPUTER_CONTROL_HINT_EFFORT = "medium";
 
-export const COMPUTER_CONTROL_HINT_MESSAGE = "Desktop actions are faster at Medium effort";
-export const COMPUTER_CONTROL_HINT_ACTION_LABEL = "Use Medium";
-
 /**
  * Effort is only "still on the default" when the thread carries no explicit
  * pick: provider option normalization drops a selection that equals the default,

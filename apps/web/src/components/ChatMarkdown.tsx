@@ -51,6 +51,7 @@ import { isLocalImageMarkdownSrc } from "../lib/localImageUrls";
 import { repairMarkdownTableDelimiters } from "../lib/markdownTableRepair";
 import { showFileReferenceContextMenu } from "../lib/fileReferenceContextMenu";
 import { useTheme } from "../hooks/useTheme";
+import { useT } from "~/i18n";
 import { useSmoothStreamedText } from "../hooks/useSmoothStreamedText";
 import { useThrottledStreamingValue } from "../hooks/useThrottledStreamingValue";
 import { openWorkspaceFileReference, useWorkspaceFileOpener } from "../lib/workspaceFileOpener";
@@ -1061,25 +1062,36 @@ interface MarkdownRenderContextValue {
 const MarkdownRenderContext = createContext<MarkdownRenderContextValue | null>(null);
 
 // Stable component types preserve code highlighting timers, copy state and image state.
-const GITHUB_ALERTS: Record<GithubAlertKind, { title: string; icon: LucideIcon }> = {
-  note: { title: "Note", icon: InfoIcon },
-  tip: { title: "Tip", icon: LightbulbIcon },
-  important: { title: "Important", icon: InfoIcon },
-  warning: { title: "Warning", icon: TriangleAlertIcon },
-  caution: { title: "Caution", icon: OctagonAlertIcon },
+const GITHUB_ALERTS: Record<GithubAlertKind, { icon: LucideIcon }> = {
+  note: { icon: InfoIcon },
+  tip: { icon: LightbulbIcon },
+  important: { icon: InfoIcon },
+  warning: { icon: TriangleAlertIcon },
+  caution: { icon: OctagonAlertIcon },
 };
 
 const MARKDOWN_COMPONENTS: Components = {
   blockquote: function MarkdownBlockquote({ node: _node, children, ...props }) {
+    const t = useT();
     const kind = (props as { "data-github-alert"?: GithubAlertKind })["data-github-alert"];
     const alert = kind ? GITHUB_ALERTS[kind] : undefined;
     if (!alert) return <blockquote {...props}>{children}</blockquote>;
     const Icon = alert.icon;
+    const title =
+      kind === "note"
+        ? t("Note")
+        : kind === "tip"
+          ? t("Tip")
+          : kind === "important"
+            ? t("Important")
+            : kind === "warning"
+              ? t("Warning")
+              : t("Caution");
     return (
       <blockquote {...props}>
         <p className="markdown-alert-title">
           <Icon aria-hidden className="size-[1.1em] shrink-0" />
-          {alert.title}
+          {title}
         </p>
         {children}
       </blockquote>

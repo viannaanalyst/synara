@@ -47,6 +47,7 @@ This document covers build-only native validation and publishing desktop release
   - `synara-mac.yml`, `synara.yml`, and `synara-linux.yml` metadata
   - every stable release includes both `synara-mac.yml`, `synara.yml`, `synara-linux.yml` and `latest-mac.yml`, `latest.yml`, `latest-linux.yml`
   - `*.blockmap` files, except the macOS update `.zip.blockmap` removed after zip repack
+
 - Enforced upgrade path:
   - Stable clean Synara releases are created with `make_latest=true` and carry both six-manifest filenames in the versioned release.
   - The historical 0.4.x compatibility release remains available for predecessor migration and is never overwritten by a clean-lane release.
@@ -253,6 +254,14 @@ the app icon and Applications link, so their appearance can differ from Dmgly's
 preview; Retina displays also scale the supplied 1× background. Local Finder
 preferences can override the DMG's saved hidden path/status bars, reducing the
 visible background and requiring scrolling to reveal the Applications label.
+
+## Install a local macOS build without a DMG
+
+On an Apple Silicon Mac, run `bun run install:desktop:mac:arm64` from the repository
+root. The command builds the unpacked `.app` bundle and replaces
+`/Applications/Synara.app` directly. Quit Synara before running it. This local
+install does not publish a release or require Apple Developer signing secrets;
+macOS may ask you to grant computer-use permissions again after the rebuild.
 
 ## 2) Apple signing + notarization setup (macOS)
 

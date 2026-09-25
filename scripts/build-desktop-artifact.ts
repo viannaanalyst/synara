@@ -1324,7 +1324,7 @@ const buildDesktopArtifact = Effect.fn("buildDesktopArtifact")(function* (
     );
   }
 
-  if (options.platform === "mac") {
+  if (options.platform === "mac" && options.target !== "dir") {
     yield* Effect.log("[desktop-artifact] Repacking and validating macOS update zip...");
     const finalizedZip = yield* timedBuildStage(
       "update-zip",
@@ -1357,18 +1357,60 @@ const buildDesktopArtifact = Effect.fn("buildDesktopArtifact")(function* (
   yield* fs.makeDirectory(options.outputDir, { recursive: true });
 
   const copiedArtifacts: string[] = [];
-  for (const entry of stageEntries) {
-    const from = path.join(stageDistDir, entry);
-    const stat = yield* fs.stat(from).pipe(Effect.catch(() => Effect.succeed(null)));
-    if (!stat || stat.type !== "File") continue;
+  if (options.platform === "mac" && options.target === "dir") {
+    const appBundleName = `${artifactIdentity.identity.displayName}.app`;
+    let appBundlePath: string | undefined;
 
-    const outputEntry =
-      options.platform === "mac" && options.arch !== "arm64" && entry === "latest-mac.yml"
-        ? `latest-mac-${options.arch}.yml`
-        : entry;
-    const to = path.join(options.outputDir, outputEntry);
-    yield* fs.copyFile(from, to);
-    copiedArtifacts.push(to);
+    for (const entry of stageEntries) {
+      const entryPath = path.join(stageDistDir, entry);
+      const entryStat = yield* fs.stat(entryPath).pipe(Effect.orElseSucceed(() => null));
+      if (!entryStat || entryStat.type !== "Directory") continue;
+
+      if (entry === appBundleName) {
+        appBundlePath = entryPath;
+        break;
+      }
+
+      const nestedEntries = yield* fs.readDirectory(entryPath);
+      if (nestedEntries.includes(appBundleName)) {
+        appBundlePath = path.join(entryPath, appBundleName);
+        break;
+      }
+    }
+
+    if (!appBundlePath) {
+      return yield* new BuildScriptError({
+        message: `Build completed but ${appBundleName} was not found in ${stageDistDir}`,
+      });
+    }
+
+    const outputAppBundlePath = path.join(options.outputDir, appBundleName);
+    if (yield* fs.exists(outputAppBundlePath)) {
+      return yield* new BuildScriptError({
+        message: `Output app bundle already exists at ${outputAppBundlePath}; choose an empty --output-dir.`,
+      });
+    }
+
+    yield* runCommand(
+      ChildProcess.make({
+        ...commandOutputOptions(options.verbose),
+      })`ditto --rsrc --extattr ${appBundlePath} ${outputAppBundlePath}`,
+    );
+    copiedArtifacts.push(outputAppBundlePath);
+  } else {
+    for (const entry of stageEntries) {
+      const from = path.join(stageDistDir, entry);
+      const stat = yield* fs.stat(from).pipe(Effect.catch(() => Effect.succeed(null)));
+      if (!stat || stat.type !== "File") continue;
+
+      const outputEntry =
+        options.platform === "mac" && options.arch !== "arm64" && entry === "latest-mac.yml"
+          ? `latest-mac-${options.arch}.yml`
+          : entry;
+      const to = path.join(options.outputDir, outputEntry);
+      yield* fs.copyFile(from, to);
+      copiedArtifacts.push(to);
+    }
   }
 
   if (copiedArtifacts.length === 0) {
@@ -1393,7 +1435,7 @@ const buildDesktopArtifactCli = Command.make("build-desktop-artifact", {
   ),
   target: Flag.string("target").pipe(
     Flag.withDescription(
-      "Artifact target, for example dmg/AppImage/nsis (env: SYNARA_DESKTOP_TARGET).",
+      "Artifact target, for example dmg/dir/AppImage/nsis (env: SYNARA_DESKTOP_TARGET).",
     ),
     Flag.optional,
   ),
@@ -1418,7 +1460,9 @@ const buildDesktopArtifactCli = Command.make("build-desktop-artifact", {
     Flag.optional,
   ),
   outputDir: Flag.string("output-dir").pipe(
-    Flag.withDescription("Output directory for artifacts (env: SYNARA_DESKTOP_OUTPUT_DIR)."),
+    Flag.withDescription(
+      "Output directory for artifacts, or for the .app bundle with target=dir (env: SYNARA_DESKTOP_OUTPUT_DIR).",
+    ),
     Flag.optional,
   ),
   skipBuild: Flag.boolean("skip-build").pipe(

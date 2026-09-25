@@ -110,6 +110,13 @@ const ptBROnboarding: Readonly<Record<string, string>> = {
   "Sign in": "Entrar",
   Guide: "Guia",
   "Re-detect": "Detectar novamente",
+  Detecting: "Detectando",
+  "Could not check": "Não foi possível verificar",
+  "Checking agents…": "Verificando agentes…",
+  "Could not check all agents": "Não foi possível verificar todos os agentes",
+  "Detecting agents on this machine…": "Detectando agentes nesta máquina…",
+  "Couldn't check all agents. Try Re-detect.":
+    "Não foi possível verificar todos os agentes. Tente detectar novamente.",
   "Signing in to {name}": "Entrando em {name}",
   "{connected} connected · {needsSignIn} need sign-in · {notInstalled} not installed":
     "{connected} conectados · {needsSignIn} precisam entrar · {notInstalled} não instalados",

@@ -404,9 +404,18 @@ const ptBRComputer: Readonly<Record<string, string>> = {
     "Permitir ações comuns na área de trabalho até o fim desta resposta. Parar cancela o acesso. Leituras da área de transferência ainda exigem aprovação separada.",
   "Stop desktop for this turn, agent continues without tools":
     "Interromper o computador nesta interação; o agente continua sem as ferramentas",
-  "Stop revokes new input; keys/buttons already sent may still land.":
-    "Parar impede novas entradas; teclas e cliques já enviados ainda podem ser executados.",
   "Allow Computer for this task?": "Permitir o uso do computador nesta tarefa?",
+  "Show this on your screen?": "Mostrar isso na sua tela?",
+  "Show on screen for this task": "Mostrar na tela nesta tarefa",
+  "Computer may bring windows to the front until this response ends.":
+    "O uso do computador pode trazer janelas para frente até esta resposta terminar.",
+  "Keep it in the background": "Manter em segundo plano",
+  "No window is raised; the agent continues in the background":
+    "Nenhuma janela será trazida para frente; o agente continuará em segundo plano.",
+  "Cancel this request": "Cancelar esta solicitação",
+  "Deny this request; use Stop to end the agent turn.":
+    "Negar esta solicitação; use Parar para encerrar a interação do agente.",
+  "Use Stop to end the agent turn.": "Use Parar para encerrar a interação do agente.",
   "Requested permission profile": "Perfil de permissões solicitado",
   "Review the request to continue.": "Revise a solicitação para continuar.",
   "Live usage is not available for this provider configuration.":

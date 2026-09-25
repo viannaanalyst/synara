@@ -44,6 +44,7 @@ import { ProjectStep, type OnboardingProjectResult } from "./steps/ProjectStep";
 import { ProvidersStep } from "./steps/ProvidersStep";
 import { ThemeStep } from "./steps/ThemeStep";
 import { WelcomeStep } from "./steps/WelcomeStep";
+import { useProviderDetection } from "./useProviderDetection";
 
 const STEP_TITLES: Record<OnboardingStep, string> = {
   welcome: "Welcome to {name}",
@@ -78,6 +79,7 @@ function OnboardingFlow(props: {
   const [projectResults, setProjectResults] = useState<ReadonlyArray<OnboardingProjectResult>>([]);
   const { settings } = useAppSettings();
   const statuses = useProviderStatusesForLocalConfig();
+  const providerDetection = useProviderDetection();
   const { activeTheme } = useTheme();
 
   const goBack = () => setStep(previousOnboardingStep(step));
@@ -95,14 +97,22 @@ function OnboardingFlow(props: {
       state: classifyProviderSetup({
         status: findProviderStatus(statuses, descriptor.kind),
         disabled: settings.disabledProviders.includes(descriptor.kind),
+        detecting: providerDetection.detecting,
+        detectionFailed: providerDetection.failed,
       }),
     })),
   );
   const themeLabel =
     CODE_THEME_OPTIONS.find((option) => option.id === activeTheme.codeThemeId)?.label ??
     activeTheme.codeThemeId;
+  const localizedAgentSummary =
+    providerSummary.detecting > 0
+      ? t("Checking agents…")
+      : providerSummary.checkFailed > 0
+        ? t("Could not check all agents")
+        : t("{count} agents connected", { count: providerSummary.connected });
   const doneSummary = [
-    t("{count} agents connected", { count: providerSummary.connected }),
+    localizedAgentSummary,
     t("{theme} theme", { theme: themeLabel }),
     projectResults.length > 0
       ? t("{count} projects added", { count: projectResults.length })
@@ -179,7 +189,7 @@ function OnboardingFlow(props: {
       >
         {step === "welcome" ? <WelcomeStep /> : null}
         {step === "tour" ? <FeatureTourStep /> : null}
-        {step === "providers" ? <ProvidersStep /> : null}
+        {step === "providers" ? <ProvidersStep detection={providerDetection} /> : null}
         {step === "theme" ? <ThemeStep /> : null}
         {step === "project" ? (
           <ProjectStep

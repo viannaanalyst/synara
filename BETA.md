@@ -27,7 +27,7 @@ shares stable's data directory or update feed.
   dumps, and anonymous usage counts to a private dashboard. Stable sends nothing. See
   [Diagnostics](#diagnostics).
 
-### Release order
+### Release ordersaddd
 
 1. Merge the PRs for the release into `main`.
 2. If Windows is shipping unsigned, set the repo variable
